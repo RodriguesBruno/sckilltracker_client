@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+httpx
+Jinja2
+pydantic
+python-multipart
+websockets
+pytest
+pandas
+pyautogui
+plotly
+pyinstaller

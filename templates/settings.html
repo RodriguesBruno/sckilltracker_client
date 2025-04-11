@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content">
+
+    <form action="/settings" method ="POST">
+    <div class="withBorder">
+        <h3 class="withMargin">Local API</h3>
+        <label for="local_api_ip_address">IP Address Bind</label>
+        <input type="text" id="local_api_ip_address" name="local_api_ip_address" value="{{ config['local_api']['ip_address'] }}" readonly required><br>
+        <label for="local_api_port">Port</label>
+        <input type="text" id="local_api_port" name="local_api_port" value="{{ config['local_api']['port'] }}" required><br>
+
+        <h3 class="withMargin">Discord BOT</h3>
+
+        <label for="api_url">URL</label>
+        <input type="text" id="api_url" name="api_url" value="{{ config['client']['api_url'] }}" size="45" required><br>
+
+        <label for="logfile">StarCitizen Log File</label>
+        <input type="text" id="logfile" name="logfile" value="{{ config['log_monitor']['logfile_with_path'] }}" size="55" required><br>
+
+        <label for="frequency">Log File Scan Frequency(s)</label>
+        <input type="text" id="frequency" name="frequency" value="{{ config['log_monitor']['frequency'] }}" required><br>
+
+        <h3 class="withMargin">Recording Trigger</h3>
+
+        <label for="gpu_vendor">Overlay</label>
+        <select id="gpu_vendor" name="gpu_vendor">
+            {% for vendor in config['trigger_controller']['vendors'] %}
+                <option value="{{vendor.name}}" {% if config['trigger_controller']['selected_vendor'] == vendor.name %}selected{% endif %} title="Hotkey: {{vendor.hotkey | upper}}">{{vendor.name | upper}}</option>
+            {% endfor %}
+        </select><br>
+
+        <div id="key-combo-container" style="margin-top: 10px;">
+            <label for="hotkey_combo">Hotkey to Trigger Recording</label>
+                <input type="text"
+                   id="hotkey_combo"
+                   name="hotkey_combo"
+                   value=""
+                   placeholder="e.g. alt+k" required><br>
+
+        </div>
+
+    </div>
+    <input type="submit" value="Submit"><br>
+
+    </form>
+
+    {% if errors %}
+        <ul class="error-messages">
+        {% for error in errors %}
+            <li>{{ error['loc'][0] }}: {{ error['msg'] }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+</div>
+
+<script>
+  const gpuSelect = document.getElementById('gpu_vendor');
+  const keyComboContainer = document.getElementById('key-combo-container');
+  const hotkeyInput = document.getElementById('hotkey_combo');
+
+  // Show or hide key combo input based on GPU selection
+  function toggleHotkeyVisibility() {
+    const selectedVendorName = gpuSelect.value;
+    const vendors = {{ config['trigger_controller']['vendors'] | tojson }};
+
+    const selectedVendor = vendors.find(v => v.name === selectedVendorName);
+
+    if (selectedVendorName === 'other') {
+        keyComboContainer.style.display = 'block';
+        hotkeyInput.required = true;
+
+        // Set the input value to the hotkey of the "other" vendor
+        if (selectedVendor) {
+            hotkeyInput.value = selectedVendor.hotkey;
+        }
+    } else {
+        keyComboContainer.style.display = 'none';
+        hotkeyInput.required = false;
+        hotkeyInput.value = '';  // Clear the value if not "other"
+    }
+}
+
+  gpuSelect.addEventListener('change', toggleHotkeyVisibility);
+
+  // Initialize on page load
+  window.addEventListener('DOMContentLoaded', toggleHotkeyVisibility);
+
+  // Optional: Format hotkey input
+  hotkeyInput.addEventListener('keydown', function(event) {
+    event.preventDefault();  // Stop regular input
+
+    let keys = [];
+    if (event.altKey) keys.push("alt");
+    if (event.ctrlKey) keys.push("ctrl");
+    if (event.shiftKey) keys.push("shift");
+    if (event.metaKey) keys.push("meta");
+
+    let key = event.key.toLowerCase();
+    if (!["alt", "ctrl", "shift", "meta"].includes(key)) {
+      keys.push(key);
+    }
+
+    this.value = keys.join("+");
+  });
+</script>
+
+{% endblock %}

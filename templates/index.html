@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="status-card">
+
+        <div class="slide_btn" >
+        <span>Bot Push Enabled</span>
+            <label class="switch">
+                <input type="checkbox" id="botToggle" {% if client_enabled %} checked {% endif %}>
+                <span class="slider round" title="Push Notifications to BOT or not"></span>
+            </label>
+        </div>
+
+        <div class="slide_btn" >
+        <span>Recording Enabled</span>
+            <label class="switch">
+                <input type="checkbox" id="recordTriggerToggle" {% if trigger_controller_enabled %} checked {% endif %}>
+                <span class="slider round" title="Trigger Replay Recording Hotkey or not"></span>
+            </label>
+        </div>
+
+        <div class="slide_btn" >
+        <span>Verbose Logging</span>
+            <label class="switch">
+                <input type="checkbox" id="verboseLoggingToggle" {% if verbose_logging %} checked {% endif %}>
+                <span class="slider round" title="Enable Verbose Logging"></span>
+            </label>
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="status-card-content">
+            <div class="status-left">
+                <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+                <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
+                <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
+            </div>
+
+            <div class="status-right">
+                <div><strong>Game Running:</strong>
+                    <span id="game-indicator" class="{{ 'green-circle' if game_is_running else 'red-circle' }}"
+                          title="Last checked: {{game_is_running_last_checked}}">
+                    </span>
+                </div>
+                <div><strong>LogFile Scanner:</strong>
+                    <span id="status-indicator" class="{{ 'green-circle' if logfile_date else 'red-circle' }}"
+                          title="Reading every {{logfile_frequency}}s, last: {{logfile_date}}">
+                    </span>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <table id="message-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Player Death</th>
+                <th>Victim Zone</th>
+
+                <th>Killed By</th>
+                <th>Ship Name</th>
+
+                <th>Using</th>
+                <th>Damage</th>
+
+                <th>Game Mode</th>
+                <th>BOT Push</th>
+            </tr>
+        </thead>
+
+        <tbody id="message-container">
+
+            {% for notification in notifications %}
+
+                <tr>
+                    <td>{{ notification.player_event.date }}</td>
+                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ notification.player_event.player_name }}"> {{ notification.player_event.victim_player_name }}</a> </td>
+                    <td>{{ notification.player_event.victim_zone_name }}</td>
+
+                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ notification.player_event.killed_by }}"> {{ notification.player_event.killed_by }}</a></td>
+                    <td>{{ notification.player_event.ship_name }}</td>
+
+                    <td>{{ notification.player_event.using }}</td>
+                    <td>{{ notification.player_event.damage }}</td>
+                    <td>{{ notification.player_event.game_mode }}</td>
+
+                    <td>
+                        {% if not notification.client_enabled %}
+                            <span class="blue-circle" title="{{ notification.push_result.message }}"></span>
+                        {% else %}
+                            <span class="{{ 'green-circle' if notification.push_result.is_success else 'red-circle' }}"
+                                  title="{{ notification.push_result.message }}"></span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    <p>Startup Date: {{startup_date}}</p>
+    <p>Version: {{version}}</p>
+
+    <script>
+        const socket = new WebSocket("{{ ws_url }}");
+        const messageContainer = document.getElementById("message-container");
+        const gameIndicator = document.getElementById("game-indicator");
+        const statusIndicator = document.getElementById("status-indicator");
+
+        const pilotName = document.getElementById("pilot-name");
+        const shipName = document.getElementById("ship-name");
+        const gameMode = document.getElementById("game-mode");
+
+        const logFileDate = document.getElementById("log-file-date");
+        const logFileDateText = document.getElementById("log-file-date-text");
+        const messageCounter = document.getElementById("message-counter");
+        const messageErrorCounter = document.getElementById("message-error-counter");
+        const maxEntries = {{ max_entries }};
+        const rsi_url = 'https://robertsspaceindustries.com/en/citizens/'
+
+        let messageTimeout = setTimeout(() => {
+            statusIndicator.classList.remove("green-circle");
+            statusIndicator.classList.add("red-circle");
+            }, {{ logfile_frequency }} * 1000)
+
+        socket.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            console.log(message)
+
+            if (message.hasOwnProperty('pilot_name')) {
+
+                pilotName.textContent = message.pilot_name
+                shipName.textContent = message.ship_name
+                gameMode.textContent = message.game_mode
+            }
+
+            if (message.hasOwnProperty('game_is_running')) {
+                gameIndicator.title = message.msg
+
+                if (message.game_is_running) {
+                    gameIndicator.classList.remove("red-circle");
+                    gameIndicator.classList.add("green-circle");
+                }
+                else {
+                    gameIndicator.classList.remove("green-circle");
+                    gameIndicator.classList.add("red-circle");
+                }
+            }
+
+            if (message.hasOwnProperty('logfile_msg')) {
+                statusIndicator.title = message.logfile_msg
+
+                if (message.logfile_scanner_is_running) {
+
+                    clearTimeout(messageTimeout);
+                    statusIndicator.classList.remove("red-circle");
+                    statusIndicator.classList.add("green-circle");
+
+                    messageTimeout = setTimeout(() => {
+                        statusIndicator.classList.remove("green-circle");
+                        statusIndicator.classList.add("red-circle");
+                        }, message.logfile_frequency * 1000 + 1000);
+                }
+                else {
+                    statusIndicator.classList.remove("green-circle");
+                    statusIndicator.classList.add("red-circle");
+                }
+            };
+
+            if (message.hasOwnProperty('player_event')) {
+                const tableRows = messageContainer.getElementsByTagName("tr");
+
+			    while (tableRows.length >= maxEntries) {
+                    messageContainer.removeChild(messageContainer.lastChild);
+                }
+
+				const tableRow = document.createElement("tr");
+				const dateCell = document.createElement("td");
+
+				const victimPlayerTD = document.createElement("td");
+
+				const playerLinkCell = document.createElement("a");
+				playerLinkCell.href = `${rsi_url}${message.player_event.victim_player_name}`;
+                playerLinkCell.textContent = message.player_event.victim_player_name;
+
+                victimPlayerTD.append(playerLinkCell)
+
+				const killedByTD = document.createElement("td");
+
+				const killedByLinkCell = document.createElement("a");
+				killedByLinkCell.href = `${rsi_url}${message.player_event.killed_by}`;
+                killedByLinkCell.textContent = message.player_event.killed_by;
+
+                killedByTD.append(killedByLinkCell)
+
+				const victimZoneCell = document.createElement("td");
+				const shipCell = document.createElement("td");
+				const usingCell = document.createElement("td");
+				const damageCell = document.createElement("td");
+				const gameModeCell = document.createElement("td");
+
+				const botPushCell = document.createElement("td");
+				const botPushSpanCell = document.createElement("span");
+				botPushSpanCell.title = message.push_result.message
+
+                if (!message.client_enabled) {
+                    botPushSpanCell.classList.add("blue-circle")
+                }
+				else if (message.push_result.is_success) {
+				    botPushSpanCell.classList.add("green-circle")
+				} else {
+				    botPushSpanCell.classList.add("red-circle")
+				}
+				botPushCell.append(botPushSpanCell)
+
+                dateCell.textContent = message.player_event.date;
+                victimZoneCell.textContent = message.player_event.victim_zone_name;
+                shipCell.textContent = message.player_event.ship_name;
+
+				usingCell.textContent = message.player_event.using;
+				damageCell.textContent = message.player_event.damage;
+				gameModeCell.textContent = message.player_event.game_mode;
+
+				tableRow.appendChild(dateCell);
+				tableRow.appendChild(victimPlayerTD);
+				tableRow.appendChild(victimZoneCell);
+
+				tableRow.appendChild(killedByTD);
+				tableRow.appendChild(shipCell);
+                tableRow.appendChild(usingCell);
+                tableRow.appendChild(damageCell);
+				tableRow.appendChild(gameModeCell);
+
+				tableRow.appendChild(botPushCell);
+
+				tableRow.classList.add("transition-background");
+                messageContainer.insertBefore(tableRow, messageContainer.firstChild);
+                void tableRow.offsetWidth;
+
+				setTimeout(function() {
+					tableRow.classList.add("green");
+				}, 100);
+
+				setTimeout(function() {
+					tableRow.classList.remove("green");
+				}, 8100);
+			};
+        };
+
+    const fetchData = (endpoint) => {
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+            })
+            .catch(error => console.error('Error toggling BOT status:', error));
+    }
+
+    document.getElementById('botToggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/client/enable' : '/client/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordTriggerToggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/trigger_controller/enable' : '/trigger_controller/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('verboseLoggingToggle').addEventListener('change', function() {
+    const endpoint = this.checked ? '/verbose_logging/enable' : '/verbose_logging/disable';
+    fetchData(endpoint)
+    });
+
+    </script>
+
+{% endblock %}
