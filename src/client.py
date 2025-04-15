@@ -222,7 +222,7 @@ class SCClient:
         victim_zone_name: str = get_victim_zone(log_entry)
         killed_by: str = get_killed_by(log_entry)
 
-        if victim_player_name == self._pilot_name:
+        if killed_by == self._pilot_name:
             ship_name = self._ship_name
         else:
             ship_name: str = get_ship_name(log_entry)
