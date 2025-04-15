@@ -15,20 +15,21 @@
     </head>
 
     <body>
-       <nav class="navbar">
-         <!-- LOGO -->
-         <div class="logo"><i class="fa fa-asterisk" style="font-size:32px; background-color: #000000; color: #d1007e;" ></i>{{ title }}</div>
-         <!-- NAVIGATION MENU -->
-         <ul class="nav-links">
-           <!-- USING CHECKBOX HACK -->
-           <input type="checkbox" id="checkbox_toggle" />
-           <label for="checkbox_toggle" class="hamburger">&#9776;</label>
-           <!-- NAVIGATION MENUS -->
-           <div class="menu">
-             <li><a href="/">Home</a></li>
-             <li><a href="/settings">Settings</a></li>
-           </div>
-         </ul>
+        <nav class="navbar">
+            <!-- LOGO -->
+            <div class="logo"><i class="fa fa-asterisk" style="font-size:32px; background-color: #000000; color: #d1007e;" ></i>{{ title }}</div>
+            <!-- NAVIGATION MENU -->
+            <ul class="nav-links">
+                <!-- USING CHECKBOX HACK -->
+                <input type="checkbox" id="checkbox_toggle" />
+                <label for="checkbox_toggle" class="hamburger">&#9776;</label>
+                <!-- NAVIGATION MENUS -->
+                <div class="menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/stats">Statistics</a></li>
+                    <li><a href="/settings">Settings</a></li>
+                </div>
+            </ul>
        </nav>
 
     <div class="content"> {% block content %} {% endblock %} </div>

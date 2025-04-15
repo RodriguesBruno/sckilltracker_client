@@ -1,10 +1,10 @@
-import os
-import sys
 import uvicorn
 import asyncio
 from contextlib import asynccontextmanager
 import logging
+import webbrowser
 
+from pathlib import Path
 from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
@@ -15,33 +15,38 @@ from src.client import SCClient
 from src.connection_manager import ConnectionManager
 from src.file_handlers import read_config, write_config
 from src.logfile_monitor import LogFileMonitor
-from src.recording_statistics import RecordingStatistics
+from src.models.models import (
+    StatisticsResult,
+    TopVictim,
+    TopVictimsTable,
+    TopKiller,
+    TopKillersTable,
+    KillsGameMode,
+    DamageTypeDistribution,
+    PilotMonthKills
+)
+from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
 from src.repository import Repository, RepositoryType
 from src.repository_factory import RepositoryFactory
 from src.settings_form import SettingsForm
-from src.utils import get_local_ip
+from src.utils import get_local_ip, resource_path, setup_folders
 
 logging.basicConfig(
-    level=logging.DEBUG,  # or DEBUG if you want verbose output
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.StreamHandler()]
 )
+
+setup_folders()
 
 config_file: str = "./config.json"
 config: dict = read_config(config_file=config_file)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await client.validate_logfile()
     asyncio.create_task(client.run(broadcast=connection_manager.broadcast))
     yield
-
-def resource_path(relative_path):
-    try:
-        return os.path.join(sys._MEIPASS, relative_path)
-    except AttributeError:
-        return os.path.abspath(relative_path)
 
 static_dir = resource_path("static")
 templates_dir = resource_path("templates")
@@ -58,9 +63,11 @@ MAX_ENTRIES: int = 22
 
 logfile_monitor: LogFileMonitor = LogFileMonitor(config=config.get('log_monitor'))
 
-repo: Repository = RepositoryFactory().get_repo(RepositoryType.CSV)
+repo: Repository = RepositoryFactory().get_repo(
+    repository_type=RepositoryType.SQL if config.get('db').get('type') == 'sql' else RepositoryType.CSV
+)
 
-recording_statistics: RecordingStatistics = RecordingStatistics(csv_path='./events.csv')
+statistics_statistics: StatisticsController = StatisticsController()
 
 trigger_controller: TriggerController = TriggerController(config=config.get('trigger_controller'))
 
@@ -68,6 +75,7 @@ client: SCClient = SCClient(
     config=config.get('client'),
     logfile_monitor=logfile_monitor,
     repo=repo,
+    statistics_controller=statistics_statistics,
     trigger_controller=trigger_controller
 )
 
@@ -84,8 +92,13 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)
 
+    except Exception as e:
+        # Log unexpected disconnections
+        logging.warning(f"WebSocket error: {e}")
+
 @app.get("/")
 async def get_index(request: Request):
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,
@@ -103,42 +116,57 @@ async def get_index(request: Request):
         "logfile_frequency": logfile_monitor.frequency,
         "trigger_controller_enabled": trigger_controller.is_enabled,
         "verbose_logging": client.is_verbose_logging,
+        "pilot_month_kills": client.statistics_kills_this_month_for_pilot(),
         "ws_url": ws_url,
 
     })
 
 @app.get("/stats")
 def stats(request: Request):
-    top_victims = recording_statistics.top_victims()
-    top_killers = recording_statistics.top_killers()
+    top_victims_chart: str = client.statistics_top_victims_chart_html()
+    top_killers_chart: str = client.statistics_top_killers_chart_html()
+    game_mode_chart: str = client.statistics_kills_by_game_mode_chart_html()
+    damage_chart: str = client.statistics_damage_type_distribution_chart_html()
 
-    kills_by_mode = recording_statistics.kills_by_game_mode()
-    damage_distribution = recording_statistics.damage_type_distribution()
-
-    top_victims_chart: str = recording_statistics.get_top_victims_chart_html()
-    top_killers_chart: str = recording_statistics.get_top_killers_chart_html()
-    game_mode_chart: str = recording_statistics.get_game_mode_pie_chart_html()
-    damage_chart : str = recording_statistics.get_damage_type_distribution_chart_html()
+    top_victims_table: list[dict] = client.statistics_top_victims_table()
+    top_killers_table: list[dict] = client.statistics_top_killers_table()
 
     return templates.TemplateResponse("stats.html", {
         "request": request,
         "title": title,
-        "top_victims": top_victims,
-        "top_killers": top_killers,
-        "kills_by_mode": kills_by_mode,
-        "damage_distribution": damage_distribution,
         "top_victims_chart": top_victims_chart,
         "top_killers_chart": top_killers_chart,
         "game_mode_chart": game_mode_chart,
-        "damage_chart": damage_chart
+        "damage_chart": damage_chart,
+        "top_victims_table": top_victims_table,
+        "top_killers_table": top_killers_table,
     })
+
+@app.get("/statistics", response_model=StatisticsResult)
+def statistics():
+    return StatisticsResult(
+        top_victims=[TopVictim(**entry) for entry in client.statistics_top_victims()],
+        top_victims_table=[TopVictimsTable(**entry) for entry in client.statistics_top_victims_table()],
+        top_killers=[TopKiller(**entry) for entry in client.statistics_top_killers()],
+        top_killers_table=[TopKillersTable(**entry) for entry in client.statistics_top_killers_table()],
+        kills_by_game_mode=[KillsGameMode(**entry) for entry in client.statistics_kills_by_game_mode()],
+        damage_type_distribution=[DamageTypeDistribution(**entry) for entry in client.statistics_damage_type_distribution()],
+        pilot_month_kills=PilotMonthKills(**client.statistics_kills_this_month_for_pilot())
+    )
 
 @app.get("/status")
 async def get_status():
     return  {
         "title": title,
         "startup_date": client.startup_date,
-        "notifications": client.notifications
+        "game": {
+            "executable_name": client.game_executable_name,
+            "is_running": client.game_is_running
+        },
+        "db": {
+            "db_type": repo.type,
+            "db_records": repo.count
+        }
     }
 
 @app.get("/client/enable")
@@ -294,11 +322,31 @@ async def set_settings(
 
 
 def main() -> None:
-    uvicorn.run(
-        app=app,
-        host=config.get("local_api").get("ip_address"),
-        port=config.get("local_api").get("port")
-    )
+    host: str = config.get("local_api").get("ip_address")
+    port: int = config.get("local_api").get("port")
+
+    cert_path: Path = Path("certs/cert.pem")
+    key_path: Path = Path("certs/key.pem")
+
+    hostname: str = "localhost" if host == "0.0.0.0" else host
+    protocol: str = "https" if cert_path.exists() and key_path.exists() else "http"
+    url: str = f"{protocol}://{hostname}:{port}"
+
+    webbrowser.open(url)
+
+    if not cert_path.exists() or not key_path.exists():
+        logging.info("⚠️ Certificate files not found. HTTPS will not be enabled.")
+        uvicorn.run(app=app, host=host, port=port)
+
+    else:
+        logging.info("✅ Starting API with HTTPS")
+        uvicorn.run(
+            app=app,
+            host=host,
+            port=port,
+            ssl_certfile=str(cert_path),
+            ssl_keyfile=str(key_path)
+        )
 
 if __name__ == "__main__":
     main()

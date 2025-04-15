@@ -5,8 +5,8 @@ from src.repository import Repository
 
 
 class CSVRepository(Repository):
-    def __init__(self, file_name: str):
-        self._file_name = file_name
+    def __init__(self, path: str):
+        self._file_name = path
         self._field_names: list[str] = ['date', 'victim_player_name', 'victim_zone_name', 'killed_by', 'ship_name', 'using', 'damage', 'game_mode']
         self._initialize()
 
@@ -18,6 +18,16 @@ class CSVRepository(Repository):
                 writer.writeheader()
 
     @property
+    def type(self) -> str:
+        return 'csv'
+
+    @property
+    def count(self) -> int:
+        with open(self._file_name, newline='') as f:
+            reader = csv.DictReader(f)
+            return sum(1 for _ in reader)
+
+    @property
     def file_name(self) -> str:
         return self._file_name
 
@@ -27,12 +37,23 @@ class CSVRepository(Repository):
             for e in entries:
                 writer.writerow({key: e.get(key) for key in self._field_names})
 
-    def read(self):
+    def read(self) -> list[dict]:
         with open(self._file_name, newline='') as f:
             reader = csv.DictReader(f)
-            for row in reader:
-                print(row)
-                # print(row['first_name'], row['last_name'])
+
+            return [
+                {
+                    "date": row['date'],
+                    "victim_player_name": row['victim_player_name'],
+                    "victim_zone_name": row['victim_zone_name'],
+                    "killed_by": row['killed_by'],
+                    "ship_name": row['ship_name'],
+                    "using": row['using'],
+                    "damage": row['damage'],
+                    "game_mode": row['game_mode']
+                }
+                for row in reader
+            ]
 
     def update(self):
         pass

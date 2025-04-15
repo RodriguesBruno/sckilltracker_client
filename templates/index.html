@@ -33,6 +33,7 @@
         <div class="status-card-content">
             <div class="status-left">
                 <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+                <div><span id="month"><strong>{{pilot_month_kills.month}} Kills:</strong></span> <span id="pilot-kills">{{pilot_month_kills.kills}}</span></div>
                 <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
                 <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
             </div>
@@ -77,16 +78,16 @@
             {% for notification in notifications %}
 
                 <tr>
-                    <td>{{ notification.player_event.date }}</td>
+                    <td>{{ notification.date }}</td>
                     <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ notification.player_event.player_name }}"> {{ notification.player_event.victim_player_name }}</a> </td>
-                    <td>{{ notification.player_event.victim_zone_name }}</td>
+                    <td>{{ notification.victim_zone_name }}</td>
 
                     <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ notification.player_event.killed_by }}"> {{ notification.player_event.killed_by }}</a></td>
-                    <td>{{ notification.player_event.ship_name }}</td>
+                    <td>{{ notification.ship_name }}</td>
 
-                    <td>{{ notification.player_event.using }}</td>
-                    <td>{{ notification.player_event.damage }}</td>
-                    <td>{{ notification.player_event.game_mode }}</td>
+                    <td>{{ notification.using }}</td>
+                    <td>{{ notification.damage }}</td>
+                    <td>{{ notification.game_mode }}</td>
 
                     <td>
                         {% if not notification.client_enabled %}
@@ -114,6 +115,9 @@
         const statusIndicator = document.getElementById("status-indicator");
 
         const pilotName = document.getElementById("pilot-name");
+        const monthName = document.getElementById("month");
+        const pilotKills = document.getElementById("pilot-kills");
+
         const shipName = document.getElementById("ship-name");
         const gameMode = document.getElementById("game-mode");
 
@@ -136,6 +140,8 @@
             if (message.hasOwnProperty('pilot_name')) {
 
                 pilotName.textContent = message.pilot_name
+                monthName.textContent = `${message.pilot_month_kills.month} Kills:`
+                pilotKills.textContent = message.pilot_month_kills.kills
                 shipName.textContent = message.ship_name
                 gameMode.textContent = message.game_mode
             }

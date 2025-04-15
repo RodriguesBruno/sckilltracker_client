@@ -2,7 +2,6 @@ import asyncio
 import logging
 import subprocess
 from typing import Callable
-
 import httpx
 
 from src.client_utls import generate_client_id
@@ -27,6 +26,7 @@ from src.msg_parser import (
     get_pilot_name,
     get_ship_name
 )
+from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
 from src.repository import Repository
 from src.utils import get_date
@@ -53,15 +53,31 @@ SHIP_PREFIXES: list[str] = [
 	"MRAI"
 ]
 
+
+def find_event_line(lines: list[str], keywords: list[str]) -> str | None:
+    return next((line for line in lines if any(k in line for k in keywords)), None)
+
+
 class SCClient:
-    def __init__(self, config: dict, logfile_monitor: LogFileMonitor, repo: Repository, trigger_controller: TriggerController) -> None:
+    def __init__(
+            self,
+            config: dict,
+            logfile_monitor: LogFileMonitor,
+            repo: Repository,
+            statistics_controller: StatisticsController,
+            trigger_controller: TriggerController) -> None:
+
         self._version: str = config.get('version')
         self._enabled: bool = config.get('enabled')
         self._api_url: str = config.get('api_url')
         self._verbose_logging: bool = config.get('verbose_logging')
 
+        self._game_executable_name: str = config.get('game_executable_name')
+        self._game_executable_check_frequency: int = config.get('game_executable_check_frequency')
+
         self._logfile_monitor: LogFileMonitor = logfile_monitor
         self._repo: Repository = repo
+        self._statistics_controller: StatisticsController = statistics_controller
         self._trigger_controller: TriggerController = trigger_controller
 
         self._startup_date: str = get_date()
@@ -84,8 +100,9 @@ class SCClient:
         self._game_is_running: bool = False
         self._game_is_running_last_checked: str = ''
 
-        self._game_executable_name: str = 'starcitizen.exe'
 
+    async def _initialize_statistics_controller(self):
+        self._statistics_controller.set_data(events=self._repo.read())
 
     async def _check_if_game_is_running(self, broadcast: Callable) -> None:
 
@@ -117,7 +134,11 @@ class SCClient:
 
             self._game_is_running_last_checked = date
 
-            await asyncio.sleep(5)
+            await asyncio.sleep(self._game_executable_check_frequency)
+
+    @property
+    def game_executable_name(self) -> str:
+        return self._game_executable_name
 
     @property
     def game_is_running(self) -> bool:
@@ -138,7 +159,6 @@ class SCClient:
     @property
     def game_mode(self) -> str:
         return self._game_mode
-
 
     def enable(self) -> None:
         self._enabled = True
@@ -191,7 +211,9 @@ class SCClient:
             "version": self._version,
             "enabled": self._enabled,
             "api_url": self._api_url,
-            "verbose_logging": self._verbose_logging
+            "verbose_logging": self._verbose_logging,
+            "game_executable_name": self._game_executable_name,
+            "game_executable_check_frequency": self._game_executable_check_frequency
         }
 
     def _get_player_event(self, log_entry: str) -> PlayerEvent:
@@ -200,10 +222,10 @@ class SCClient:
         victim_zone_name: str = get_victim_zone(log_entry)
         killed_by: str = get_killed_by(log_entry)
 
-        if victim_player_name != self._pilot_name:
-            ship_name: str = get_ship_name(log_entry)
+        if victim_player_name == self._pilot_name:
+            ship_name = self._ship_name
         else:
-            ship_name = '-'
+            ship_name: str = get_ship_name(log_entry)
 
         using: str = get_using(log_entry)
         damage: str = get_damage(log_entry)
@@ -274,7 +296,10 @@ class SCClient:
         if self._trigger_controller.is_enabled and player_events:
             self._trigger_controller.trigger_hotkey()
 
-        self._repo.create([e.model_dump() for e in player_events])
+        events: list[dict] = [e.model_dump() for e in player_events]
+        self._repo.create(events)
+
+        self._statistics_controller.set_data(events=self._repo.read())
 
     async def _handle_online_mode(self, broadcast: Callable, player_events: list[PlayerEvent]) -> None:
         async with httpx.AsyncClient() as client:
@@ -314,7 +339,10 @@ class SCClient:
             if self._trigger_controller.is_enabled and player_events:
                 self._trigger_controller.trigger_hotkey()
 
-            self._repo.create([e.model_dump() for e in player_events])
+            events: list[dict] = [e.model_dump() for e in player_events]
+            self._repo.create(events)
+
+            self._statistics_controller.set_data(events=self._repo.read())
 
     async def validate_logfile(self) -> None:
         logging.info(f"[CLIENT] Requesting LogFile Validation")
@@ -341,6 +369,8 @@ class SCClient:
               f"*---------------------------------*")
 
     async def run(self, broadcast: Callable) -> None:
+        asyncio.create_task(self.validate_logfile())
+        asyncio.create_task(self._initialize_statistics_controller())
         asyncio.create_task(self._check_if_game_is_running(broadcast))
 
         while True:
@@ -358,56 +388,51 @@ class SCClient:
 
                     player_event_lines: list[str] = [line for line in new_lines if self._player_event_keyword in line]
 
-                    broadcast_game_notification: bool = False
+                    must_broadcast_to_ui: bool = False
 
-                    # PILOT NAME EVENT
-                    pilot_name_event: str | None = next(
-                        (line for line in new_lines if self._pilot_name_keyword in line), None)
+                    # [PILOT NAME EVENT]
+                    pilot_name_event: str | None = find_event_line(lines=new_lines, keywords=[self._pilot_name_keyword])
 
                     if pilot_name_event:
-                        await self._handle_pilot_name_event(pilot_name_event)
-                        broadcast_game_notification = True
+                        await self._handle_pilot_name_event(log_entry=pilot_name_event)
+                        must_broadcast_to_ui = True
 
-                    # SHIP NAME EVENT
-                    ship_name_event = None
-                    for line in new_lines:
-                        for word in self._ship_name_keywords:
-                            if word in line:
-                                ship_name_event = line
+                    # [SHIP NAME EVENT]
+                    ship_name_event: str | None = find_event_line(lines=new_lines, keywords=self._ship_name_keywords)
 
                     if ship_name_event:
                         await self._handle_ship_name_event(ship_name_event)
-                        broadcast_game_notification = True
+                        must_broadcast_to_ui = True
 
-                    # GAME MODE EVENT
-                    game_mode_event = None
-                    for line in new_lines:
-                        for word in self._game_mode_keywords:
-                            if word in line:
-                                game_mode_event = line
+                    # [GAME MODE EVENT]
+                    game_mode_event: str | None = find_event_line(lines=new_lines, keywords=self._game_mode_keywords)
 
                     if game_mode_event:
                         await self._handle_game_mode_event(game_mode_event)
-                        broadcast_game_notification = True
-
-                    if broadcast_game_notification:
-                        logging.info(f"[CLIENT - UI NOTIFICATION] Pilot Name: {self._pilot_name}, Ship Name: {self._ship_name}, Game Mode: {self._game_mode}")
-
-                        await broadcast(
-                            GameNotification(
-                                pilot_name=self._pilot_name,
-                                ship_name=self._ship_name,
-                                game_mode=self._game_mode
-                            ).model_dump()
-                        )
+                        must_broadcast_to_ui = True
 
                     player_events: list[PlayerEvent] = [self._get_player_event(line) for line in player_event_lines]
 
-                    if self.is_disabled:
-                        await self._handle_offline_mode(broadcast, player_events)
-
                     if self.is_enabled:
                         await self._handle_online_mode(broadcast, player_events)
+                    else:
+                        await self._handle_offline_mode(broadcast, player_events)
+
+                    if must_broadcast_to_ui:
+                        logging.info(
+                            f"[CLIENT - UI NOTIFICATION] Pilot Name: {self._pilot_name}, Ship Name: {self._ship_name}, Game Mode: {self._game_mode}")
+
+                        pilot_month_kills: dict = self.statistics_kills_this_month_for_pilot()
+
+                        game_notification: GameNotification = GameNotification(
+                                pilot_name=self._pilot_name,
+                                pilot_kills=pilot_month_kills.get('kills'),
+                                month=pilot_month_kills.get('month'),
+                                ship_name=self._ship_name,
+                                game_mode=self._game_mode,
+                            )
+
+                        await broadcast(game_notification.model_dump())
 
             except FileNotFoundError:
                 logging.error(f"[CLIENT] LogFile not found: {self._logfile_monitor.logfile_with_path}")
@@ -417,3 +442,40 @@ class SCClient:
 
             await asyncio.sleep(self._logfile_monitor.frequency)
 
+    # [STATISTICS METHODS]
+
+    def statistics_top_victims(self) -> list[dict]:
+        return self._statistics_controller.top_victims()
+
+    def statistics_top_victims_table(self) -> list[dict[str, int]]:
+        return self._statistics_controller.get_top_victims_table()
+
+    def statistics_top_victims_chart_html(self) -> str:
+        return self._statistics_controller.top_victims_chart_html()
+
+    def statistics_kills_this_month_for_pilot(self, pilot_name: str = None) -> dict[str, None | int | str]:
+        if not pilot_name:
+            pilot_name = self._pilot_name
+
+        return self._statistics_controller.kills_this_month_for_pilot(pilot_name=pilot_name)
+
+    def statistics_top_killers(self) -> list[dict]:
+        return self._statistics_controller.top_killers()
+
+    def statistics_top_killers_table(self) -> list[dict[str, int]]:
+        return self._statistics_controller.get_top_killers_table()
+
+    def statistics_top_killers_chart_html(self) -> str:
+        return self._statistics_controller.top_killers_chart_html()
+
+    def statistics_kills_by_game_mode(self) -> list[dict[str, int]]:
+        return self._statistics_controller.kills_by_game_mode()
+
+    def statistics_kills_by_game_mode_chart_html(self) -> str:
+        return self._statistics_controller.kills_by_game_mode_chart_html()
+
+    def statistics_damage_type_distribution(self) -> list[dict[str, int]]:
+        return self._statistics_controller.damage_type_distribution()
+
+    def statistics_damage_type_distribution_chart_html(self) -> str:
+        return self._statistics_controller.damage_type_distribution_chart_html()

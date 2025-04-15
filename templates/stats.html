@@ -4,42 +4,6 @@
 <div class="content">
   <h2>Statistics</h2>
 
-<!--  <div class="stats-section">-->
-<!--    <h3>Top Victims</h3>-->
-<!--    <ul>-->
-<!--      {% for item in top_victims %}-->
-<!--        <li>{{ item.victim_player_name }} — {{ item.count }} deaths</li>-->
-<!--      {% endfor %}-->
-<!--    </ul>-->
-<!--  </div>-->
-
-<!--  <div class="stats-section">-->
-<!--    <h3>Top Killers</h3>-->
-<!--    <ul>-->
-<!--      {% for item in top_killers %}-->
-<!--        <li>{{ item.killed_by }} — {{ item.count }} kills</li>-->
-<!--      {% endfor %}-->
-<!--    </ul>-->
-<!--  </div>-->
-
-<!--  <div class="stats-section">-->
-<!--    <h3>Kills by Game Mode</h3>-->
-<!--    <ul>-->
-<!--      {% for item in kills_by_mode %}-->
-<!--        <li>{{ item.game_mode }} — {{ item.count }}</li>-->
-<!--      {% endfor %}-->
-<!--    </ul>-->
-<!--  </div>-->
-
-<!--  <div class="stats-section">-->
-<!--    <h3>Damage Type Distribution</h3>-->
-<!--    <ul>-->
-<!--      {% for item in damage_distribution %}-->
-<!--        <li>{{ item.damage }} — {{ item.count }}</li>-->
-<!--      {% endfor %}-->
-<!--    </ul>-->
-<!--  </div>-->
-
   <div class="chart-row">
     <div class="chart-container shadowed-chart">
       {{ top_victims_chart | safe }}
@@ -62,41 +26,86 @@
 
   </div>
 
+  <div class="tables">
+    <h3>Top Victims (Day / Week / Month / All)</h3>
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Victim</th>
+            <th>Day</th>
+            <th>Week</th>
+            <th>Month</th>
+            <th>All</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_victims_table %}
+          <tr>
+            <td><a href="https://robertsspaceindustries.com/en/citizens/{{ row.victim }}" target="_blank">{{ row.victim }}</a></td>
+            <td>{{ row.day }}</td>
+            <td>{{ row.week }}</td>
+            <td>{{ row.month }}</td>
+            <td>{{ row.all }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    <br>
+
+    <h3>Top Killers (Day / Week / Month / All)</h3>
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Killer</th>
+            <th>Day</th>
+            <th>Week</th>
+            <th>Month</th>
+            <th>All</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_killers_table %}
+          <tr>
+            <td><a href="https://robertsspaceindustries.com/en/citizens/{{ row.killer }}" target="_blank">{{ row.killer }}</a></td>
+            <td>{{ row.day }}</td>
+            <td>{{ row.week }}</td>
+            <td>{{ row.month }}</td>
+            <td>{{ row.all }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+  </div>
+
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   setTimeout(function () {
     const victimsChart = document.getElementById('top-victims-chart');
-
     if (victimsChart) {
+      victimsChart.on = null;  // Remove if any old listeners
+      Plotly.newPlot(victimsChart, victimsChart.data, victimsChart.layout);  // Optional re-render
       victimsChart.on('plotly_click', function (data) {
         const url = data.points[0].customdata[0];
-        if (url) {
-          window.open(url, '_blank');
-        }
+        if (url) window.open(url, '_blank');
       });
-    } else {
-      console.warn("Chart not found: #top-victims-chart");
     }
   }, 250);
 
   setTimeout(function () {
-  const killersChart = document.getElementById('top-killers-chart');
-
-  if (killersChart) {
-    killersChart.on('plotly_click', function (data) {
-      const url = data.points[0].customdata[0];
-      if (url) {
-        window.open(url, '_blank');
-      }
-    });
-    } else {
-      console.warn("Chart not found: #top-killers-chart");
+    const killersChart = document.getElementById('top-killers-chart');
+    if (killersChart) {
+      killersChart.on = null;
+      Plotly.newPlot(killersChart, killersChart.data, killersChart.layout);  // Optional
+      killersChart.on('plotly_click', function (data) {
+        const url = data.points[0].customdata[0];
+        if (url) window.open(url, '_blank');
+      });
     }
   }, 250);
-
-
 });
 </script>
 
