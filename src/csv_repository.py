@@ -7,14 +7,14 @@ from src.repository import Repository
 class CSVRepository(Repository):
     def __init__(self, path: str):
         self._file_name = path
-        self._field_names: list[str] = ['date', 'victim_player_name', 'victim_zone_name', 'killed_by', 'ship_name', 'using', 'damage', 'game_mode']
+        self._key_names: list[str] = ['date', 'victim_player_name', 'victim_zone_name', 'killed_by', 'ship_name', 'using', 'damage', 'game_mode']
         self._initialize()
 
     def _initialize(self):
         write_header = not os.path.exists(self._file_name) or os.stat(self._file_name).st_size == 0
         if write_header:
             with open(self._file_name, 'w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=self._field_names)
+                writer = csv.DictWriter(f, fieldnames=self._key_names)
                 writer.writeheader()
 
     @property
@@ -33,27 +33,15 @@ class CSVRepository(Repository):
 
     def create(self, entries: list[dict]):
         with open(self._file_name, 'a', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=self._field_names)
+            writer = csv.DictWriter(f, fieldnames=self._key_names)
             for e in entries:
-                writer.writerow({key: e.get(key) for key in self._field_names})
+                writer.writerow({key: e.get(key) for key in self._key_names})
 
     def read(self) -> list[dict]:
         with open(self._file_name, newline='') as f:
             reader = csv.DictReader(f)
 
-            return [
-                {
-                    "date": row['date'],
-                    "victim_player_name": row['victim_player_name'],
-                    "victim_zone_name": row['victim_zone_name'],
-                    "killed_by": row['killed_by'],
-                    "ship_name": row['ship_name'],
-                    "using": row['using'],
-                    "damage": row['damage'],
-                    "game_mode": row['game_mode']
-                }
-                for row in reader
-            ]
+            return [{key: row[key] for key in self._key_names} for row in reader]
 
     def update(self):
         pass
