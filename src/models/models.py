@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 class PlayerEvent(BaseModel):
+    uuid: str
     date: str
     victim_player_name: str
     victim_zone_name: str
@@ -12,27 +13,9 @@ class PlayerEvent(BaseModel):
     damage: str
     game_mode: str = Field(default='-')
 
-class ClientEvent(BaseModel):
-    client_id: str
-    client_version: str
-    player_event: PlayerEvent
-
-class ClientConfig(BaseModel):
-    enabled: bool
-    api_url: str
-
-class LogMonitorConfig(BaseModel):
-    logfile_with_path: str
-    frequency: int
-
-class PushResult(BaseModel):
-    is_success: bool = Field(default=True)
-    message: str = Field(default='')
-
-class Notification(BaseModel):
-    player_event: PlayerEvent
-    client_enabled: bool
-    push_result: PushResult
+    client_enabled: bool = Field(default=False)
+    push_result_message: str = Field(default='-')
+    push_result_is_success: bool = Field(default=False)
 
 class GameNotification(BaseModel):
     pilot_name: str

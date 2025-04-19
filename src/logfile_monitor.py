@@ -10,6 +10,7 @@ class LogFileMonitor:
 
         self._is_validated: bool = False
         self._last_read_date: str = 'Never'
+        self._lines: int = 0
 
         self._file_position: int = 0
 
@@ -20,6 +21,10 @@ class LogFileMonitor:
     @logfile_with_path.setter
     def logfile_with_path(self, value: str) -> None:
         self._logfile_with_path = value
+
+    @property
+    def lines(self) -> int:
+        return self._lines
 
     @property
     def frequency(self) -> int:
@@ -40,6 +45,10 @@ class LogFileMonitor:
     @property
     def last_read_date(self) -> str:
         return self._last_read_date
+
+    def reset(self) -> None:
+        self._is_validated = False
+        self._file_position = 0
 
     def get_config(self) -> dict:
         return {
@@ -79,6 +88,8 @@ class LogFileMonitor:
             self._is_validated = True
             self._last_read_date = get_date()
 
+            self._lines = len(lines)
+
             logging.info(f"[LOGFILE MONITOR] Validation Complete")
 
         except Exception as _:
@@ -91,9 +102,11 @@ class LogFileMonitor:
     async def get_new_lines(self) -> list[str]:
         with open(self._logfile_with_path, 'r') as file:
             file.seek(self._file_position)
+
             new_lines: list[str] = file.readlines()
             self._file_position = file.tell()
 
             self._last_read_date = get_date()
+            self._lines += len(new_lines)
 
             return new_lines

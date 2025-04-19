@@ -1,8 +1,8 @@
+import webbrowser
 import uvicorn
 import asyncio
 from contextlib import asynccontextmanager
 import logging
-import webbrowser
 
 from pathlib import Path
 from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status
@@ -59,12 +59,14 @@ templates = Jinja2Templates(directory=templates_dir)
 
 connection_manager: ConnectionManager = ConnectionManager()
 
-MAX_ENTRIES: int = 22
+MAX_ENTRIES: int = 15
 
 logfile_monitor: LogFileMonitor = LogFileMonitor(config=config.get('log_monitor'))
 
 repo: Repository = RepositoryFactory().get_repo(
-    repository_type=RepositoryType.SQL if config.get('db').get('type') == 'sql' else RepositoryType.CSV
+    repository_type=RepositoryType.SQL
+    if config.get('db').get('type') == 'sql'
+    else RepositoryType.CSV
 )
 
 statistics_statistics: StatisticsController = StatisticsController()
@@ -79,7 +81,10 @@ client: SCClient = SCClient(
     trigger_controller=trigger_controller
 )
 
-ws_url: str = f'ws://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
+protocol = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pem").exists()) else "ws"
+ws_url: str = f'{protocol}://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
+
+# ws_url: str = f'ws://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
 
 
 @app.websocket("/ws")
@@ -96,8 +101,15 @@ async def websocket_endpoint(websocket: WebSocket):
         # Log unexpected disconnections
         logging.warning(f"WebSocket error: {e}")
 
+@app.get("/notification")
+async def notification():
+    return await client.text_notification(broadcast=connection_manager.broadcast)
+
+
 @app.get("/")
 async def get_index(request: Request):
+    player_events = client.player_events(limit=MAX_ENTRIES)
+    print(player_events)
 
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -109,7 +121,7 @@ async def get_index(request: Request):
         "pilot_name": client.pilot_name,
         "ship_name": client.ship_name,
         "game_mode": client.game_mode,
-        "notifications": client.notifications[:MAX_ENTRIES],
+        "player_events": reversed(player_events),
         "startup_date": client.startup_date,
         "logfile_date": logfile_monitor.last_read_date,
         "max_entries": MAX_ENTRIES,
@@ -302,8 +314,8 @@ async def set_settings(
     client.api_url = str(form_data.api_url)
 
     if form_data.logfile != logfile_monitor.logfile_with_path:
-        logfile_monitor.log_is_validated = False
         logfile_monitor.logfile_with_path = form_data.logfile
+        logfile_monitor.reset()
 
         await client.validate_logfile()
 
@@ -329,8 +341,8 @@ def main() -> None:
     key_path: Path = Path("certs/key.pem")
 
     hostname: str = "localhost" if host == "0.0.0.0" else host
-    protocol: str = "https" if cert_path.exists() and key_path.exists() else "http"
-    url: str = f"{protocol}://{hostname}:{port}"
+    protoc: str = "https" if cert_path.exists() and key_path.exists() else "http"
+    url: str = f"{protoc}://{hostname}:{port}"
 
     webbrowser.open(url)
 

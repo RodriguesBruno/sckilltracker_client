@@ -2,9 +2,9 @@
     "title": "SCKillTracker Client",
     "client": {
         "version": "1.0",
-        "enabled": true,
-        "api_url": "http://127.0.0.1:8088/api/v1/event",
-        "verbose_logging": false,
+        "enabled": false,
+        "api_url": "https://127.0.0.1:8081/api/v1/event",
+        "verbose_logging": true,
         "game_executable_name": "starcitizen.exe",
         "game_executable_check_frequency": 5
     },
@@ -13,11 +13,11 @@
         "port": 8082
     },
     "log_monitor": {
-        "logfile_with_path": "E:\\StarCitizen\\StarCitizen\\LIVE\\Game.log",
+        "logfile_with_path": "d:\\StarCitizen\\LIVE\\Game.log",
         "frequency": 5
     },
     "trigger_controller": {
-        "enabled": true,
+        "enabled": false,
         "selected_vendor": "nvidia",
         "vendors": [
             {

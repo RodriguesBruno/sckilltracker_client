@@ -1,6 +1,5 @@
 import logging
 import sqlite3
-import uuid
 
 from src.repository import Repository
 
@@ -38,12 +37,10 @@ class SQLRepository(Repository):
         c = conn.cursor()
 
         for entry in entries:
-            event_id = str(uuid.uuid4())
-
             c.execute(
                 'INSERT INTO events (uuid, date, victim_player_name, victim_zone_name, killed_by, ship_name, "using", damage, game_mode) VALUES (?, ?, ?, ? ,?, ?, ?, ?, ?)',
                 (
-                    event_id,
+                    entry.get('uuid'),
                     entry.get('date'),
                     entry.get('victim_player_name'),
                     entry.get('victim_zone_name'),

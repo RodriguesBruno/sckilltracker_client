@@ -3,11 +3,25 @@ import os
 
 from src.repository import Repository
 
+KEY_NAMES: list[str] = [
+    'uuid',
+    'date',
+    'victim_player_name',
+    'victim_zone_name',
+    'killed_by',
+    'ship_name',
+    'using',
+    'damage',
+    'game_mode',
+    'client_enabled',
+    'push_result_message',
+    'push_result_is_success'
+]
 
 class CSVRepository(Repository):
     def __init__(self, path: str):
         self._file_name = path
-        self._key_names: list[str] = ['date', 'victim_player_name', 'victim_zone_name', 'killed_by', 'ship_name', 'using', 'damage', 'game_mode']
+        self._key_names: list[str] = KEY_NAMES
         self._initialize()
 
     def _initialize(self):
@@ -41,7 +55,19 @@ class CSVRepository(Repository):
         with open(self._file_name, newline='') as f:
             reader = csv.DictReader(f)
 
-            return [{key: row[key] for key in self._key_names} for row in reader]
+            result = []
+
+            for row in reader:
+                parsed_row = {}
+                for key in self._key_names:
+                    value = row[key]
+                    if key in ("client_enabled", "push_result_is_success"):
+                        parsed_row[key] = value.strip().lower() == "true"
+                    else:
+                        parsed_row[key] = value
+
+                result.append(parsed_row)
+            return result
 
     def update(self):
         pass
