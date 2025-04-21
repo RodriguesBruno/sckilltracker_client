@@ -2,7 +2,7 @@
     "title": "SCKillTracker Client",
     "client": {
         "version": "1.1",
-        "enabled": false,
+        "enabled": true,
         "api_url": "https://127.0.0.1:8081/api/v1/event",
         "verbose_logging": true,
         "game_executable_name": "starcitizen.exe",

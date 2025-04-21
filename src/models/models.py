@@ -96,4 +96,12 @@ class ClientStatus(BaseModel):
     game: Game
     db: DB
 
+class ClientEnabledStatus(BaseModel):
+    is_enabled: bool
 
+class TriggerControllerStatus(BaseModel):
+    enabled: bool
+    selected_vendor: str
+
+class LoggingStatus(BaseModel):
+    is_verbose: bool

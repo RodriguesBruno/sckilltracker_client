@@ -13,6 +13,10 @@ class TriggerController:
         return self._enabled
 
     @property
+    def selected_vendor(self) -> str:
+        return self._selected_vendor
+
+    @property
     def is_disabled(self) -> bool:
         return not self._enabled
 

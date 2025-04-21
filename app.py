@@ -23,7 +23,7 @@ from src.models.models import (
     TopKillersTable,
     KillsGameMode,
     DamageTypeDistribution,
-    PilotMonthKills, Game, DB, ClientStatus
+    PilotMonthKills, Game, DB, ClientStatus, TriggerControllerStatus, LoggingStatus, ClientEnabledStatus
 )
 from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
@@ -159,8 +159,7 @@ async def get_status():
         )
     )
 
-
-@app.get("/client/enable")
+@app.get("/client/enable", response_model=ClientEnabledStatus)
 async def enable_client():
     if client.is_disabled:
         client.enable()
@@ -168,11 +167,9 @@ async def enable_client():
 
         write_config(config_file=config_file, data=config)
 
-    return  {
-        "client_enabled": client.is_enabled
-    }
+    return ClientEnabledStatus(is_enabled=client.is_enabled)
 
-@app.get("/client/disable")
+@app.get("/client/disable", response_model=ClientEnabledStatus)
 async def disable_client():
     if client.is_enabled:
         client.disable()
@@ -180,9 +177,8 @@ async def disable_client():
 
         write_config(config_file=config_file, data=config)
 
-    return {
-        "client_enabled": client.is_enabled
-    }
+    return ClientEnabledStatus(is_enabled=client.is_enabled)
+
 
 @app.get("/trigger_controller/enable")
 async def enable_trigger_controller():
@@ -192,11 +188,12 @@ async def enable_trigger_controller():
 
         write_config(config_file=config_file, data=config)
 
-    return  {
-        "trigger_controller": trigger_controller.is_enabled
-    }
+    return TriggerControllerStatus(
+        enabled=trigger_controller.is_enabled,
+        selected_vendor=trigger_controller.selected_vendor
+    )
 
-@app.get("/trigger_controller/disable")
+@app.get("/trigger_controller/disable", response_model=TriggerControllerStatus)
 async def disable_trigger_controller():
     if trigger_controller.is_enabled:
         trigger_controller.disable()
@@ -204,11 +201,12 @@ async def disable_trigger_controller():
 
         write_config(config_file=config_file, data=config)
 
-    return {
-        "trigger_controller": trigger_controller.is_enabled
-    }
+    return TriggerControllerStatus(
+        enabled=trigger_controller.is_enabled,
+        selected_vendor=trigger_controller.selected_vendor
+    )
 
-@app.get("/verbose_logging/enable")
+@app.get("/verbose_logging/enable", response_model=LoggingStatus)
 async def enable_verbose_logging():
     if not client.is_verbose_logging:
         client.verbose_logging_enable()
@@ -216,11 +214,12 @@ async def enable_verbose_logging():
 
         write_config(config_file=config_file, data=config)
 
-    return  {
-        "verbose_logging": client.is_verbose_logging
-    }
+    return LoggingStatus(
+        is_verbose=client.is_verbose_logging
+    )
 
-@app.get("/verbose_logging/disable")
+
+@app.get("/verbose_logging/disable", response_model=LoggingStatus)
 async def disable_verbose_logging():
     if client.is_verbose_logging:
         client.verbose_logging_disable()
@@ -228,14 +227,13 @@ async def disable_verbose_logging():
 
         write_config(config_file=config_file, data=config)
 
-    return {
-        "verbose_logging": client.is_verbose_logging
-    }
-
+    return LoggingStatus(
+        is_verbose=client.is_verbose_logging
+    )
 
 
 @app.get("/settings")
-async def get_settings(request: Request):
+async def settings_page(request: Request):
     return templates.TemplateResponse("settings.html", {
         "request": request,
         "title": title,
