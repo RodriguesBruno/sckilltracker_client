@@ -1,7 +1,7 @@
 import csv
 import os
 
-from src.repository import Repository
+from src.repository import Repository, RepositoryType
 
 KEY_NAMES: list[str] = [
     'uuid',
@@ -32,8 +32,8 @@ class CSVRepository(Repository):
                 writer.writeheader()
 
     @property
-    def type(self) -> str:
-        return 'csv'
+    def type(self) -> RepositoryType:
+        return RepositoryType.CSV
 
     @property
     def count(self) -> int:

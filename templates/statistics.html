@@ -56,7 +56,7 @@
 <script>
   async function loadStatistics() {
     try {
-      const res = await fetch('/stats');
+      const res = await fetch('/statistics/data');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 

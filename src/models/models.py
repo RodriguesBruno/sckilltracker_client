@@ -1,5 +1,8 @@
 from pydantic import BaseModel, Field
 
+from src.repository import RepositoryType
+
+
 class PlayerEvent(BaseModel):
     uuid: str
     date: str
@@ -70,7 +73,7 @@ class PilotMonthKills(BaseModel):
     pilot: str
 
 
-class StatisticsResult(BaseModel):
+class StatisticsData(BaseModel):
     top_victims: list[TopVictim]
     top_victims_table: list[TopVictimsTable]
     top_killers: list[TopKiller]
@@ -78,3 +81,19 @@ class StatisticsResult(BaseModel):
     kills_by_game_mode: list[KillsGameMode]
     damage_type_distribution: list[DamageTypeDistribution]
     pilot_month_kills: PilotMonthKills
+
+class Game(BaseModel):
+    executable_name: str
+    is_running: bool
+
+class DB(BaseModel):
+    type: RepositoryType
+    records_qty: int
+
+class ClientStatus(BaseModel):
+    title: str
+    startup_date: str
+    game: Game
+    db: DB
+
+

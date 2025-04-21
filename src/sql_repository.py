@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 
-from src.repository import Repository
+from src.repository import Repository, RepositoryType
 
 
 class SQLRepository(Repository):
@@ -18,8 +18,8 @@ class SQLRepository(Repository):
         conn.close()
 
     @property
-    def type(self) -> str:
-        return 'sql'
+    def type(self) -> RepositoryType:
+        return RepositoryType.SQL
 
     @property
     def count(self) -> int:

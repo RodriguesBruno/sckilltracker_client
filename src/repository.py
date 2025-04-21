@@ -10,7 +10,7 @@ class RepositoryType(Enum):
 class Repository(ABC):
 
     @abstractmethod
-    def type(self) -> str:
+    def type(self) -> RepositoryType:
         pass
 
     def count(self) -> int:

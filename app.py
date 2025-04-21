@@ -16,14 +16,14 @@ from src.file_handlers import read_config, write_config
 from src.logfile_monitor import LogFileMonitor
 from src.logger import setup_logging
 from src.models.models import (
-    StatisticsResult,
+    StatisticsData,
     TopVictim,
     TopVictimsTable,
     TopKiller,
     TopKillersTable,
     KillsGameMode,
     DamageTypeDistribution,
-    PilotMonthKills
+    PilotMonthKills, Game, DB, ClientStatus
 )
 from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
@@ -132,9 +132,9 @@ def statistics_page(request: Request):
         "title": title
     })
 
-@app.get("/stats", response_model=StatisticsResult)
-def stats():
-    return StatisticsResult(
+@app.get("/statistics/data", response_model=StatisticsData)
+def statistics_data():
+    return StatisticsData(
         top_victims=[TopVictim(**entry) for entry in client.statistics_top_victims()],
         top_victims_table=[TopVictimsTable(**entry) for entry in client.statistics_top_victims_table()],
         top_killers=[TopKiller(**entry) for entry in client.statistics_top_killers()],
@@ -144,20 +144,21 @@ def stats():
         pilot_month_kills=PilotMonthKills(**client.statistics_kills_this_month_for_pilot())
     )
 
-@app.get("/status")
+@app.get("/status", response_model=ClientStatus)
 async def get_status():
-    return  {
-        "title": title,
-        "startup_date": client.startup_date,
-        "game": {
-            "executable_name": client.game_executable_name,
-            "is_running": client.game_is_running
-        },
-        "db": {
-            "db_type": repo.type,
-            "db_records": repo.count
-        }
-    }
+    return ClientStatus(
+        title=title,
+        startup_date=client.startup_date,
+        game=Game(
+            executable_name=client.game_executable_name,
+            is_running=client.game_is_running
+        ),
+        db=DB(
+            type=repo.type,
+            records_qty=repo.count
+        )
+    )
+
 
 @app.get("/client/enable")
 async def enable_client():
