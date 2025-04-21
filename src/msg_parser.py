@@ -45,14 +45,14 @@ def get_victim_zone(line: str) -> str:
     return '-'
 
 def get_killed_by(line: str) -> str:
-    match = re.search(r"killed\sby\s'(?P<killed_by>\w*)", line)
+    match = re.search(r"killed\sby\s'(?P<killed_by>[\w-]*)", line)
     return match.group('killed_by') if match else '-'
 
 def get_using(line: str) -> str:
     if "with damage type 'Crash'" in line:
         return '-'
 
-    match = re.search(r"using\s'(?P<using>\w*)", line)
+    match = re.search(r"using\s'(?P<using>[\w-]*)", line)
     if match:
         using_name = match.group('using')
 

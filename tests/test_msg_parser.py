@@ -19,6 +19,7 @@ def test_get_log_date_returns_date():
     expected_result = '2025-04-02 21:29:47 UTC'
     assert result == expected_result
 
+# [VICTIM NAME]
 def test_get_victim_player_name_returns_player_name():
 
     entry = "<2025-04-03T01:26:11.622Z> [Notice] <Actor Death> CActor::Kill: 'beast3PO' [200146293833] in zone 'AEGS_Gladius_2456589863667' killed by 'BluePanda' [202139681949] using 'KLWE_LaserRepeater_S2_2472796603691' [Class unknown] with damage type 'VehicleDestruction' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
@@ -27,17 +28,26 @@ def test_get_victim_player_name_returns_player_name():
     expected_result = 'beast3PO'
     assert result == expected_result
 
-def test_get_victim_player_name_with_long_name_returns_player_name():
+def test_get_victim_player_name_with_dash_returns_player_name():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'BluePanda' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
     result = get_victim_player_name(entry)
 
     expected_result = 'Ecelli-Telumehtar'
     assert result == expected_result
 
+# [KILLED BY]
+
 def test_get_killed_by_return_player_name():
     result = get_killed_by(log_entry)
 
     expected_result = 'BlackHole'
+    assert result == expected_result
+
+def test_get_killed_with_dash_return_player_name():
+    entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'Ecelli-Telumehtar' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
+    result = get_killed_by(entry)
+
+    expected_result = 'Ecelli-Telumehtar'
     assert result == expected_result
 
 # [VICTIM ZONE]
