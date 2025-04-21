@@ -27,7 +27,7 @@ def get_log_date(line: str) -> str:
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
 def get_victim_player_name(line: str) -> str:
-    match = re.search(r"CActor::Kill:\s'(?P<player_name>\w*)", line)
+    match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
     return match.group('player_name') if match else '-'
 
 def get_victim_zone(line: str) -> str:
@@ -45,14 +45,14 @@ def get_victim_zone(line: str) -> str:
     return '-'
 
 def get_killed_by(line: str) -> str:
-    match = re.search(r"killed\sby\s'(?P<killed_by>\w*)", line)
+    match = re.search(r"killed\sby\s'(?P<killed_by>[\w-]*)", line)
     return match.group('killed_by') if match else '-'
 
 def get_using(line: str) -> str:
     if "with damage type 'Crash'" in line:
         return '-'
 
-    match = re.search(r"using\s'(?P<using>\w*)", line)
+    match = re.search(r"using\s'(?P<using>[\w-]*)", line)
     if match:
         using_name = match.group('using')
 
@@ -70,23 +70,26 @@ def get_damage(line: str) -> str:
     return '-'
 
 def get_game_mode(line: str) -> str:
-    if 'ode Change from INVALID[-1] to EA_ExperimentalMode_3' in line:
+    if 'Loading screen for Frontend_Main' in line:
+        return '-'
+
+    if "Starting 'Game" in line:
         return 'PU'
 
-    match = re.search(r'gamerules="(?P<game_mode>[\w_]*)', line)
-    if not match:
-        match = re.search(r"Requesting\sMode\sChange\sfrom\s.*\sto\s(?P<game_mode>[\w_]*)\[\d", line)
-
+    match = re.search(r'screen\sfor\s[\w_]*\s:\s(?P<game_mode>[\w_]*)\sclosed', line)
     if match:
         game_mode = match.group('game_mode').replace('EA_', '')
-        if game_mode == 'SC_Frontend' or game_mode == 'SC_Default':
+        if game_mode == 'SC_Frontend':
             return 'PU'
 
+        return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
+
+
+    match = re.search(r'>\sMode\[EA_(?P<game_mode>[\w_]*)]', line)
+    if match:
+        game_mode = match.group('game_mode')
         if game_mode == 'FPSGunGame':
             return 'Gun Rush'
-
-        if game_mode == 'ExperimentalMode_3':
-            return 'Tank Royale'
 
         return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
 

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content">
+  <h2>Statistics</h2>
+
+  <div class="chart-row">
+    <div class="chart-container shadowed-chart">
+      <div id="topVictimsPlot"></div>
+    </div>
+
+    <div class="chart-container shadowed-chart">
+      <div id="topKillersPlot"></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-container shadowed-chart">
+      <div id="gameModePlot"></div>
+    </div>
+
+    <div class="chart-container shadowed-chart">
+      <div id="damagePlot"></div>
+    </div>
+  </div>
+
+
+  <div class="tables">
+    <div>
+      <h3>Top Victims (Day / Week / Month / All)</h3>
+      <table id="topVictimsTable" class="stats-table">
+        <thead>
+          <tr>
+            <th>Victim</th><th>Day</th><th>Week</th><th>Month</th><th>All</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div>
+      <h3>Top Killers (Day / Week / Month / All)</h3>
+      <table id="topKillersTable" class="stats-table">
+        <thead>
+          <tr>
+            <th>Killer</th><th>Day</th><th>Week</th><th>Month</th><th>All</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  async function loadStatistics() {
+    try {
+      const res = await fetch('/statistics/data');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const layoutDark = {
+        template: 'plotly_dark',
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: { family: 'Verdana, sans-serif', size: 14, color: '#e0e0e0' }
+      };
+
+      const axisCommon = {
+        titlefont: { color: '#e0e0e0' },
+        tickfont: { color: '#e0e0e0' },
+        showline: true,
+        linecolor: '#555',
+        mirror: true,
+        zerolinecolor: '#444',
+        tickcolor: '#555'
+      };
+
+      // Top Victims (vertical bar)
+      Plotly.newPlot('topVictimsPlot', [{
+        x: data.top_victims.map(v => v.victim_player_name),
+        y: data.top_victims.map(v => v.count),
+        type: 'bar', marker: { color: '#0d6efd' }
+      }], Object.assign({
+        margin: { b: 80, t: 60 },
+        xaxis: { title: 'Victim' },
+        yaxis: { title: 'Count' },
+        title: 'Top Victims'
+        }, axisCommon, layoutDark));
+
+      // Add click handler for Top Victims
+      document.getElementById('topVictimsPlot').on('plotly_click', function(eventData) {
+        const name = eventData.points[0].x;
+        const url = `https://robertsspaceindustries.com/en/citizens/${name}`;
+        window.open(url, '_blank');
+      });
+
+      // Top Killers (vertical bar)
+      Plotly.newPlot('topKillersPlot', [{
+        x: data.top_killers.map(k => k.killed_by),
+        y: data.top_killers.map(k => k.count),
+        type: 'bar', marker: { color: '#0d6efd' }
+      }], Object.assign({
+        margin: { b: 80, t: 60 },
+        xaxis: { title: 'Killer' },
+        yaxis: { title: 'Count' },
+        title: 'Top Killers'
+        }, axisCommon, layoutDark));
+
+      // Add click handler for Top Killers
+      document.getElementById('topKillersPlot').on('plotly_click', function(eventData) {
+        const name = eventData.points[0].x;
+        const url = `https://robertsspaceindustries.com/en/citizens/${name}`;
+        window.open(url, '_blank');
+      });
+
+      // Kills by Game Mode (pie)
+      Plotly.newPlot('gameModePlot', [{
+        labels: data.kills_by_game_mode.map(m => m.game_mode),
+        values: data.kills_by_game_mode.map(m => m.count),
+        type: 'pie', textinfo: 'label+percent', hole: 0.4
+      }], Object.assign({
+        margin: { b: 80, t: 60 },
+        title: 'Kills/Game Mode'
+        }, axisCommon, layoutDark));
+
+      // Damage Distribution (donut)
+      Plotly.newPlot('damagePlot', [{
+        labels: data.damage_type_distribution.map(d => d.damage),
+        values: data.damage_type_distribution.map(d => d.count),
+        type: 'pie', textinfo: 'label+percent', hole: 0.4
+      }], Object.assign({
+        margin: { b: 80, t: 60 },
+        title: 'Damage Type Distribution'
+        }, axisCommon, layoutDark));
+
+
+      // Populate Top Victims Table
+      const vtBody = document.querySelector('#topVictimsTable tbody');
+      data.top_victims_table.forEach(row => {
+        const tr = document.createElement('tr');
+        ['victim','day','week','month','all'].forEach(key => {
+          const td = document.createElement('td');
+          if (key === 'victim') {
+            td.innerHTML = `<a href="https://robertsspaceindustries.com/en/citizens/${row[key]}" target="_blank">${row[key]}</a>`;
+          } else {
+            td.textContent = row[key];
+          }
+          tr.appendChild(td);
+        });
+        vtBody.appendChild(tr);
+      });
+
+      // Populate Top Killers Table
+      const ktBody = document.querySelector('#topKillersTable tbody');
+      data.top_killers_table.forEach(row => {
+        const tr = document.createElement('tr');
+        ['killer','day','week','month','all'].forEach(key => {
+          const td = document.createElement('td');
+          if (key === 'killer') {
+            td.innerHTML = `<a href="https://robertsspaceindustries.com/en/citizens/${row[key]}" target="_blank">${row[key]}</a>`;
+          } else {
+            td.textContent = row[key];
+          }
+          tr.appendChild(td);
+        });
+        ktBody.appendChild(tr);
+      });
+
+    } catch (err) {
+      console.error('Failed to load statistics:', err);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', loadStatistics);
+</script>
+
+{% endblock %}

@@ -1,4 +1,6 @@
 import json
+import logging
+
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
 
@@ -18,9 +20,13 @@ class ConnectionManager:
         if websocket in self._active_connections:
             self._active_connections.remove(websocket)
 
-    async def broadcast(self, msg_obj: dict):
+    async def broadcast(self, msg_obj: dict) -> None:
         serialized_msg: str = json.dumps(msg_obj)
 
         for websocket in self._active_connections:
             if websocket.application_state == WebSocketState.CONNECTED:
-                await websocket.send_text(serialized_msg)
+                try:
+                    await websocket.send_text(serialized_msg)
+
+                except Exception as e:
+                    logging.error(f"Error sending message: {e}")

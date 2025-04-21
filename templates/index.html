@@ -33,6 +33,7 @@
         <div class="status-card-content">
             <div class="status-left">
                 <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+                <div><span id="month"><strong>{{pilot_month_kills.month}} Kills:</strong></span> <span id="pilot-kills">{{pilot_month_kills.kills}}</span></div>
                 <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
                 <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
             </div>
@@ -74,26 +75,26 @@
 
         <tbody id="message-container">
 
-            {% for notification in notifications %}
+            {% for player_event in player_events %}
 
                 <tr>
-                    <td>{{ notification.player_event.date }}</td>
-                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ notification.player_event.player_name }}"> {{ notification.player_event.victim_player_name }}</a> </td>
-                    <td>{{ notification.player_event.victim_zone_name }}</td>
+                    <td>{{ player_event.date }}</td>
+                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_player_name }}"> {{ player_event.victim_player_name }}</a> </td>
+                    <td>{{ player_event.victim_zone_name }}</td>
 
-                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ notification.player_event.killed_by }}"> {{ notification.player_event.killed_by }}</a></td>
-                    <td>{{ notification.player_event.ship_name }}</td>
+                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killed_by }}"> {{ player_event.killed_by }}</a></td>
+                    <td>{{ player_event.ship_name }}</td>
 
-                    <td>{{ notification.player_event.using }}</td>
-                    <td>{{ notification.player_event.damage }}</td>
-                    <td>{{ notification.player_event.game_mode }}</td>
+                    <td>{{ player_event.using }}</td>
+                    <td>{{ player_event.damage }}</td>
+                    <td>{{ player_event.game_mode }}</td>
 
                     <td>
-                        {% if not notification.client_enabled %}
-                            <span class="blue-circle" title="{{ notification.push_result.message }}"></span>
+                        {% if not player_event.client_enabled %}
+                            <span class="blue-circle" title="{{ player_event.push_result_message }}"></span>
                         {% else %}
-                            <span class="{{ 'green-circle' if notification.push_result.is_success else 'red-circle' }}"
-                                  title="{{ notification.push_result.message }}"></span>
+                            <span class="{{ 'green-circle' if player_event.push_result_is_success else 'red-circle' }}"
+                                  title="{{ player_event.push_result_message }}"></span>
                         {% endif %}
                     </td>
                 </tr>
@@ -114,6 +115,9 @@
         const statusIndicator = document.getElementById("status-indicator");
 
         const pilotName = document.getElementById("pilot-name");
+        const monthStrong = document.querySelector("#month strong");
+        const pilotKills = document.getElementById("pilot-kills");
+
         const shipName = document.getElementById("ship-name");
         const gameMode = document.getElementById("game-mode");
 
@@ -133,13 +137,17 @@
             const message = JSON.parse(event.data);
             console.log(message)
 
+            // [PILOT NAME]
             if (message.hasOwnProperty('pilot_name')) {
 
                 pilotName.textContent = message.pilot_name
+                monthStrong.textContent = `${message.month} Kills:`
+                pilotKills.textContent = message.pilot_kills
                 shipName.textContent = message.ship_name
                 gameMode.textContent = message.game_mode
             }
 
+            // [GAME EXECUTABLE]
             if (message.hasOwnProperty('game_is_running')) {
                 gameIndicator.title = message.msg
 
@@ -153,6 +161,7 @@
                 }
             }
 
+            // [LOGFILE SCANNER]
             if (message.hasOwnProperty('logfile_msg')) {
                 statusIndicator.title = message.logfile_msg
 
@@ -173,7 +182,8 @@
                 }
             };
 
-            if (message.hasOwnProperty('player_event')) {
+            // [PLAYER EVENT]
+            if (message.hasOwnProperty('uuid')) {
                 const tableRows = messageContainer.getElementsByTagName("tr");
 
 			    while (tableRows.length >= maxEntries) {
@@ -186,16 +196,19 @@
 				const victimPlayerTD = document.createElement("td");
 
 				const playerLinkCell = document.createElement("a");
-				playerLinkCell.href = `${rsi_url}${message.player_event.victim_player_name}`;
-                playerLinkCell.textContent = message.player_event.victim_player_name;
+				playerLinkCell.href = `${rsi_url}${message.victim_player_name}`;
+                playerLinkCell.textContent = message.victim_player_name;
 
                 victimPlayerTD.append(playerLinkCell)
 
 				const killedByTD = document.createElement("td");
 
 				const killedByLinkCell = document.createElement("a");
-				killedByLinkCell.href = `${rsi_url}${message.player_event.killed_by}`;
-                killedByLinkCell.textContent = message.player_event.killed_by;
+				if (message.killed_by !== '-') {
+				    killedByLinkCell.href = `${rsi_url}${message.killed_by}`;
+				}
+
+                killedByLinkCell.textContent = message.killed_by;
 
                 killedByTD.append(killedByLinkCell)
 
@@ -207,25 +220,25 @@
 
 				const botPushCell = document.createElement("td");
 				const botPushSpanCell = document.createElement("span");
-				botPushSpanCell.title = message.push_result.message
+				botPushSpanCell.title = message.push_result_message
 
                 if (!message.client_enabled) {
                     botPushSpanCell.classList.add("blue-circle")
                 }
-				else if (message.push_result.is_success) {
+				else if (message.push_result_is_success) {
 				    botPushSpanCell.classList.add("green-circle")
 				} else {
 				    botPushSpanCell.classList.add("red-circle")
 				}
 				botPushCell.append(botPushSpanCell)
 
-                dateCell.textContent = message.player_event.date;
-                victimZoneCell.textContent = message.player_event.victim_zone_name;
-                shipCell.textContent = message.player_event.ship_name;
+                dateCell.textContent = message.date;
+                victimZoneCell.textContent = message.victim_zone_name;
+                shipCell.textContent = message.ship_name;
 
-				usingCell.textContent = message.player_event.using;
-				damageCell.textContent = message.player_event.damage;
-				gameModeCell.textContent = message.player_event.game_mode;
+				usingCell.textContent = message.using;
+				damageCell.textContent = message.damage;
+				gameModeCell.textContent = message.game_mode;
 
 				tableRow.appendChild(dateCell);
 				tableRow.appendChild(victimPlayerTD);
