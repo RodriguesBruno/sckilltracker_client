@@ -27,7 +27,7 @@ def get_log_date(line: str) -> str:
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
 def get_victim_player_name(line: str) -> str:
-    match = re.search(r"CActor::Kill:\s'(?P<player_name>\w*)", line)
+    match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
     return match.group('player_name') if match else '-'
 
 def get_victim_zone(line: str) -> str:

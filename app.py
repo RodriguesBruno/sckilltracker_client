@@ -103,6 +103,9 @@ async def notification():
 
 @app.get("/")
 async def index_page(request: Request):
+    player_events = reversed(client.player_events(limit=MAX_ENTRIES))
+
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,
@@ -113,7 +116,7 @@ async def index_page(request: Request):
         "pilot_name": client.pilot_name,
         "ship_name": client.ship_name,
         "game_mode": client.game_mode,
-        "player_events": reversed(client.player_events(limit=MAX_ENTRIES)),
+        "player_events": player_events,
         "startup_date": client.startup_date,
         "logfile_date": logfile_monitor.last_read_date,
         "max_entries": MAX_ENTRIES,

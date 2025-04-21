@@ -27,6 +27,13 @@ def test_get_victim_player_name_returns_player_name():
     expected_result = 'beast3PO'
     assert result == expected_result
 
+def test_get_victim_player_name_with_long_name_returns_player_name():
+    entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'BluePanda' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
+    result = get_victim_player_name(entry)
+
+    expected_result = 'Ecelli-Telumehtar'
+    assert result == expected_result
+
 def test_get_killed_by_return_player_name():
     result = get_killed_by(log_entry)
 

@@ -4,7 +4,6 @@ from datetime import timedelta, datetime
 from typing import Optional
 
 import pandas as pd
-import plotly.express as px
 
 
 class StatisticsController:
@@ -35,29 +34,6 @@ class StatisticsController:
         top.rename(columns={'index': 'name'}, inplace=True)
         
         return top.to_dict(orient='records')
-
-    def top_victims_chart_html(self) -> str:
-        if self._df.empty:
-            return ""
-
-        data = self._df['victim_player_name'].value_counts().head(10).reset_index()
-        data.columns = ['victim_player_name', 'count']
-
-        data['url'] = data['victim_player_name'].apply(lambda name: f"{self._rsi_url}/{name}")
-
-        fig = px.bar(data, x='victim_player_name', y='count', title='Top Victims', custom_data=['url'])
-
-        fig.update_layout(
-            xaxis=dict(categoryorder='total descending'),
-            template=self._chart_template,
-            width=self._chart_width,
-            height=self._chart_height,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
-        )
-
-        return fig.to_html(full_html=False, include_plotlyjs=False, div_id='top-victims-chart')
 
     def kills_this_month_for_pilot(self, pilot_name: str) -> dict[str, None | int | str]:
         """Return the number of kills a pilot made in the current month."""
@@ -95,27 +71,6 @@ class StatisticsController:
         top.rename(columns={'index': 'name'}, inplace=True)
 
         return top.to_dict(orient='records')
-
-    def top_killers_chart_html(self) -> str:
-        if self._df.empty:
-            return ""
-
-        data = self._df['killed_by'].value_counts().head(10).reset_index()
-        data.columns = ['killed_by', 'count']
-
-        data['url'] = data['killed_by'].apply(lambda name: f"{self._rsi_url}/{name}")
-        fig = px.bar(data, x='killed_by', y='count', title='Top Killers', custom_data=['url'])
-
-        fig.update_layout(
-            xaxis=dict(categoryorder='total descending'),
-            template=self._chart_template,
-            width=self._chart_width,
-            height=self._chart_height,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
-        )
-        return fig.to_html(full_html=False, include_plotlyjs=False, div_id='top-killers-chart')
 
     def kills_by_game_mode(self) -> list[dict[str, int]]:
         if self._df.empty:

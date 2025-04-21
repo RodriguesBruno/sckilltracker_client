@@ -512,9 +512,6 @@ class SCClient:
     def statistics_top_victims_table(self) -> list[dict[str, int]]:
         return self._statistics_controller.get_top_victims_table()
 
-    def statistics_top_victims_chart_html(self) -> str:
-        return self._statistics_controller.top_victims_chart_html()
-
     def statistics_kills_this_month_for_pilot(self, pilot_name: str = None) -> dict[str, None | int | str]:
         if not pilot_name:
             pilot_name = self._pilot_name

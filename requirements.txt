@@ -8,5 +8,4 @@ websockets
 pytest
 pandas
 pyautogui
-plotly
 pyinstaller
