@@ -76,7 +76,7 @@ def get_game_mode(line: str) -> str:
     if "Starting 'Game" in line:
         return 'PU'
 
-    match = re.search(r'screen\sfor\s(?:[\w_]*)\s:\s(?P<game_mode>[\w_]*)\sclosed', line)
+    match = re.search(r'screen\sfor\s[\w_]*\s:\s(?P<game_mode>[\w_]*)\sclosed', line)
     if match:
         game_mode = match.group('game_mode').replace('EA_', '')
         if game_mode == 'SC_Frontend':
@@ -85,42 +85,11 @@ def get_game_mode(line: str) -> str:
         return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
 
 
-    match = re.search(r'\>\sMode\[EA_(?P<game_mode>[\w_]*)]', line)
+    match = re.search(r'>\sMode\[EA_(?P<game_mode>[\w_]*)]', line)
     if match:
         game_mode = match.group('game_mode')
         if game_mode == 'FPSGunGame':
             return 'Gun Rush'
-
-        return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
-
-    return '-'
-
-def get_game_mode_old(line: str) -> str:
-    if 'ode Change from INVALID[-1] to EA_ExperimentalMode_3' in line:
-        return 'PU'
-
-    if 'Loading screen for Frontend_Main' in line:
-        return '-'
-
-    match = re.search(r'\>\sMode\[EA_(?P<game_mode>[\w_]*)]', line)
-    if match:
-        game_mode = match.group('game_mode')
-        return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
-
-    match = re.search(r'gamerules="(?P<game_mode>[\w_]*)', line)
-    if not match:
-        match = re.search(r"Requesting\sMode\sChange\sfrom\s.*\sto\s(?P<game_mode>[\w_]*)\[\d", line)
-
-    if match:
-        game_mode = match.group('game_mode').replace('EA_', '')
-        if game_mode == 'SC_Frontend' or game_mode == 'SC_Default':
-            return 'PU'
-
-        if game_mode == 'FPSGunGame':
-            return 'Gun Rush'
-
-        if game_mode == 'ExperimentalMode_3':
-            return 'Tank Royale'
 
         return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
 

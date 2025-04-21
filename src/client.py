@@ -2,7 +2,6 @@ import asyncio
 import logging
 import subprocess
 import uuid
-
 from random import randint
 from typing import Callable, Optional
 import httpx
@@ -91,7 +90,6 @@ class SCClient:
 
         self._pilot_name_keyword: str = '<OnClientConnected> Player'
         self._ship_name_keywords: list[str] = ['[VEHICLE SPAWN] CPlayerShipRespawnManager:', '<Jump Drive Requesting State Change>']
-        # self._game_mode_keywords: list[str] = ['> Loading screen for ', "<CContextEstablisherStart> Starting 'Game", '> Mode[EA']
         self._game_mode_keywords: list[str] = ['> Loading screen for ', '> Mode[EA']
 
         self._player_event_keyword: str = "<Actor Death>"
@@ -431,14 +429,6 @@ class SCClient:
 
                     new_lines: list[str] = await self._logfile_monitor.get_new_lines()
 
-
-                    if self._verbose_logging:
-                        if new_lines:
-                            logging.debug(f"[CLIENT - NEW LINES]")
-                            # for line in new_lines:
-                            #     print(f"JOHN: {line}")
-
-
                     # [PILOT NAME EVENT]
                     pilot_name_changed: bool = False
 
@@ -462,16 +452,6 @@ class SCClient:
 
                     # [GAME MODE EVENT]
                     game_mode_changed: bool = False
-
-                    # john = False
-                    # for line in new_lines:
-                    #     # print(line)
-                    #     if 'for pu' in line:
-                    #         print(f"JOHN: {line}")
-                    #         john = True
-                    #
-                    # if john:
-                    #     print('john_enabled')
 
                     game_mode_event: str | None = find_event_line(lines=new_lines, keywords=self._game_mode_keywords)
 

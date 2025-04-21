@@ -11,9 +11,7 @@ def get_date() -> str:
 def get_local_ip() -> str:
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.connect(('8.8.8.8', 80))
-        result = s.getsockname()[0]
-
-        return result
+        return s.getsockname()[0]
 
 def resource_path(relative_path):
     try:
@@ -23,7 +21,7 @@ def resource_path(relative_path):
         return os.path.abspath(relative_path)
 
 
-def setup_folders():
+def setup_folders() -> None:
     folders: list[str] = ['certs', 'db']
 
     for folder in folders:

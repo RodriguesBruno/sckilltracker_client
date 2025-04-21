@@ -15,6 +15,7 @@ from src.client import SCClient
 from src.connection_manager import ConnectionManager
 from src.file_handlers import read_config, write_config
 from src.logfile_monitor import LogFileMonitor
+from src.logger import setup_logging
 from src.models.models import (
     StatisticsResult,
     TopVictim,
@@ -32,13 +33,11 @@ from src.repository_factory import RepositoryFactory
 from src.settings_form import SettingsForm
 from src.utils import get_local_ip, resource_path, setup_folders
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
 
 setup_folders()
+
+config_logging: dict = read_config(config_file='./config_logging.json')
+setup_logging(config=config_logging)
 
 config_file: str = "./config.json"
 config: dict = read_config(config_file=config_file)
@@ -81,10 +80,8 @@ client: SCClient = SCClient(
     trigger_controller=trigger_controller
 )
 
-protocol = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pem").exists()) else "ws"
+protocol: str = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pem").exists()) else "ws"
 ws_url: str = f'{protocol}://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
-
-# ws_url: str = f'ws://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
 
 
 @app.websocket("/ws")
@@ -98,7 +95,6 @@ async def websocket_endpoint(websocket: WebSocket):
         connection_manager.disconnect(websocket)
 
     except Exception as e:
-        # Log unexpected disconnections
         logging.warning(f"WebSocket error: {e}")
 
 @app.get("/notification")
@@ -131,29 +127,16 @@ async def get_index(request: Request):
 
     })
 
-@app.get("/stats")
-def stats(request: Request):
-    top_victims_chart: str = client.statistics_top_victims_chart_html()
-    top_killers_chart: str = client.statistics_top_killers_chart_html()
-    game_mode_chart: str = client.statistics_kills_by_game_mode_chart_html()
-    damage_chart: str = client.statistics_damage_type_distribution_chart_html()
 
-    top_victims_table: list[dict] = client.statistics_top_victims_table()
-    top_killers_table: list[dict] = client.statistics_top_killers_table()
-
-    return templates.TemplateResponse("stats.html", {
+@app.get("/statistics")
+def statistics_page(request: Request):
+    return templates.TemplateResponse("statistics.html", {
         "request": request,
-        "title": title,
-        "top_victims_chart": top_victims_chart,
-        "top_killers_chart": top_killers_chart,
-        "game_mode_chart": game_mode_chart,
-        "damage_chart": damage_chart,
-        "top_victims_table": top_victims_table,
-        "top_killers_table": top_killers_table,
+        "title": title
     })
 
-@app.get("/statistics", response_model=StatisticsResult)
-def statistics():
+@app.get("/stats", response_model=StatisticsResult)
+def stats():
     return StatisticsResult(
         top_victims=[TopVictim(**entry) for entry in client.statistics_top_victims()],
         top_victims_table=[TopVictimsTable(**entry) for entry in client.statistics_top_victims_table()],
