@@ -44,6 +44,7 @@ class StatisticsController:
                 "pilot": pilot_name
             }
 
+        print(pilot_name)
         df: pd.DataFrame = self._get_prepared_df()
 
         now = pd.Timestamp.utcnow()
@@ -51,15 +52,20 @@ class StatisticsController:
         current_month = now.month
         month_name = calendar.month_name[current_month]
 
-        monthly_kills = df[
-            (df["killed_by"] == pilot_name) &
-            (df["date"].dt.year == current_year) &
-            (df["date"].dt.month == current_month)
-            ]
+        is_this_month = (df["date"].dt.year == current_year) & (df["date"].dt.month == current_month)
+
+        monthly_kills = df[is_this_month & (df["killed_by"] == pilot_name)]
+        monthly_deaths = df[is_this_month & (df["victim_player_name"] == pilot_name)]
+
+        non_suicide_kills = monthly_kills[monthly_kills["damage"] != "Suicide"]
+        suicide_kills = monthly_kills[monthly_kills["damage"] == "Suicide"]
+        non_suicide_deaths = monthly_deaths[monthly_deaths["damage"] != "Suicide"]
 
         return {
             "month": month_name,
-            "kills": len(monthly_kills),
+            "kills": len(non_suicide_kills),
+            "suicides": len(suicide_kills),
+            "deaths": len(non_suicide_deaths),
             "pilot": pilot_name
         }
 

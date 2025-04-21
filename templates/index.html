@@ -32,10 +32,10 @@
 
         <div class="status-card-content">
             <div class="status-left">
-                <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
-                <div><span id="month"><strong>{{pilot_month_kills.month}} Kills:</strong></span> <span id="pilot-kills">{{pilot_month_kills.kills}}</span></div>
-                <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
-                <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
+              <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+              <div><span id="month"><strong>{{pilot_month_kills.month}} Kills:</strong></span> <span id="pilot-kills">{{pilot_month_kills.kills}}</span><strong> | Deaths: </strong><span id="pilot-deaths">{{pilot_month_kills.deaths}}</span><strong> | Suicides: </strong><span id="pilot-suicides">{{pilot_month_kills.suicides}}</span></div>
+              <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
+              <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
             </div>
 
             <div class="status-right">
@@ -55,55 +55,57 @@
         </div>
     </div>
 
-    <table id="message-table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Player Death</th>
-                <th>Victim Zone</th>
-
-                <th>Killed By</th>
-                <th>Ship Name</th>
-
-                <th>Using</th>
-                <th>Damage</th>
-
-                <th>Game Mode</th>
-                <th>BOT Push</th>
-            </tr>
-        </thead>
-
-        <tbody id="message-container">
-
-            {% for player_event in player_events %}
-
+    <div class="events-table-container">
+        <table id="message-table">
+            <thead>
                 <tr>
-                    <td>{{ player_event.date }}</td>
-                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_player_name }}"> {{ player_event.victim_player_name }}</a> </td>
-                    <td>{{ player_event.victim_zone_name }}</td>
+                    <th>Date</th>
+                    <th>Player Death</th>
+                    <th>Victim Zone</th>
 
-                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killed_by }}"> {{ player_event.killed_by }}</a></td>
-                    <td>{{ player_event.ship_name }}</td>
+                    <th>Killed By</th>
+                    <th>Ship Name</th>
 
-                    <td>{{ player_event.using }}</td>
-                    <td>{{ player_event.damage }}</td>
-                    <td>{{ player_event.game_mode }}</td>
+                    <th>Using</th>
+                    <th>Damage</th>
 
-                    <td>
-                        {% if not player_event.client_enabled %}
-                            <span class="blue-circle" title="{{ player_event.push_result_message }}"></span>
-                        {% else %}
-                            <span class="{{ 'green-circle' if player_event.push_result_is_success else 'red-circle' }}"
-                                  title="{{ player_event.push_result_message }}"></span>
-                        {% endif %}
-                    </td>
+                    <th>Game Mode</th>
+                    <th>BOT Push</th>
                 </tr>
+            </thead>
 
-            {% endfor %}
+            <tbody id="message-container">
 
-        </tbody>
+                {% for player_event in player_events %}
 
-    </table>
+                    <tr>
+                        <td>{{ player_event.date }}</td>
+                        <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_player_name }}"> {{ player_event.victim_player_name }}</a> </td>
+                        <td>{{ player_event.victim_zone_name }}</td>
+
+                        <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killed_by }}"> {{ player_event.killed_by }}</a></td>
+                        <td>{{ player_event.ship_name }}</td>
+
+                        <td>{{ player_event.using }}</td>
+                        <td>{{ player_event.damage }}</td>
+                        <td>{{ player_event.game_mode }}</td>
+
+                        <td>
+                            {% if not player_event.client_enabled %}
+                                <span class="blue-circle" title="{{ player_event.push_result_message }}"></span>
+                            {% else %}
+                                <span class="{{ 'green-circle' if player_event.push_result_is_success else 'red-circle' }}"
+                                      title="{{ player_event.push_result_message }}"></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
 
     <p>Startup Date: {{startup_date}}</p>
     <p>Version: {{version}}</p>

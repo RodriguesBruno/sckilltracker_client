@@ -200,7 +200,8 @@ class SCClient:
 
     def player_events(self, limit: Optional[int] = None) -> list[PlayerEvent]:
         if limit:
-            return self._repo.read()[:limit]
+            res = self._repo.read()[-limit:]
+            return res
         else:
             return self._repo.read()
 
@@ -234,13 +235,16 @@ class SCClient:
             "game_executable_check_frequency": self._game_executable_check_frequency
         }
 
-    def _get_player_event(self, log_entry: str) -> PlayerEvent:
+    def _get_player_event(self, log_entry: str) -> PlayerEvent | None:
         date = get_log_date(log_entry)
         victim_player_name: str = get_victim_player_name(log_entry)
         victim_zone_name: str = get_victim_zone(log_entry)
         killed_by: str = get_killed_by(log_entry)
         using: str = get_using(log_entry)
         damage: str = get_damage(log_entry)
+
+        if killed_by == 'npc' or victim_player_name == 'npc':
+            return None
 
         if self._verbose_logging:
             logging.debug(f"[PLAYER EVENT LOG] {log_entry}")
@@ -467,6 +471,9 @@ class SCClient:
                         if self._player_event_keyword in line
                     ]
 
+                    player_events = list(filter(lambda x: x is not None, player_events))
+
+
                     if player_events:
                         if self._trigger_controller.is_enabled:
                             self._trigger_controller.trigger_hotkey()
@@ -487,12 +494,14 @@ class SCClient:
                         pilot_month_kills: dict = self.statistics_kills_this_month_for_pilot()
 
                         game_notification: GameNotification = GameNotification(
-                                pilot_name=self._pilot_name,
-                                pilot_kills=pilot_month_kills.get('kills'),
-                                month=pilot_month_kills.get('month'),
-                                ship_name=self._ship_name,
-                                game_mode=self._game_mode,
-                            )
+                            pilot_name=self._pilot_name,
+                            month=pilot_month_kills.get('month'),
+                            pilot_kills=pilot_month_kills.get('kills'),
+                            suicides=pilot_month_kills.get('suicides'),
+                            deaths=pilot_month_kills.get('deaths'),
+                            ship_name=self._ship_name,
+                            game_mode=self._game_mode,
+                        )
 
                         await broadcast(game_notification.model_dump())
 
@@ -523,9 +532,6 @@ class SCClient:
 
     def statistics_top_killers_table(self) -> list[dict[str, int]]:
         return self._statistics_controller.get_top_killers_table()
-
-    def statistics_top_killers_chart_html(self) -> str:
-        return self._statistics_controller.top_killers_chart_html()
 
     def statistics_kills_by_game_mode(self) -> list[dict[str, int]]:
         return self._statistics_controller.kills_by_game_mode()

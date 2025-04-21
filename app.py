@@ -103,8 +103,8 @@ async def notification():
 
 @app.get("/")
 async def index_page(request: Request):
-    player_events = reversed(client.player_events(limit=MAX_ENTRIES))
 
+    player_events = reversed(client.player_events())
 
     return templates.TemplateResponse("index.html", {
         "request": request,

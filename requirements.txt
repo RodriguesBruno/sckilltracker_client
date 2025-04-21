@@ -6,6 +6,7 @@ pydantic
 python-multipart
 websockets
 pytest
+pytest-asyncio
 pandas
 pyautogui
 pyinstaller

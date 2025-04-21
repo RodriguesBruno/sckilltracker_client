@@ -101,6 +101,13 @@ class LogFileMonitor:
 
     async def get_new_lines(self) -> list[str]:
         with open(self._logfile_with_path, 'r') as file:
+            total_lines: int = file.tell()
+
+            if self._file_position > total_lines:
+                logging.info(f"[LOGFILE MONITOR] LOGFILE WAS RESET, RESETTING POSITION/LINES")
+                self._file_position = 0
+                self._lines = 0
+
             file.seek(self._file_position)
 
             new_lines: list[str] = file.readlines()
