@@ -59,7 +59,6 @@ def test_get_victim_zone_in_station_return_station_name():
     assert result == expected_result
 
 def test_get_victim_zone_in_ship_return_ship_name():
-
     entry = "<2025-04-02T21:34:55.219Z> [Notice] <Actor Death> CActor::Kill: 'nocxua' [200146293087] in zone 'ANVL_Hornet_F7C_Mk2_2468344906962' killed by 'BluePanda' [202139681949] using 'MRCK_S03_AEGS_Sabre_Firebird_2470687086457' [Class unknown] with damage type 'VehicleDestruction' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
     result = get_victim_zone(entry)
 
