@@ -126,23 +126,6 @@ class StatisticsController:
 
         return top.to_dict(orient='records')
 
-    def kills_by_game_mode_chart_html(self) -> str:
-        if self._df.empty:
-            return ""
-
-        data = self._df['game_mode'].value_counts().reset_index()
-        data.columns = ['game_mode', 'count']
-        fig = px.pie(data, names='game_mode', values='count', title='Kills by Game Mode')
-        fig.update_layout(
-            template=self._chart_template,
-            width=self._chart_width,
-            height=self._chart_height,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
-        )
-        return fig.to_html(full_html=False)
-
     def damage_type_distribution(self) -> list[dict[str, int]]:
         if self._df.empty:
             return []
@@ -151,24 +134,6 @@ class StatisticsController:
         top.rename(columns={'index': 'name'}, inplace=True)
 
         return top.to_dict(orient='records')
-
-    def damage_type_distribution_chart_html(self) -> str:
-        if self._df.empty:
-            return ""
-
-        data = self._df['damage'].value_counts().reset_index()
-        data.columns = ['damage', 'count']
-
-        fig = px.pie(data, names='damage', values='count', title='Damage Type Distribution')
-        fig.update_layout(
-            template=self._chart_template,
-            width=self._chart_width,
-            height=self._chart_height,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white')
-        )
-        return fig.to_html(full_html=False)
 
     def _get_table(self, name: str, filter_by: str, limit: int):
         df: pd.DataFrame = self._get_prepared_df()

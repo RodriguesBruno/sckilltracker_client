@@ -3,7 +3,6 @@ import uvicorn
 import asyncio
 from contextlib import asynccontextmanager
 import logging
-
 from pathlib import Path
 from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status
 from fastapi.templating import Jinja2Templates
@@ -103,8 +102,7 @@ async def notification():
 
 
 @app.get("/")
-async def get_index(request: Request):
-
+async def index_page(request: Request):
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,
@@ -126,7 +124,6 @@ async def get_index(request: Request):
         "ws_url": ws_url,
 
     })
-
 
 @app.get("/statistics")
 def statistics_page(request: Request):

@@ -533,14 +533,8 @@ class SCClient:
     def statistics_kills_by_game_mode(self) -> list[dict[str, int]]:
         return self._statistics_controller.kills_by_game_mode()
 
-    def statistics_kills_by_game_mode_chart_html(self) -> str:
-        return self._statistics_controller.kills_by_game_mode_chart_html()
-
     def statistics_damage_type_distribution(self) -> list[dict[str, int]]:
         return self._statistics_controller.damage_type_distribution()
-
-    def statistics_damage_type_distribution_chart_html(self) -> str:
-        return self._statistics_controller.damage_type_distribution_chart_html()
 
     async def text_notification(self, broadcast: Callable) -> None:
         pilot_month_kills: dict = self.statistics_kills_this_month_for_pilot()
