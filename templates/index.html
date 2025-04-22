@@ -119,6 +119,8 @@
         const pilotName = document.getElementById("pilot-name");
         const monthStrong = document.querySelector("#month strong");
         const pilotKills = document.getElementById("pilot-kills");
+        const pilotDeaths = document.getElementById("pilot-deaths");
+        const pilotSuicides = document.getElementById("pilot-suicides");
 
         const shipName = document.getElementById("ship-name");
         const gameMode = document.getElementById("game-mode");
@@ -145,6 +147,8 @@
                 pilotName.textContent = message.pilot_name
                 monthStrong.textContent = `${message.month} Kills:`
                 pilotKills.textContent = message.pilot_kills
+                pilotDeaths.textContent = message.pilot_deaths
+                pilotSuicides.textContent = message.pilot_suicides
                 shipName.textContent = message.ship_name
                 gameMode.textContent = message.game_mode
             }

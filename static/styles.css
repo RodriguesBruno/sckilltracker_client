@@ -408,7 +408,7 @@ input:checked + .slider:before {
 }
 
 .events-table-container {
-  max-height: 500px;       /* adjust as you like */
+  height: 600px;       /* adjust as you like */
   overflow-y: auto;
   margin-bottom: 1rem;
 }
@@ -416,6 +416,5 @@ input:checked + .slider:before {
 .events-table-container thead th {
   position: sticky;
   top: 0;
-  background: #dfe3e6;
-  z-index: 1;
+  background: #323336;
 }

@@ -8,12 +8,6 @@ import pandas as pd
 
 class StatisticsController:
     def __init__(self) -> None:
-        self._chart_template: str = 'plotly_dark'
-        self._chart_width: int = 700
-        self._chart_height: int = 350
-
-        self._rsi_url: str = "https://robertsspaceindustries.com/en/citizens"
-
         self._df: Optional[pd.DataFrame] = None
 
     def _get_prepared_df(self) -> pd.DataFrame:
@@ -44,7 +38,6 @@ class StatisticsController:
                 "pilot": pilot_name
             }
 
-        print(pilot_name)
         df: pd.DataFrame = self._get_prepared_df()
 
         now = pd.Timestamp.utcnow()
@@ -62,11 +55,11 @@ class StatisticsController:
         non_suicide_deaths = monthly_deaths[monthly_deaths["damage"] != "Suicide"]
 
         return {
+            "pilot": pilot_name,
             "month": month_name,
             "kills": len(non_suicide_kills),
-            "suicides": len(suicide_kills),
             "deaths": len(non_suicide_deaths),
-            "pilot": pilot_name
+            "suicides": len(suicide_kills)
         }
 
     def top_killers(self, limit: int = 5) -> list[dict[str, int]]:

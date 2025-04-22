@@ -129,8 +129,10 @@ class SCClient:
 
                 game_notification: GameNotification = GameNotification(
                     pilot_name=self._pilot_name,
-                    pilot_kills=pilot_month_kills.get('kills'),
                     month=pilot_month_kills.get('month'),
+                    pilot_kills=pilot_month_kills.get('kills'),
+                    pilot_deaths=pilot_month_kills.get('deaths'),
+                    pilot_suicides=pilot_month_kills.get('suicides'),
                     ship_name=self._ship_name,
                     game_mode=self._game_mode,
                 )
@@ -429,7 +431,10 @@ class SCClient:
 
                 if self._logfile_monitor.log_is_validated and self._game_is_running:
                     if self._verbose_logging:
-                        logging.debug(f"[CLIENT - CHECKING FOR NEW EVENTS] Lines: {self._logfile_monitor.lines}")
+                        logging.debug(f"[CLIENT - CHECKING FOR NEW EVENTS]")
+
+                    if await self._logfile_monitor.has_rolled_over():
+                        await self.validate_logfile()
 
                     new_lines: list[str] = await self._logfile_monitor.get_new_lines()
 
@@ -473,7 +478,6 @@ class SCClient:
 
                     player_events = list(filter(lambda x: x is not None, player_events))
 
-
                     if player_events:
                         if self._trigger_controller.is_enabled:
                             self._trigger_controller.trigger_hotkey()
@@ -497,8 +501,9 @@ class SCClient:
                             pilot_name=self._pilot_name,
                             month=pilot_month_kills.get('month'),
                             pilot_kills=pilot_month_kills.get('kills'),
-                            suicides=pilot_month_kills.get('suicides'),
-                            deaths=pilot_month_kills.get('deaths'),
+                            pilot_deaths=pilot_month_kills.get('deaths'),
+                            pilot_suicides=pilot_month_kills.get('suicides'),
+
                             ship_name=self._ship_name,
                             game_mode=self._game_mode,
                         )
