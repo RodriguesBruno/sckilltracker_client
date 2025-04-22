@@ -22,8 +22,11 @@ class PlayerEvent(BaseModel):
 
 class GameNotification(BaseModel):
     pilot_name: str
-    pilot_kills: int
     month: str
+    pilot_kills: int
+    pilot_deaths: int
+    pilot_suicides: int
+
     ship_name: str
     game_mode: str
 
@@ -70,6 +73,8 @@ class DamageTypeDistribution(BaseModel):
 class PilotMonthKills(BaseModel):
     month: str
     kills: int
+    suicides: int
+    deaths: int
     pilot: str
 
 

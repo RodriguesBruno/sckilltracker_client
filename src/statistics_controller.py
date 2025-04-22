@@ -8,12 +8,6 @@ import pandas as pd
 
 class StatisticsController:
     def __init__(self) -> None:
-        self._chart_template: str = 'plotly_dark'
-        self._chart_width: int = 700
-        self._chart_height: int = 350
-
-        self._rsi_url: str = "https://robertsspaceindustries.com/en/citizens"
-
         self._df: Optional[pd.DataFrame] = None
 
     def _get_prepared_df(self) -> pd.DataFrame:
@@ -51,16 +45,21 @@ class StatisticsController:
         current_month = now.month
         month_name = calendar.month_name[current_month]
 
-        monthly_kills = df[
-            (df["killed_by"] == pilot_name) &
-            (df["date"].dt.year == current_year) &
-            (df["date"].dt.month == current_month)
-            ]
+        is_this_month = (df["date"].dt.year == current_year) & (df["date"].dt.month == current_month)
+
+        monthly_kills = df[is_this_month & (df["killed_by"] == pilot_name)]
+        monthly_deaths = df[is_this_month & (df["victim_player_name"] == pilot_name)]
+
+        non_suicide_kills = monthly_kills[monthly_kills["damage"] != "Suicide"]
+        suicide_kills = monthly_kills[monthly_kills["damage"] == "Suicide"]
+        non_suicide_deaths = monthly_deaths[monthly_deaths["damage"] != "Suicide"]
 
         return {
+            "pilot": pilot_name,
             "month": month_name,
-            "kills": len(monthly_kills),
-            "pilot": pilot_name
+            "kills": len(non_suicide_kills),
+            "deaths": len(non_suicide_deaths),
+            "suicides": len(suicide_kills)
         }
 
     def top_killers(self, limit: int = 5) -> list[dict[str, int]]:

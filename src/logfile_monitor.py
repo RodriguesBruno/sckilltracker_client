@@ -99,6 +99,17 @@ class LogFileMonitor:
         finally:
             return last_pilot_name_event_line, last_ship_name_event_line, last_game_mode_event_line
 
+    async def has_rolled_over(self) -> bool:
+        with open(self._logfile_with_path, 'r') as file:
+            file.readlines()
+            total_lines: int = file.tell()
+
+            if self._file_position > total_lines:
+                logging.debug(f"[LOGFILE MONITOR] LOGFILE HAS ROLLED OVER")
+                return True
+
+            return False
+
     async def get_new_lines(self) -> list[str]:
         with open(self._logfile_with_path, 'r') as file:
             file.seek(self._file_position)

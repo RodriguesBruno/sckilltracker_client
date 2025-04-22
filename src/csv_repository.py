@@ -67,6 +67,7 @@ class CSVRepository(Repository):
                         parsed_row[key] = value
 
                 result.append(parsed_row)
+
             return result
 
     def update(self):

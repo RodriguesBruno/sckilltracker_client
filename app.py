@@ -23,7 +23,13 @@ from src.models.models import (
     TopKillersTable,
     KillsGameMode,
     DamageTypeDistribution,
-    PilotMonthKills, Game, DB, ClientStatus, TriggerControllerStatus, LoggingStatus, ClientEnabledStatus
+    PilotMonthKills,
+    Game,
+    DB,
+    ClientStatus,
+    TriggerControllerStatus,
+    LoggingStatus,
+    ClientEnabledStatus
 )
 from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
@@ -103,8 +109,8 @@ async def notification():
 
 @app.get("/")
 async def index_page(request: Request):
-    player_events = reversed(client.player_events(limit=MAX_ENTRIES))
 
+    player_events = reversed(client.player_events())
 
     return templates.TemplateResponse("index.html", {
         "request": request,

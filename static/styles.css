@@ -174,7 +174,6 @@ a.button3 {
   font-weight: bold;
   font-size: large;
   color: #212121;
-  background-color: #4eb5f1;
   text-align: center;
   transition: all 0.2s;
 }
@@ -300,8 +299,7 @@ input:checked + .slider:before {
   margin: 20px auto;
   border-radius: 16px;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.05);
-  width: 80%;
-  max-width: 600px;
+  max-width: 30%;
   border: 1px solid #333;
 }
 
@@ -407,4 +405,16 @@ input:checked + .slider:before {
 
 .stats-table th {
   background-color: #222;
+}
+
+.events-table-container {
+  height: 600px;       /* adjust as you like */
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+/* Optional: lock header in place */
+.events-table-container thead th {
+  position: sticky;
+  top: 0;
+  background: #323336;
 }
