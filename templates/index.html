@@ -45,8 +45,14 @@
                     </span>
                 </div>
                 <div><strong>LogFile Scanner:</strong>
-                    <span id="status-indicator" class="{{ 'green-circle' if logfile_date else 'red-circle' }}"
+                    <span id="status-indicator"
+                          class="{{ 'green-circle' if logfile_date else 'red-circle' }}"
                           title="Reading every {{logfile_frequency}}s, last: {{logfile_date}}">
+                    </span>
+                </div>
+                <div><strong>Recordings Qty:</strong>
+                    <span id="recordings-qty" title="{{latest_recordings[0] if latest_recordings else 'No recordings found'}}">
+                        {{recordings_qty}}
                     </span>
                 </div>
             </div>
@@ -115,6 +121,7 @@
         const messageContainer = document.getElementById("message-container");
         const gameIndicator = document.getElementById("game-indicator");
         const statusIndicator = document.getElementById("status-indicator");
+        const recordingsQuantity = document.getElementById("recordings-qty");
 
         const pilotName = document.getElementById("pilot-name");
         const monthStrong = document.querySelector("#month strong");
@@ -165,6 +172,12 @@
                     gameIndicator.classList.remove("green-circle");
                     gameIndicator.classList.add("red-circle");
                 }
+            }
+
+            // [RECORDINGS]
+            if (message.hasOwnProperty('recordings_qty')) {
+                recordingsQuantity.textContent = message.recordings_qty;
+                recordingsQuantity.title = message.latest_recording;
             }
 
             // [LOGFILE SCANNER]

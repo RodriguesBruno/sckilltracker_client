@@ -22,7 +22,7 @@
         <label for="frequency">Log File Scan Frequency(s)</label>
         <input type="text" id="frequency" name="frequency" value="{{ config['log_monitor']['frequency'] }}" required><br>
 
-        <h3 class="withMargin">Recording Trigger</h3>
+        <h3 class="withMargin">Replay Recording</h3>
 
         <label for="gpu_vendor">Overlay</label>
         <select id="gpu_vendor" name="gpu_vendor">
@@ -40,6 +40,9 @@
                    placeholder="e.g. alt+k" required><br>
 
         </div>
+
+        <label for="video_folder_path">Video Folder Path</label>
+        <input type="text" id="video_folder_path" name="video_folder_path" value="{{ config['recordings_controller']['path'] }}" size="55"><br>
 
     </div>
     <input type="submit" value="Submit"><br>

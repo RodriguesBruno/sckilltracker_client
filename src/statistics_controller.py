@@ -24,7 +24,11 @@ class StatisticsController:
         if self._df.empty:
             return []
 
-        top = self._df['victim_player_name'].value_counts().head(limit).to_frame(name='count').reset_index()
+        df: pd.DataFrame = self._df.copy()
+
+        filtered_df = df[df['damage'] != 'Suicide']
+
+        top = filtered_df['victim_player_name'].value_counts().head(limit).to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
         
         return top.to_dict(orient='records')
@@ -66,7 +70,11 @@ class StatisticsController:
         if self._df.empty:
             return []
 
-        top = self._df['killed_by'].value_counts().head(limit).to_frame(name='count').reset_index()
+        df: pd.DataFrame = self._df.copy()
+
+        filtered_df = df[df['damage'] != 'Suicide']
+
+        top = filtered_df['killed_by'].value_counts().head(limit).to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
 
         return top.to_dict(orient='records')

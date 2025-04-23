@@ -1,5 +1,4 @@
 import logging
-
 import pyautogui
 
 class TriggerController:
@@ -46,7 +45,9 @@ class TriggerController:
             if vendor.get('name') == self._selected_vendor:
                 return vendor.get('hotkey')
 
-    def trigger_hotkey(self) -> None:
+
+
+    async def trigger_hotkey(self) -> None:
         if self._enabled:
             hotkey: str = self.get_hotkey()
             if '+' in hotkey:

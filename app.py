@@ -31,6 +31,7 @@ from src.models.models import (
     LoggingStatus,
     ClientEnabledStatus
 )
+from src.recordings_controller import RecordingsController
 from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
 from src.repository import Repository, RepositoryType
@@ -56,9 +57,11 @@ static_dir = resource_path("static")
 templates_dir = resource_path("templates")
 
 title: str = config.get('title')
+recordings_path: Path = Path(config.get('recordings_controller').get('path'))
 
 app: FastAPI = FastAPI(title=f"{title} API", openapi_url="/openapi.json", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/videos/static", StaticFiles(directory=recordings_path), name="video_static")
 templates = Jinja2Templates(directory=templates_dir)
 
 connection_manager: ConnectionManager = ConnectionManager()
@@ -73,16 +76,18 @@ repo: Repository = RepositoryFactory().get_repo(
     else RepositoryType.CSV
 )
 
-statistics_statistics: StatisticsController = StatisticsController()
+statistics_controller: StatisticsController = StatisticsController()
 
 trigger_controller: TriggerController = TriggerController(config=config.get('trigger_controller'))
+recordings_controller: RecordingsController = RecordingsController(path=recordings_path)
 
 client: SCClient = SCClient(
     config=config.get('client'),
     logfile_monitor=logfile_monitor,
     repo=repo,
-    statistics_controller=statistics_statistics,
-    trigger_controller=trigger_controller
+    statistics_controller=statistics_controller,
+    trigger_controller=trigger_controller,
+    recordings_controller=recordings_controller
 )
 
 protocol: str = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pem").exists()) else "ws"
@@ -130,6 +135,8 @@ async def index_page(request: Request):
         "trigger_controller_enabled": trigger_controller.is_enabled,
         "verbose_logging": client.is_verbose_logging,
         "pilot_month_kills": client.statistics_kills_this_month_for_pilot(),
+        "recordings_qty": await client.recordings_video_files_quantity(),
+        "latest_recordings": await client.recordings_latest_videos(qty=1),
         "ws_url": ws_url,
 
     })
@@ -215,6 +222,36 @@ async def disable_trigger_controller():
         selected_vendor=trigger_controller.selected_vendor
     )
 
+
+@app.get("/recordings/trigger")
+async def recordings_trigger():
+    await client.recordings_trigger(broadcast=connection_manager.broadcast)
+
+    return 'ok'
+
+@app.get("/recordings")
+async def recordings_page(request: Request):
+    return templates.TemplateResponse("recordings.html", {
+        "request": request,
+        "title": title,
+        "video_files": await client.recordings_video_files()
+    })
+
+@app.post("/recordings_controller/rename_video")
+async def rename_video(old_name: str = Form(...), new_name: str = Form(...)):
+    if not '.mp4' in new_name:
+        new_name = f"{new_name}.mp4"
+
+    await client.recordings_rename_video(old_name=old_name, new_name=new_name)
+
+    return RedirectResponse(url="/recordings", status_code=303)
+
+@app.post("/recordings_controller/delete_video")
+async def delete_video(filename: str = Form(...)):
+    await client.recordings_delete_video(filename=filename)
+
+    return RedirectResponse(url="/recordings", status_code=303)
+
 @app.get("/verbose_logging/enable", response_model=LoggingStatus)
 async def enable_verbose_logging():
     if not client.is_verbose_logging:
@@ -227,7 +264,6 @@ async def enable_verbose_logging():
         is_verbose=client.is_verbose_logging
     )
 
-
 @app.get("/verbose_logging/disable", response_model=LoggingStatus)
 async def disable_verbose_logging():
     if client.is_verbose_logging:
@@ -239,7 +275,6 @@ async def disable_verbose_logging():
     return LoggingStatus(
         is_verbose=client.is_verbose_logging
     )
-
 
 @app.get("/settings")
 async def settings_page(request: Request):
@@ -258,7 +293,8 @@ async def set_settings(
         logfile: str = Form(...),
         frequency: str = Form(...),
         gpu_vendor: str = Form(...),
-        hotkey_combo: str = Form(None)
+        hotkey_combo: str = Form(None),
+        video_folder_path: str = Form(...)
     ):
 
     try:
@@ -290,7 +326,9 @@ async def set_settings(
                         "frequency": frequency,
                     },
                     "trigger_controller": trigger_controller.get_config(),
-                    "version": config.get('version'),
+                    "recordings_controller": {
+                        "path": recordings_controller.path
+                    }
                 },
                 "errors": e.errors(),
             },
@@ -305,14 +343,23 @@ async def set_settings(
 
         await client.validate_logfile()
 
+
     logfile_monitor.frequency = int(form_data.frequency)
 
     trigger_controller.set_overlay(gpu_vendor=gpu_vendor, hotkey=hotkey_combo)
+
+    if not len(video_folder_path):
+        video_folder_path = "."
+
+    recordings_controller.path = Path(video_folder_path)
+
+    print(recordings_controller.path)
 
     config['local_api']['port'] = int(form_data.local_api_port)
     config['client'] = client.get_config()
     config['log_monitor'] = logfile_monitor.get_config()
     config['trigger_controller'] = trigger_controller.get_config()
+    config['recordings_controller'] = recordings_controller.get_config()
 
     write_config(config_file=config_file, data=config)
 

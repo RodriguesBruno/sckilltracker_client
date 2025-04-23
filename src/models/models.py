@@ -40,6 +40,10 @@ class GameExecutableNotification(BaseModel):
     game_is_running: bool
     msg: str
 
+class RecordingNotification(BaseModel):
+    recordings_qty: int
+    latest_recording: str
+
 class TopVictim(BaseModel):
     victim_player_name: str
     count: int
@@ -76,7 +80,6 @@ class PilotMonthKills(BaseModel):
     suicides: int
     deaths: int
     pilot: str
-
 
 class StatisticsData(BaseModel):
     top_victims: list[TopVictim]

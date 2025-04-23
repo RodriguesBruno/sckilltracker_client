@@ -17,8 +17,8 @@
         "frequency": 5
     },
     "trigger_controller": {
-        "enabled": false,
-        "selected_vendor": "nvidia",
+        "enabled": true,
+        "selected_vendor": "amd",
         "vendors": [
             {
                 "name": "nvidia",
@@ -26,13 +26,16 @@
             },
             {
                 "name": "amd",
-                "hotkey": "alt+r"
+                "hotkey": "ctrl+shift+s"
             },
             {
                 "name": "other",
                 "hotkey": ""
             }
         ]
+    },
+    "recordings_controller": {
+        "path": "C:\\Users\\rodri\\Videos\\Radeon ReLive\\unknown"
     },
     "db": {
         "type": "csv"
