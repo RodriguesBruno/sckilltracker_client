@@ -24,7 +24,11 @@ class StatisticsController:
         if self._df.empty:
             return []
 
-        top = self._df['victim_player_name'].value_counts().head(limit).to_frame(name='count').reset_index()
+        df: pd.DataFrame = self._df.copy()
+
+        filtered_df = df[df['damage'] != 'Suicide']
+
+        top = filtered_df['victim_player_name'].value_counts().head(limit).to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
         
         return top.to_dict(orient='records')
@@ -35,7 +39,10 @@ class StatisticsController:
             return {
                 "month": datetime.now().strftime("%B"),
                 "kills": 0,
-                "pilot": pilot_name
+                "pilot": pilot_name,
+                "deaths": 0,
+                "suicides": 0,
+                "kdr": 0
             }
 
         df: pd.DataFrame = self._get_prepared_df()
@@ -54,19 +61,30 @@ class StatisticsController:
         suicide_kills = monthly_kills[monthly_kills["damage"] == "Suicide"]
         non_suicide_deaths = monthly_deaths[monthly_deaths["damage"] != "Suicide"]
 
+        try:
+            kdr = round(len(non_suicide_kills) / len(non_suicide_deaths), 2)
+
+        except ZeroDivisionError:
+            kdr = 0
+
         return {
             "pilot": pilot_name,
             "month": month_name,
             "kills": len(non_suicide_kills),
             "deaths": len(non_suicide_deaths),
-            "suicides": len(suicide_kills)
+            "suicides": len(suicide_kills),
+            "kdr": kdr
         }
 
     def top_killers(self, limit: int = 5) -> list[dict[str, int]]:
         if self._df.empty:
             return []
 
-        top = self._df['killed_by'].value_counts().head(limit).to_frame(name='count').reset_index()
+        df: pd.DataFrame = self._df.copy()
+
+        filtered_df = df[df['damage'] != 'Suicide']
+
+        top = filtered_df['killed_by'].value_counts().head(limit).to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
 
         return top.to_dict(orient='records')

@@ -21,4 +21,6 @@ def test_find_event_line_with_game_mode_returns_something():
 
     result = find_event_line(lines=lines, keywords=keywords)
 
-    print(result)
+    expect_result = '<2025-04-18T11:27:07.908Z> Loading screen for pu : SC_Frontend closed after 30.00 seconds'
+
+    assert result == expect_result

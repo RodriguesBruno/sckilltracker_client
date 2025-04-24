@@ -11,7 +11,7 @@ def config():
         "selected_vendor": "nvidia",
         "vendors": [
             {"name": "nvidia", "hotkey": "alt+f10"},
-            {"name": "amd", "hotkey": "alt+r"},
+            {"name": "amd", "hotkey": "ctrl+shift+s"},
             {"name": "other", "hotkey": ""}
         ]
     }
@@ -53,26 +53,29 @@ def test_set_overlay_other_without_hotkey(config):
 
 def test_get_hotkey_returns_correct_value(config):
     rt = TriggerController(config)
+
     assert rt.get_hotkey() == "alt+f10"
 
+@pytest.mark.asyncio
 @patch("pyautogui.hotkey")
-def test_trigger_hotkey_combination(mock_hotkey, config):
+async def test_trigger_hotkey_combination(mock_hotkey, config):
     config['enabled'] = True
     config['selected_vendor'] = 'amd'
 
     rt = TriggerController(config)
-    rt.trigger_hotkey()
+    await rt.trigger_hotkey()
 
-    mock_hotkey.assert_called_once_with('alt', 'r')
+    mock_hotkey.assert_called_once_with('ctrl', 'shift', 's')
 
+@pytest.mark.asyncio
 @patch("pyautogui.hotkey")
-def test_trigger_hotkey_single_key(mock_hotkey, config):
+async def test_trigger_hotkey_single_key(mock_hotkey, config):
     config['enabled'] = True
     config['selected_vendor'] = 'other'
     config['vendors'][2]['hotkey'] = 'f12'
 
     rt = TriggerController(config)
-    rt.trigger_hotkey()
+    await rt.trigger_hotkey()
 
     mock_hotkey.assert_called_once_with('f12')
 

@@ -104,6 +104,9 @@ def get_game_mode(line: str) -> str:
         if game_mode == 'SC_Frontend':
             return 'PU'
 
+        if game_mode == 'FPSGunGame':
+            return 'Gun Rush'
+
         return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
 
 

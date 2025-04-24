@@ -2,56 +2,99 @@
 
 {% block content %}
 
-    <div class="status-card">
-
-        <div class="slide_btn" >
-        <span>Bot Push Enabled</span>
-            <label class="switch">
-                <input type="checkbox" id="botToggle" {% if client_enabled %} checked {% endif %}>
-                <span class="slider round" title="Push Notifications to BOT or not"></span>
-            </label>
-        </div>
-
-        <div class="slide_btn" >
-        <span>Recording Enabled</span>
-            <label class="switch">
-                <input type="checkbox" id="recordTriggerToggle" {% if trigger_controller_enabled %} checked {% endif %}>
-                <span class="slider round" title="Trigger Replay Recording Hotkey or not"></span>
-            </label>
-        </div>
-
-        <div class="slide_btn" >
-        <span>Verbose Logging</span>
-            <label class="switch">
-                <input type="checkbox" id="verboseLoggingToggle" {% if verbose_logging %} checked {% endif %}>
-                <span class="slider round" title="Enable Verbose Logging"></span>
-            </label>
-        </div>
-
-        <hr class="section-divider">
-
-        <div class="status-card-content">
-            <div class="status-left">
-              <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
-              <div><span id="month"><strong>{{pilot_month_kills.month}} Kills:</strong></span> <span id="pilot-kills">{{pilot_month_kills.kills}}</span><strong> | Deaths: </strong><span id="pilot-deaths">{{pilot_month_kills.deaths}}</span><strong> | Suicides: </strong><span id="pilot-suicides">{{pilot_month_kills.suicides}}</span></div>
-              <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
-              <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
+    <div style="display: inline-flex; justify-content: center; align-items: flex-start; gap: 20px;">
+        <div class="status-card">
+            <div class="slide_btn">
+                <span>Bot Push</span>
+                <label class="switch">
+                    <input type="checkbox" id="botToggle" {% if client_enabled %} checked {% endif %}>
+                    <span class="slider round" title="Push Notifications to BOT or not"></span>
+                </label>
             </div>
 
-            <div class="status-right">
-                <div><strong>Game Running:</strong>
-                    <span id="game-indicator" class="{{ 'green-circle' if game_is_running else 'red-circle' }}"
-                          title="Last checked: {{game_is_running_last_checked}}">
-                    </span>
-                </div>
-                <div><strong>LogFile Scanner:</strong>
-                    <span id="status-indicator" class="{{ 'green-circle' if logfile_date else 'red-circle' }}"
-                          title="Reading every {{logfile_frequency}}s, last: {{logfile_date}}">
-                    </span>
-                </div>
+            <div class="slide_btn">
+                <span>Video Recording</span>
+                <label class="switch">
+                    <input type="checkbox" id="recordTriggerToggle" {% if trigger_controller_enabled %} checked {% endif %}>
+                    <span class="slider round" title="Trigger Replay Recording Hotkey or not"></span>
+                </label>
             </div>
 
+            <div class="slide_btn">
+                <span>Verbose Logging</span>
+                <label class="switch">
+                    <input type="checkbox" id="verboseLoggingToggle" {% if verbose_logging %} checked {% endif %}>
+                    <span class="slider round" title="Enable Verbose Logging"></span>
+                </label>
+            </div>
 
+            <hr class="section-divider">
+
+            <div class="status-card-content">
+                <div class="status-left">
+                    <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+                    <div>
+                        <span id="month">
+                            <strong>{{pilot_month_kills.month}} Kills:</strong>
+                        </span><span id="pilot-kills">{{pilot_month_kills.kills}}</span>
+                        <strong>| Deaths: </strong><span id="pilot-deaths">{{pilot_month_kills.deaths}}</span>
+                        <strong>| Suicides: </strong><span id="pilot-suicides">{{pilot_month_kills.suicides}}</span>
+                        <strong>| KDR: </strong><span id="pilot-kdr">{{pilot_month_kills.kdr}}</span>
+                    </div>
+                    <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
+                    <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
+                </div>
+
+                <div class="status-right">
+                    <div><strong>Game Running:</strong>
+                        <span id="game-indicator" class="{{ 'green-circle' if game_is_running else 'red-circle' }}"
+                              title="Last checked: {{game_is_running_last_checked}}">
+                        </span>
+                    </div>
+                    <div><strong>LogFile Scanner:</strong>
+                        <span id="status-indicator"
+                              class="{{ 'green-circle' if logfile_date else 'red-circle' }}"
+                              title="Reading every {{logfile_frequency}}s, last: {{logfile_date}}">
+                        </span>
+                    </div>
+                    <div><strong>Video Recordings:</strong>
+                        <span id="recordings-qty" title="{{latest_recordings[0] if latest_recordings else 'No recordings found'}}">
+                            {{recordings_qty}}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="recording-control-panel"
+             style="display: {% if trigger_controller_enabled %}inline-flex{% else %}none{% endif %};
+                    flex-direction: column;
+                    margin: 20px auto;
+                    background-color: #1c1c1c;
+                    padding: 20px;
+                    border-radius: 10px;
+                    color: #f0f0f0;
+                    border: 1px solid #333;
+                    min-width: 50%;
+                    box-shadow: 0 0 15px rgba(0,0,0,0.2);"
+        >
+
+            <div style="margin-bottom: 10px;"><strong>Video Recording Options:</strong></div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;">
+                <div class="slide_btn"><span>Suicide Death</span><label class="switch"><input type="checkbox" id="recordings-suicide-toggle" {% if recording_controller.record_suicide %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Own Death</span><label class="switch"><input type="checkbox" id="recordings-own-death-toggle" {% if recording_controller.record_own_death %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>PU</span><label class="switch"><input type="checkbox" id="recordings-pu-toggle" {% if recording_controller.record_pu %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Gun Rush</span><label class="switch"><input type="checkbox" id="recordings-gun-rush-toggle" {% if recording_controller.record_gun_rush %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Squadron Battle</span><label class="switch"><input type="checkbox" id="recordings-squadron-battle-toggle" {% if recording_controller.record_squadron_battle %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Arena Commander</span><label class="switch"><input type="checkbox" id="recordings-arena-commander-toggle" {% if recording_controller.record_arena_commander %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Classic Race</span><label class="switch"><input type="checkbox" id="recordings-classic-race-toggle" {% if recording_controller.record_classic_race %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Battle Royale</span><label class="switch"><input type="checkbox" id="recordings-battle-royale-toggle" {% if recording_controller.record_battle_royale %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Free Flight</span><label class="switch"><input type="checkbox" id="recordings-free-flight-toggle" {% if recording_controller.record_free_flight %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Pirate Swarm</span><label class="switch"><input type="checkbox" id="recordings-pirate-swarm-toggle" {% if recording_controller.record_pirate_swarm %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Vanduul Swarm</span><label class="switch"><input type="checkbox" id="recordings-vanduul-swarm-toggle" {% if recording_controller.record_vanduul_swarm %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Other Modes</span><label class="switch"><input type="checkbox" id="recordings-other-toggle" {% if recording_controller.record_other %} checked {% endif %}><span class="slider round"></span></label></div>
+            </div>
         </div>
     </div>
 
@@ -62,48 +105,36 @@
                     <th>Date</th>
                     <th>Player Death</th>
                     <th>Victim Zone</th>
-
                     <th>Killed By</th>
                     <th>Ship Name</th>
-
                     <th>Using</th>
                     <th>Damage</th>
-
                     <th>Game Mode</th>
                     <th>BOT Push</th>
                 </tr>
             </thead>
-
             <tbody id="message-container">
-
                 {% for player_event in player_events %}
-
-                    <tr>
-                        <td>{{ player_event.date }}</td>
-                        <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_player_name }}"> {{ player_event.victim_player_name }}</a> </td>
-                        <td>{{ player_event.victim_zone_name }}</td>
-
-                        <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killed_by }}"> {{ player_event.killed_by }}</a></td>
-                        <td>{{ player_event.ship_name }}</td>
-
-                        <td>{{ player_event.using }}</td>
-                        <td>{{ player_event.damage }}</td>
-                        <td>{{ player_event.game_mode }}</td>
-
-                        <td>
-                            {% if not player_event.client_enabled %}
-                                <span class="blue-circle" title="{{ player_event.push_result_message }}"></span>
-                            {% else %}
-                                <span class="{{ 'green-circle' if player_event.push_result_is_success else 'red-circle' }}"
-                                      title="{{ player_event.push_result_message }}"></span>
-                            {% endif %}
-                        </td>
-                    </tr>
-
+                <tr>
+                    <td>{{ player_event.date }}</td>
+                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_player_name }}"> {{ player_event.victim_player_name }}</a> </td>
+                    <td>{{ player_event.victim_zone_name }}</td>
+                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killed_by }}"> {{ player_event.killed_by }}</a></td>
+                    <td>{{ player_event.ship_name }}</td>
+                    <td>{{ player_event.using }}</td>
+                    <td>{{ player_event.damage }}</td>
+                    <td>{{ player_event.game_mode }}</td>
+                    <td>
+                        {% if not player_event.client_enabled %}
+                            <span class="blue-circle" title="{{ player_event.push_result_message }}"></span>
+                        {% else %}
+                            <span class="{{ 'green-circle' if player_event.push_result_is_success else 'red-circle' }}"
+                                  title="{{ player_event.push_result_message }}"></span>
+                        {% endif %}
+                    </td>
+                </tr>
                 {% endfor %}
-
             </tbody>
-
         </table>
     </div>
 
@@ -115,12 +146,14 @@
         const messageContainer = document.getElementById("message-container");
         const gameIndicator = document.getElementById("game-indicator");
         const statusIndicator = document.getElementById("status-indicator");
+        const recordingsQuantity = document.getElementById("recordings-qty");
 
         const pilotName = document.getElementById("pilot-name");
         const monthStrong = document.querySelector("#month strong");
         const pilotKills = document.getElementById("pilot-kills");
         const pilotDeaths = document.getElementById("pilot-deaths");
         const pilotSuicides = document.getElementById("pilot-suicides");
+        const pilotKdr = document.getElementById("pilot-kdr");
 
         const shipName = document.getElementById("ship-name");
         const gameMode = document.getElementById("game-mode");
@@ -149,6 +182,7 @@
                 pilotKills.textContent = message.pilot_kills
                 pilotDeaths.textContent = message.pilot_deaths
                 pilotSuicides.textContent = message.pilot_suicides
+                pilotKdr.textContent = message.pilot_kdr
                 shipName.textContent = message.ship_name
                 gameMode.textContent = message.game_mode
             }
@@ -165,6 +199,12 @@
                     gameIndicator.classList.remove("green-circle");
                     gameIndicator.classList.add("red-circle");
                 }
+            }
+
+            // [RECORDINGS]
+            if (message.hasOwnProperty('recordings_qty')) {
+                recordingsQuantity.textContent = message.recordings_qty;
+                recordingsQuantity.title = message.latest_recording;
             }
 
             // [LOGFILE SCANNER]
@@ -292,10 +332,83 @@
     });
 
     document.getElementById('verboseLoggingToggle').addEventListener('change', function() {
-    const endpoint = this.checked ? '/verbose_logging/enable' : '/verbose_logging/disable';
-    fetchData(endpoint)
+        const endpoint = this.checked ? '/verbose_logging/enable' : '/verbose_logging/disable';
+        fetchData(endpoint)
     });
 
+    document.getElementById('recordings-suicide-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/suicide/enable' : '/recordings_controller/suicide/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-own-death-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/own_death/enable' : '/recordings_controller/own_death/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-pu-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/pu/enable' : '/recordings_controller/pu/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-gun-rush-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/gun_rush/enable' : '/recordings_controller/gun_rush/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-squadron-battle-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/squadron_battle/enable' : '/recordings_controller/squadron_battle/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-squadron-battle-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/squadron_battle/enable' : '/recordings_controller/squadron_battle/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-arena-commander-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/arena_commander/enable' : '/recordings_controller/arena_commander/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('recordings-classic-race-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/classic_race/enable' : '/recordings_controller/classic_race/disable';
+        fetchData(endpoint)
+    });
+    document.getElementById('recordings-battle-royale-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/battle_royale/enable' : '/recordings_controller/battle_royale/disable';
+        fetchData(endpoint)
+    });
+    document.getElementById('recordings-free-flight-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/free_flight/enable' : '/recordings_controller/free_flight/disable';
+        fetchData(endpoint)
+    });
+    document.getElementById('recordings-pirate-swarm-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/pirate_swarm/enable' : '/recordings_controller/pirate_swarm/disable';
+        fetchData(endpoint)
+    });
+    document.getElementById('recordings-vanduul-swarm-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/vanduul_swarm/enable' : '/recordings_controller/vanduul_swarm/disable';
+        fetchData(endpoint)
+    });
+    document.getElementById('recordings-other-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/recordings_controller/other/enable' : '/recordings_controller/other/disable';
+        fetchData(endpoint)
+    });
+
+    </script>
+
+    <script>
+        const recordingToggle = document.getElementById("recordTriggerToggle");
+        const recordingPanel = document.getElementById("recording-control-panel");
+
+        recordingToggle.addEventListener("change", function() {
+            if (this.checked) {
+                recordingPanel.style.display = "flex";
+            } else {
+                recordingPanel.style.display = "none";
+            }
+        });
     </script>
 
 {% endblock %}

@@ -29,8 +29,9 @@ from src.models.models import (
     ClientStatus,
     TriggerControllerStatus,
     LoggingStatus,
-    ClientEnabledStatus
+    ClientEnabledStatus, RecordingsControllerStatus
 )
+from src.recordings_controller import RecordingsController
 from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
 from src.repository import Repository, RepositoryType
@@ -56,9 +57,11 @@ static_dir = resource_path("static")
 templates_dir = resource_path("templates")
 
 title: str = config.get('title')
+recordings_path: Path = Path(config.get('recordings_controller').get('path'))
 
 app: FastAPI = FastAPI(title=f"{title} API", openapi_url="/openapi.json", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/videos/static", StaticFiles(directory=recordings_path), name="video_static")
 templates = Jinja2Templates(directory=templates_dir)
 
 connection_manager: ConnectionManager = ConnectionManager()
@@ -73,16 +76,18 @@ repo: Repository = RepositoryFactory().get_repo(
     else RepositoryType.CSV
 )
 
-statistics_statistics: StatisticsController = StatisticsController()
+statistics_controller: StatisticsController = StatisticsController()
 
 trigger_controller: TriggerController = TriggerController(config=config.get('trigger_controller'))
+recordings_controller: RecordingsController = RecordingsController(config=config.get('recordings_controller'))
 
 client: SCClient = SCClient(
     config=config.get('client'),
     logfile_monitor=logfile_monitor,
     repo=repo,
-    statistics_controller=statistics_statistics,
-    trigger_controller=trigger_controller
+    statistics_controller=statistics_controller,
+    trigger_controller=trigger_controller,
+    recordings_controller=recordings_controller
 )
 
 protocol: str = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pem").exists()) else "ws"
@@ -110,8 +115,6 @@ async def notification():
 @app.get("/")
 async def index_page(request: Request):
 
-    player_events = reversed(client.player_events())
-
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,
@@ -122,7 +125,7 @@ async def index_page(request: Request):
         "pilot_name": client.pilot_name,
         "ship_name": client.ship_name,
         "game_mode": client.game_mode,
-        "player_events": player_events,
+        "player_events": reversed(client.player_events()),
         "startup_date": client.startup_date,
         "logfile_date": logfile_monitor.last_read_date,
         "max_entries": MAX_ENTRIES,
@@ -130,6 +133,9 @@ async def index_page(request: Request):
         "trigger_controller_enabled": trigger_controller.is_enabled,
         "verbose_logging": client.is_verbose_logging,
         "pilot_month_kills": client.statistics_kills_this_month_for_pilot(),
+        "recordings_qty": await client.recordings_video_files_quantity(),
+        "latest_recordings": await client.recordings_latest_videos(qty=1),
+        "recording_controller": recordings_controller.get_config(),
         "ws_url": ws_url,
 
     })
@@ -203,7 +209,7 @@ async def enable_trigger_controller():
     )
 
 @app.get("/trigger_controller/disable", response_model=TriggerControllerStatus)
-async def disable_trigger_controller():
+async def trigger_controller_disable():
     if trigger_controller.is_enabled:
         trigger_controller.disable()
         config['trigger_controller'] = trigger_controller.get_config()
@@ -214,6 +220,275 @@ async def disable_trigger_controller():
         enabled=trigger_controller.is_enabled,
         selected_vendor=trigger_controller.selected_vendor
     )
+
+@app.get("/recordings_controller/suicide/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_suicide_enable():
+    if not recordings_controller.is_record_suicide:
+        recordings_controller.record_suicide_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/suicide/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_suicide_disable():
+    if recordings_controller.is_record_suicide:
+        recordings_controller.record_suicide_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/own_death/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_own_death_enable():
+    if not recordings_controller.is_record_own_death:
+        recordings_controller.record_own_death_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/own_death/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_own_death_disable():
+    if recordings_controller.is_record_own_death:
+        recordings_controller.record_own_death_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/pu/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_pu_enable():
+    if not recordings_controller.is_record_pu:
+        recordings_controller.record_pu_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/pu/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_pu_disable():
+    if recordings_controller.is_record_pu:
+        recordings_controller.record_pu_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/gun_rush/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_gun_rush_enable():
+    if not recordings_controller.is_record_gun_rush:
+        recordings_controller.record_gun_rush_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/gun_rush/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_gun_rush_disable():
+    if recordings_controller.is_record_gun_rush:
+        recordings_controller.record_gun_rush_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/squadron_battle/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_squadron_battle_enable():
+    if not recordings_controller.is_record_squadron_battle:
+        recordings_controller.record_squadron_battle_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/squadron_battle/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_squadron_battle_disable():
+    if recordings_controller.is_record_squadron_battle:
+        recordings_controller.record_squadron_battle_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/arena_commander/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_arena_commander_enable():
+    if not recordings_controller.is_record_arena_commander:
+        recordings_controller.record_arena_commander_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/arena_commander/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_arena_commander_disable():
+    if recordings_controller.is_record_arena_commander:
+        recordings_controller.record_arena_commander_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/classic_race/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_classic_race_enable():
+    if not recordings_controller.is_record_classic_race:
+        recordings_controller.record_classic_race_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/classic_race/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_classic_race_disable():
+    if recordings_controller.is_record_classic_race:
+        recordings_controller.record_classic_race_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/battle_royale/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_battle_royale_enable():
+    if not recordings_controller.is_record_battle_royale:
+        recordings_controller.record_battle_royale_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/battle_royale/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_battle_royale_disable():
+    if recordings_controller.is_record_battle_royale:
+        recordings_controller.record_battle_royale_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/free_flight/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_free_flight_enable():
+    if not recordings_controller.is_record_free_flight:
+        recordings_controller.record_free_flight_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/free_flight/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_free_flight_disable():
+    if recordings_controller.is_record_free_flight:
+        recordings_controller.record_free_flight_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/pirate_swarm/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_pirate_swarm_enable():
+    if not recordings_controller.is_record_pirate_swarm:
+        recordings_controller.record_pirate_swarm_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/pirate_swarm/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_pirate_swarm_disable():
+    if recordings_controller.is_record_pirate_swarm:
+        recordings_controller.record_pirate_swarm_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/vanduul_swarm/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_vanduul_swarm_enable():
+    if not recordings_controller.is_record_vanduul_swarm:
+        recordings_controller.record_vanduul_swarm_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/vanduul_swarm/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_vanduul_swarm_disable():
+    if recordings_controller.is_record_vanduul_swarm:
+        recordings_controller.record_vanduul_swarm_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/other/enable", response_model=RecordingsControllerStatus)
+async def recordings_controller_other_enable():
+    if not recordings_controller.is_record_other:
+        recordings_controller.record_other_enable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings_controller/other/disable", response_model=RecordingsControllerStatus)
+async def recordings_controller_other_disable():
+    if recordings_controller.is_record_other:
+        recordings_controller.record_other_disable()
+        config['recordings_controller'] = recordings_controller.get_config()
+
+        write_config(config_file=config_file, data=config)
+
+    return RecordingsControllerStatus(**recordings_controller.get_config())
+
+@app.get("/recordings/trigger")
+async def recordings_trigger():
+    await client.recordings_trigger(broadcast=connection_manager.broadcast)
+
+    return 'ok'
+
+@app.get("/recordings")
+async def recordings_page(request: Request):
+    return templates.TemplateResponse("recordings.html", {
+        "request": request,
+        "title": title,
+        "video_files": await client.recordings_video_files()
+    })
+
+@app.post("/recordings_controller/rename_video")
+async def rename_video(old_name: str = Form(...), new_name: str = Form(...)):
+    if not '.mp4' in new_name:
+        new_name = f"{new_name}.mp4"
+
+    await client.recordings_rename_video(old_name=old_name, new_name=new_name)
+
+    return RedirectResponse(url="/recordings", status_code=303)
+
+@app.post("/recordings_controller/delete_video")
+async def delete_video(filename: str = Form(...)):
+    await client.recordings_delete_video(filename=filename)
+
+    return RedirectResponse(url="/recordings", status_code=303)
 
 @app.get("/verbose_logging/enable", response_model=LoggingStatus)
 async def enable_verbose_logging():
@@ -227,7 +502,6 @@ async def enable_verbose_logging():
         is_verbose=client.is_verbose_logging
     )
 
-
 @app.get("/verbose_logging/disable", response_model=LoggingStatus)
 async def disable_verbose_logging():
     if client.is_verbose_logging:
@@ -239,7 +513,6 @@ async def disable_verbose_logging():
     return LoggingStatus(
         is_verbose=client.is_verbose_logging
     )
-
 
 @app.get("/settings")
 async def settings_page(request: Request):
@@ -258,7 +531,8 @@ async def set_settings(
         logfile: str = Form(...),
         frequency: str = Form(...),
         gpu_vendor: str = Form(...),
-        hotkey_combo: str = Form(None)
+        hotkey_combo: str = Form(None),
+        video_folder_path: str = Form(...)
     ):
 
     try:
@@ -290,7 +564,9 @@ async def set_settings(
                         "frequency": frequency,
                     },
                     "trigger_controller": trigger_controller.get_config(),
-                    "version": config.get('version'),
+                    "recordings_controller": {
+                        "path": recordings_controller.path
+                    }
                 },
                 "errors": e.errors(),
             },
@@ -305,14 +581,21 @@ async def set_settings(
 
         await client.validate_logfile()
 
+
     logfile_monitor.frequency = int(form_data.frequency)
 
     trigger_controller.set_overlay(gpu_vendor=gpu_vendor, hotkey=hotkey_combo)
+
+    if not len(video_folder_path):
+        video_folder_path = "."
+
+    await recordings_controller.set_path(path=Path(video_folder_path))
 
     config['local_api']['port'] = int(form_data.local_api_port)
     config['client'] = client.get_config()
     config['log_monitor'] = logfile_monitor.get_config()
     config['trigger_controller'] = trigger_controller.get_config()
+    config['recordings_controller'] = recordings_controller.get_config()
 
     write_config(config_file=config_file, data=config)
 
@@ -330,7 +613,7 @@ def main() -> None:
     protoc: str = "https" if cert_path.exists() and key_path.exists() else "http"
     url: str = f"{protoc}://{hostname}:{port}"
 
-    webbrowser.open(url)
+    # webbrowser.open(url)
 
     if not cert_path.exists() or not key_path.exists():
         logging.info("⚠️ Certificate files not found. HTTPS will not be enabled.")
