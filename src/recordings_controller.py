@@ -316,12 +316,18 @@ class RecordingsController:
 
                 new_file: Path = old_file.with_name(new_name)
 
-                logging.info(f"[RECORDING CONTROLLER RENAMING FILE] filename: {file_name}, new filename: {new_name}")
+                try:
+                    logging.info(f"[RECORDING CONTROLLER RENAMING FILE] filename: {file_name}, new filename: {new_name}")
+                    old_file.rename(new_file)
+                    self._current_files.append(new_name)
 
-                old_file.rename(new_file)
-                self._current_files.append(new_name)
+                    return new_name
 
-                return file_name
+                except Exception as e:
+                    logging.error(
+                        f"[RECORDING CONTROLLER RENAMING FILE - ERROR] couldn't rename filename: {file_name} because {e}")
+
+                    return file_name
 
             await asyncio.sleep(sleep_time)
             video_record_max_time -= sleep_time

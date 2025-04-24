@@ -613,7 +613,7 @@ def main() -> None:
     protoc: str = "https" if cert_path.exists() and key_path.exists() else "http"
     url: str = f"{protoc}://{hostname}:{port}"
 
-    # webbrowser.open(url)
+    webbrowser.open(url)
 
     if not cert_path.exists() or not key_path.exists():
         logging.info("⚠️ Certificate files not found. HTTPS will not be enabled.")
