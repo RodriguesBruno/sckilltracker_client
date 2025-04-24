@@ -415,7 +415,7 @@ class SCClient:
 
         recording_notification: RecordingNotification = RecordingNotification(
             recordings_qty=self._recordings_controller.video_files_quantity(),
-            latest_recording=video_filename
+            latest_video_filename=video_filename
         )
         await broadcast(recording_notification.model_dump())
 
@@ -538,7 +538,7 @@ class SCClient:
 
                                     recording_notification: RecordingNotification = RecordingNotification(
                                         recordings_qty=self._recordings_controller.video_files_quantity(),
-                                        latest_recording=video_filename
+                                        latest_video_filename=video_filename
                                     )
                                     await broadcast(recording_notification.model_dump())
 

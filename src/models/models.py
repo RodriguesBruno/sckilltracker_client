@@ -43,7 +43,7 @@ class GameExecutableNotification(BaseModel):
 
 class RecordingNotification(BaseModel):
     recordings_qty: int
-    latest_recording: str
+    latest_video_filename: str
 
 class TopVictim(BaseModel):
     victim_player_name: str
