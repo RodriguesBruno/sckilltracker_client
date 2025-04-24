@@ -45,8 +45,6 @@ class TriggerController:
             if vendor.get('name') == self._selected_vendor:
                 return vendor.get('hotkey')
 
-
-
     async def trigger_hotkey(self) -> None:
         if self._enabled:
             hotkey: str = self.get_hotkey()

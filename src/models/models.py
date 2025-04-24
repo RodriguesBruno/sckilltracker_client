@@ -26,6 +26,7 @@ class GameNotification(BaseModel):
     pilot_kills: int
     pilot_deaths: int
     pilot_suicides: int
+    pilot_kdr: float = Field(default=0)
 
     ship_name: str
     game_mode: str
@@ -113,3 +114,18 @@ class TriggerControllerStatus(BaseModel):
 
 class LoggingStatus(BaseModel):
     is_verbose: bool
+
+class RecordingsControllerStatus(BaseModel):
+    path: str
+    record_suicide: bool
+    record_own_death: bool
+    record_pu: bool
+    record_gun_rush: bool
+    record_squadron_battle: bool
+    record_arena_commander: bool
+    record_classic_race: bool
+    record_battle_royale: bool
+    record_free_flight: bool
+    record_pirate_swarm: bool
+    record_vanduul_swarm: bool
+    record_other: bool
