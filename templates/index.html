@@ -142,6 +142,13 @@
     <p>Version: {{version}}</p>
 
     <script>
+        function flashElement(el, color) {
+            el.classList.add(`flash-${color}`);
+            setTimeout(() => {
+                el.classList.remove(`flash-${color}`);
+            }, 8100);
+        }
+
         const socket = new WebSocket("{{ ws_url }}");
         const messageContainer = document.getElementById("message-container");
         const gameIndicator = document.getElementById("game-indicator");
@@ -172,19 +179,36 @@
 
         socket.onmessage = function(event) {
             const message = JSON.parse(event.data);
-            console.log(message)
 
             // [PILOT NAME]
             if (message.hasOwnProperty('pilot_name')) {
+                console.log(message)
 
                 pilotName.textContent = message.pilot_name
                 monthStrong.textContent = `${message.month} Kills:`
-                pilotKills.textContent = message.pilot_kills
-                pilotDeaths.textContent = message.pilot_deaths
-                pilotSuicides.textContent = message.pilot_suicides
-                pilotKdr.textContent = message.pilot_kdr
+
+                if (pilotKills.textContent !== String(message.pilot_kills)) {
+                    pilotKills.textContent = message.pilot_kills;
+                    flashElement(pilotKills, 'green');
+                }
+
+                if (pilotDeaths.textContent !== String(message.pilot_deaths)) {
+                    pilotDeaths.textContent = message.pilot_deaths;
+                    flashElement(pilotDeaths, 'red');
+                }
+
+                if (pilotSuicides.textContent !== String(message.pilot_suicides)) {
+                    pilotSuicides.textContent = message.pilot_suicides;
+                    flashElement(pilotSuicides, 'blue');
+                }
+
+                if (pilotKdr.textContent !== String(message.pilot_kdr)) {
+                    pilotKdr.textContent = message.pilot_kdr;
+                    flashElement(pilotKdr, 'orange');
+                }
                 shipName.textContent = message.ship_name
                 gameMode.textContent = message.game_mode
+
             }
 
             // [GAME EXECUTABLE]
@@ -203,8 +227,12 @@
 
             // [RECORDINGS]
             if (message.hasOwnProperty('recordings_qty')) {
-                recordingsQuantity.textContent = message.recordings_qty;
-                recordingsQuantity.title = message.latest_video_filename;
+                if (recordingsQuantity.textContent !== String(message.recordings_qty)) {
+                    recordingsQuantity.textContent = message.recordings_qty;
+                    recordingsQuantity.title = message.latest_video_filename;
+                    flashElement(recordingsQuantity, 'blue');
+                }
+
             }
 
             // [LOGFILE SCANNER]
@@ -299,6 +327,7 @@
 				tableRow.appendChild(botPushCell);
 
 				tableRow.classList.add("transition-background");
+
                 messageContainer.insertBefore(tableRow, messageContainer.firstChild);
                 void tableRow.offsetWidth;
 

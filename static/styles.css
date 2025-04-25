@@ -454,3 +454,23 @@ input:checked + .slider:before {
 .rename-form {
     transition: all 0.3s ease;
 }
+
+.flash-green {
+  background-color: rgba(46, 204, 113, 0.8);
+  transition: background-color 0.3s ease;
+}
+
+.flash-red {
+  background-color: rgba(231, 76, 60, 0.8);
+  transition: background-color 0.3s ease;
+}
+
+.flash-blue {
+  background-color: rgba(52, 152, 219, 0.8);
+  transition: background-color 0.3s ease;
+}
+
+.flash-orange {
+  background-color: rgba(241, 196, 15, 0.8);
+  transition: background-color 0.3s ease;
+}

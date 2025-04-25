@@ -6,22 +6,31 @@ from pathlib import Path
 from src.models.models import PlayerEvent
 
 
+def is_file_locked(file_path: Path) -> bool:
+    try:
+        with open(file_path, 'a'):
+            return False
+
+    except OSError:
+        return True
+
+
 class RecordingsController:
     def __init__(self, config: dict) -> None:
         self._path: Path = Path(config.get('path'))
 
-        self._record_suicide = config.get('record_suicide')
-        self._record_own_death = config.get('record_own_death')
-        self._record_pu = config.get('record_pu')
-        self._record_gun_rush = config.get('record_gun_rush')
-        self._record_squadron_battle = config.get('record_squadron_battle')
-        self._record_arena_commander = config.get('record_arena_commander')
-        self._record_classic_race = config.get('record_classic_race')
-        self._record_battle_royale = config.get('record_battle_royale')
-        self._record_free_flight = config.get('record_free_flight')
-        self._record_pirate_swarm = config.get('record_pirate_swarm')
-        self._record_vanduul_swarm = config.get('record_vanduul_swarm')
-        self._record_other = config.get('record_other')
+        self._record_suicide: bool = config.get('record_suicide')
+        self._record_own_death: bool = config.get('record_own_death')
+        self._record_pu: bool = config.get('record_pu')
+        self._record_gun_rush: bool = config.get('record_gun_rush')
+        self._record_squadron_battle: bool = config.get('record_squadron_battle')
+        self._record_arena_commander: bool = config.get('record_arena_commander')
+        self._record_classic_race: bool = config.get('record_classic_race')
+        self._record_battle_royale: bool = config.get('record_battle_royale')
+        self._record_free_flight: bool = config.get('record_free_flight')
+        self._record_pirate_swarm: bool = config.get('record_pirate_swarm')
+        self._record_vanduul_swarm: bool = config.get('record_vanduul_swarm')
+        self._record_other: bool = config.get('record_other')
 
         self._current_files: list[str] = []
 
@@ -33,11 +42,16 @@ class RecordingsController:
         )
 
         self._current_files = [f.name for f in video_files]
-        logging.info(f"[RECORDING CONTROLLER SCANNING VIDEO FILES] found {len(self._current_files)} files, path: '{self._path}'")
+        logging.info(f"[RECORDING CONTROLLER - SCAN VIDEO FILES] found {len(self._current_files)} files, path: '{self._path}'")
 
     @property
-    def path(self) -> str:
-        return str(self._path)
+    def path(self) -> Path:
+        return self._path
+
+    async def set_path(self, path: Path) -> None:
+        if self._path != path:
+            self._path = path
+            await self.scan_video_files()
 
     @property
     def is_record_suicide(self) -> bool:
@@ -159,11 +173,6 @@ class RecordingsController:
     def record_other_disable(self) -> None:
         self._record_other = False
 
-    async def set_path(self, path: Path) -> None:
-        if self._path != path:
-            self._path = path
-            await self.scan_video_files()
-
     def video_files(self) -> list[str]:
         return sorted(
             self._current_files,
@@ -182,6 +191,7 @@ class RecordingsController:
         return len(self._current_files)
 
     async def rename_video(self, old_name: str, new_name: str) -> None:
+        logging.info(f"[RECORDING CONTROLLER - RENAME VIDEO]")
         try:
             old_path: Path = self._path / old_name
             new_path: Path = self._path / new_name
@@ -192,49 +202,10 @@ class RecordingsController:
             self._current_files.remove(old_name)
             self._current_files.append(new_name)
 
+            logging.info(f"[RECORDING CONTROLLER - RENAMED VIDEO] filename: {old_name}, new filename: {new_name}")
+
         except Exception as e:
-            logging.error(f"[RECORDINGS CONTROLLER ERROR RENAME VIDEO] {e}")
-
-    async def must_record_video_old(self, player_name: str, player_event: PlayerEvent) -> bool:
-        if player_event.victim_player_name == player_name and player_event.damage == 'Suicide' and self._record_suicide:
-            return True
-
-        if player_event.victim_player_name == player_name and self._record_own_death:
-            return True
-
-        if player_event.game_mode == 'PU' and self._record_pu:
-            return True
-
-        if player_event.game_mode == 'Gun Rush' and self._record_gun_rush:
-            return True
-
-        if player_event.game_mode == 'Squadron Battle' and self._record_squadron_battle:
-            return True
-
-        if player_event.game_mode == 'Arena Commander' and self._record_arena_commander:
-            return True
-
-        if player_event.game_mode == 'Classic Race' and self._record_classic_race:
-            return True
-
-        if player_event.game_mode == 'Battle Royale' and self._record_battle_royale:
-            return True
-
-        if player_event.game_mode == 'Free Flight' and self._record_free_flight:
-            return True
-
-        if player_event.game_mode == 'Pirate Swarm' and self._record_pirate_swarm:
-            return True
-
-        if player_event.game_mode == 'Vanduul Swarm' and self._record_vanduul_swarm:
-            return True
-
-        game_modes: list[str] = ['PU', 'Gun Rush', 'Squadron Battle', 'Arena Commander', 'Classic Race', 'Battle Royale', 'Free Flight', 'Pirate Swarm']
-
-        if player_event.game_mode not in game_modes and self._record_other:
-            return True
-
-        return False
+            logging.error(f"[RECORDINGS CONTROLLER - RENAME VIDEO ERROR] {e}")
 
     async def must_record_video(self, player_name: str, player_event: PlayerEvent) -> tuple[bool, str]:
         is_self: bool = player_event.victim_player_name == player_name
@@ -272,22 +243,28 @@ class RecordingsController:
         return False, f'{player_event.game_mode} is disabled'
 
     async def delete_video(self, filename: str) -> None:
+        logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO]")
         try:
             file_path: Path = self._path / filename
 
             if file_path.exists():
-                file_path.unlink()
+                if is_file_locked(file_path=file_path):
+                    logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO ERROR] File is locked: {filename}")
+                    return
 
-            self._current_files.remove(filename)
+                file_path.unlink()
+                self._current_files.remove(filename)
+                logging.info(f"[RECORDINGS CONTROLLER - DELETED VIDEO] filename: {filename}")
 
         except Exception as e:
-            logging.error(f"[RECORDINGS CONTROLLER ERROR DELETE VIDEO] {e}")
+            logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO ERROR] {e}")
+
 
     async def auto_rename_video(self, player_event: PlayerEvent) -> str:
-        logging.info(f"[RECORDING CONTROLLER AUTO RENAMING]")
+        logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING]")
 
         sleep_time = 0.1
-        video_record_max_time: float = 4
+        video_record_max_time: float = 6
 
         while video_record_max_time > 0:
             new_files: list[str] = sorted(
@@ -298,8 +275,15 @@ class RecordingsController:
 
             if new_files:
                 file_name: str = new_files[0]
-
                 old_file: Path = Path(self._path, file_name)
+
+                if is_file_locked(old_file):
+                    logging.warning(f"[RECORDING CONTROLLER - AUTO RENAMING] File is locked: {file_name}")
+                    await asyncio.sleep(sleep_time)
+                    video_record_max_time -= sleep_time
+                    continue
+
+                logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING] File is unlocked: {file_name}, Proceeding with renaming...")
 
                 new_name: str = (
                     f"{player_event.date.replace(':', '_')}_"
@@ -317,7 +301,7 @@ class RecordingsController:
                 new_file: Path = old_file.with_name(new_name)
 
                 try:
-                    logging.info(f"[RECORDING CONTROLLER RENAMING FILE] filename: {file_name}, new filename: {new_name}")
+                    logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING] filename: {file_name}, new filename: {new_name}")
                     old_file.rename(new_file)
                     self._current_files.append(new_name)
 
@@ -325,7 +309,7 @@ class RecordingsController:
 
                 except Exception as e:
                     logging.error(
-                        f"[RECORDING CONTROLLER RENAMING FILE - ERROR] couldn't rename filename: {file_name} because {e}")
+                        f"[RECORDING CONTROLLER - AUTO RENAMING ERROR] couldn't rename filename: {file_name} because {e}")
 
                     return file_name
 

@@ -4,9 +4,9 @@ import asyncio
 from contextlib import asynccontextmanager
 import logging
 from pathlib import Path
-from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status
+from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status, HTTPException
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
@@ -61,7 +61,6 @@ recordings_path: Path = Path(config.get('recordings_controller').get('path'))
 
 app: FastAPI = FastAPI(title=f"{title} API", openapi_url="/openapi.json", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
-app.mount("/videos/static", StaticFiles(directory=recordings_path), name="video_static")
 templates = Jinja2Templates(directory=templates_dir)
 
 connection_manager: ConnectionManager = ConnectionManager()
@@ -111,6 +110,14 @@ async def websocket_endpoint(websocket: WebSocket):
 async def notification():
     return await client.text_notification(broadcast=connection_manager.broadcast)
 
+@app.get("/videos/static/{filename}")
+async def serve_video(filename: str):
+    video_path: Path = recordings_controller.path / filename
+
+    if video_path.exists():
+        return FileResponse(video_path)
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
 
 @app.get("/")
 async def index_page(request: Request):
@@ -144,7 +151,8 @@ async def index_page(request: Request):
 def statistics_page(request: Request):
     return templates.TemplateResponse("statistics.html", {
         "request": request,
-        "title": title
+        "title": title,
+        "version": client.version
     })
 
 @app.get("/statistics/data", response_model=StatisticsData)
@@ -472,6 +480,7 @@ async def recordings_page(request: Request):
     return templates.TemplateResponse("recordings.html", {
         "request": request,
         "title": title,
+        "version": client.version,
         "video_files": await client.recordings_video_files()
     })
 
@@ -519,6 +528,7 @@ async def settings_page(request: Request):
     return templates.TemplateResponse("settings.html", {
         "request": request,
         "title": title,
+        "version": client.version,
         "config": config
     })
 
