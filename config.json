@@ -2,9 +2,9 @@
     "title": "SCKillTracker Client",
     "client": {
         "version": "1.2",
-        "enabled": true,
+        "enabled": false,
         "api_url": "https://127.0.0.1:8081/api/v1/event",
-        "verbose_logging": false,
+        "verbose_logging": true,
         "game_executable_name": "starcitizen.exe",
         "game_executable_check_frequency": 5
     },
@@ -35,8 +35,8 @@
         ]
     },
     "recordings_controller": {
-        "path": "C:\\Users\\rodri\\Videos\\Radeon ReLive\\Star Citizen",
-        "record_suicide": false,
+        "path": "c:\\Users\\rodri\\Videos\\Radeon ReLive\\Star Citizen",
+        "record_suicide": true,
         "record_own_death": true,
         "record_pu": true,
         "record_gun_rush": true,

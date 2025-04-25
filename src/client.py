@@ -2,18 +2,18 @@ import asyncio
 import logging
 import subprocess
 import uuid
-from pathlib import Path
 from random import randint
 from typing import Callable, Optional
 import httpx
 
-from src.client_utls import generate_client_id
+from src.client_utils import generate_client_id
 from src.logfile_monitor import LogFileMonitor
 from src.models.models import (
     PlayerEvent,
     GameNotification,
     LogFileNotification,
-    GameExecutableNotification, RecordingNotification
+    GameExecutableNotification,
+    RecordingNotification
 )
 from src.msg_parser import (
     get_game_mode,
@@ -58,7 +58,6 @@ SHIP_PREFIXES: list[str] = [
 def find_event_line(lines: list[str], keywords: list[str]) -> str | None:
     return next((line for line in lines if any(k in line for k in keywords)), None)
 
-MAX_ENTRIES: int = 22
 
 class SCClient:
     def __init__(
@@ -145,6 +144,9 @@ class SCClient:
 
                 if self._verbose_logging:
                     logging.debug(f"[CLIENT] {msg}")
+
+            logging.info(
+                f"[CLIENT - UI NOTIFICATION - GAME EXECUTABLE] is running: {self._game_is_running}, date: {date}")
 
             await broadcast(
                 GameExecutableNotification(
@@ -287,11 +289,15 @@ class SCClient:
         else:
             logfile_msg: str = f'LogFile Scanner stopped since game is not running'
 
+        logfile_is_running: bool = False if not self._logfile_monitor.log_is_validated else self._game_is_running
+
+        logging.info(f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}")
+
         await broadcast(
             LogFileNotification(
                 logfile_frequency=self._logfile_monitor.frequency,
                 logfile_msg=logfile_msg,
-                logfile_scanner_is_running = False if not self._logfile_monitor.log_is_validated else self._game_is_running
+                logfile_scanner_is_running = logfile_is_running
             ).model_dump()
         )
 
@@ -413,6 +419,8 @@ class SCClient:
         await self._trigger_controller.trigger_hotkey()
         video_filename = await self._recordings_controller.auto_rename_video(player_event=player_event)
 
+        logging.info(f"[CLIENT - UI NOTIFICATION - RECORDING TRIGGER]")
+
         recording_notification: RecordingNotification = RecordingNotification(
             recordings_qty=self._recordings_controller.video_files_quantity(),
             latest_video_filename=video_filename
@@ -531,10 +539,13 @@ class SCClient:
                                 must_record_video, reason = await self._recordings_controller.must_record_video(player_name=self._pilot_name, player_event=player_event)
 
                                 if must_record_video:
-                                    logging.info(f"[CLIENT EVENT] TRIGGERING VIDEO RECORDING REASON: {reason}")
+                                    logging.info(f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}")
                                     await self._trigger_controller.trigger_hotkey()
 
                                     video_filename: str = await self._recordings_controller.auto_rename_video(player_event=player_event)
+
+                                    logging.info(
+                                        f"[CLIENT - UI NOTIFICATION - RECORDING CONTROLLER] videos_qty: {self._recordings_controller.video_files_quantity()}, latest_video_filename: {video_filename}")
 
                                     recording_notification: RecordingNotification = RecordingNotification(
                                         recordings_qty=self._recordings_controller.video_files_quantity(),
@@ -543,7 +554,7 @@ class SCClient:
                                     await broadcast(recording_notification.model_dump())
 
                                 else:
-                                    logging.info(f"[CLIENT EVENT] VIDEO RECORDING BYPASSED REASON: {reason}")
+                                    logging.info(f"[CLIENT EVENT - VIDEO RECORDING BYPASSED] REASON: {reason}")
 
                         if self.is_enabled:
                             updated_player_events: list[PlayerEvent] = await self._handle_online_mode(broadcast, player_events)
@@ -555,6 +566,9 @@ class SCClient:
                         self._statistics_controller.set_data(events=self._repo.read())
 
                         pilot_month_kills: dict = self.statistics_kills_this_month_for_pilot()
+
+                        logging.info(
+                            f"[CLIENT - UI NOTIFICATION - GAME] Pilot Name: {self._pilot_name}, Ship Name: {self._ship_name}, Game Mode: {self._game_mode}")
 
                         game_notification: GameNotification = GameNotification(
                             pilot_name=self._pilot_name,
@@ -572,8 +586,23 @@ class SCClient:
 
                     if any((pilot_name_changed, ship_name_changed, game_mode_changed)):
                         logging.info(
-                            f"[CLIENT - UI NOTIFICATION] Pilot Name: {self._pilot_name}, Ship Name: {self._ship_name}, Game Mode: {self._game_mode}")
+                            f"[CLIENT - UI NOTIFICATION - GAME] Pilot Name: {self._pilot_name}, Ship Name: {self._ship_name}, Game Mode: {self._game_mode}")
 
+                        pilot_month_kills: dict = self.statistics_kills_this_month_for_pilot()
+
+                        game_notification: GameNotification = GameNotification(
+                            pilot_name=self._pilot_name,
+                            month=pilot_month_kills.get('month'),
+                            pilot_kills=pilot_month_kills.get('kills'),
+                            pilot_deaths=pilot_month_kills.get('deaths'),
+                            pilot_suicides=pilot_month_kills.get('suicides'),
+                            pilot_kdr=pilot_month_kills.get('kdr'),
+
+                            ship_name=self._ship_name,
+                            game_mode=self._game_mode,
+                        )
+
+                        await broadcast(game_notification.model_dump())
 
 
             except FileNotFoundError:

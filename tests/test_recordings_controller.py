@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from unittest.mock import patch, MagicMock
 from src.recordings_controller import RecordingsController
@@ -28,7 +30,7 @@ def test_initialization(config):
 
     assert rc.is_record_suicide
     assert not rc.is_record_own_death
-    assert rc.path == config["path"]
+    assert rc.path == Path(config["path"])
 
 
 def test_enable_disable_modes(config):
@@ -76,6 +78,7 @@ async def test_must_record_video_other_mode(config):
         uuid="1234567890abcdef"
     )
     result, reason = await rc.must_record_video("Player1", event)
+
     assert result is True
     assert "Other modes is enabled" in reason
 
@@ -92,6 +95,7 @@ async def test_scan_video_files(mock_glob, mock_stat, config):
     mock_glob.return_value = [fake_file]
 
     await rc.scan_video_files()
+
     assert rc.video_files_quantity() == 1
     assert "test.mp4" in rc.video_files()
 
@@ -99,6 +103,7 @@ async def test_scan_video_files(mock_glob, mock_stat, config):
 def test_get_config_returns_expected_keys(config):
     rc = RecordingsController(config)
     cfg = rc.get_config()
+
     assert cfg["record_suicide"] is True
     assert cfg["record_pu"] is True
     assert cfg["path"] == config["path"]
