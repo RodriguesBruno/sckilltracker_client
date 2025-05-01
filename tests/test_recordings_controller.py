@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 from unittest.mock import patch, MagicMock
 from src.recordings_controller import RecordingsController
-from src.models.models import PlayerEvent
+from src.models.models import PlayerEvent, PlayerProfile
+
 
 @pytest.fixture
 def config(tmp_path):
@@ -48,11 +49,11 @@ def test_enable_disable_modes(config):
 async def test_must_record_video_suicide_enabled(config):
     rc = RecordingsController(config)
     event = PlayerEvent(
-        victim_player_name="Player1",
         damage="Suicide",
+        victim_profile=PlayerProfile(name="Player1"),
+        killer_profile=PlayerProfile(),
         game_mode="PU",
         date="2024-01-01T12:00:00",
-        killed_by="Test",
         ship_name="Ship",
         using="Weapon",
         victim_zone_name="Zone",
@@ -67,11 +68,11 @@ async def test_must_record_video_suicide_enabled(config):
 async def test_must_record_video_other_mode(config):
     rc = RecordingsController(config)
     event = PlayerEvent(
-        victim_player_name="OtherPlayer",
         damage="Laser",
         game_mode="Unknown Mode",
+        victim_profile=PlayerProfile(),
+        killer_profile=PlayerProfile(),
         date="2024-01-01T12:00:00",
-        killed_by="Test",
         ship_name="Ship",
         using="Weapon",
         victim_zone_name="Zone",

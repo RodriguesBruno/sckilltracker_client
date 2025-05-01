@@ -121,7 +121,6 @@ async def serve_video(filename: str):
 
 @app.get("/")
 async def index_page(request: Request):
-
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,
@@ -130,6 +129,7 @@ async def index_page(request: Request):
         "game_is_running": client.game_is_running,
         "game_is_running_last_checked": client.game_is_running_last_checked,
         "pilot_name": client.pilot_name,
+        "pilot_org_name": client.pilot_org_name,
         "ship_name": client.ship_name,
         "game_mode": client.game_mode,
         "player_events": reversed(client.player_events()),
@@ -139,12 +139,11 @@ async def index_page(request: Request):
         "logfile_frequency": logfile_monitor.frequency,
         "trigger_controller_enabled": trigger_controller.is_enabled,
         "verbose_logging": client.is_verbose_logging,
-        "pilot_month_kills": client.statistics_kills_this_month_for_pilot(),
+        "player_month_statistics": client.statistics_for_pilot_this_month(),
         "recordings_qty": await client.recordings_video_files_quantity(),
         "latest_recordings": await client.recordings_latest_videos(qty=1),
         "recording_controller": recordings_controller.get_config(),
         "ws_url": ws_url,
-
     })
 
 @app.get("/statistics")
@@ -164,7 +163,7 @@ def statistics_data():
         top_killers_table=[TopKillersTable(**entry) for entry in client.statistics_top_killers_table()],
         kills_by_game_mode=[KillsGameMode(**entry) for entry in client.statistics_kills_by_game_mode()],
         damage_type_distribution=[DamageTypeDistribution(**entry) for entry in client.statistics_damage_type_distribution()],
-        pilot_month_kills=PilotMonthKills(**client.statistics_kills_this_month_for_pilot())
+        pilot_month_kills=PilotMonthKills(**client.statistics_for_pilot_this_month())
     )
 
 @app.get("/status", response_model=ClientStatus)

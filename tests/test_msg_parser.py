@@ -1,7 +1,7 @@
 from src.msg_parser import (
     get_log_date,
-    get_victim_player_name,
-    get_killed_by, get_victim_zone,
+    get_victim_name,
+    get_killer_name, get_victim_zone,
     get_using,
     get_damage,
     get_game_mode,
@@ -19,40 +19,41 @@ def test_get_log_date_returns_date():
     expected_result = '2025-04-02 21:29:47 UTC'
     assert result == expected_result
 
+
 # [VICTIM NAME]
 
 def test_get_victim_player_name_returns_player_name():
 
     entry = "<2025-04-03T01:26:11.622Z> [Notice] <Actor Death> CActor::Kill: 'beast3PO' [200146293833] in zone 'AEGS_Gladius_2456589863667' killed by 'BluePanda' [202139681949] using 'KLWE_LaserRepeater_S2_2472796603691' [Class unknown] with damage type 'VehicleDestruction' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_victim_player_name(entry)
+    result = get_victim_name(entry)
 
     expected_result = 'beast3PO'
     assert result == expected_result
 
 def test_get_victim_player_name_with_dash_returns_player_name():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'BluePanda' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_victim_player_name(entry)
+    result = get_victim_name(entry)
 
     expected_result = 'Ecelli-Telumehtar'
     assert result == expected_result
 
 def test_get_victim_player_name_from_npc_returns_npc():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'PU_Human_Enemy_GroundCombat_NPC_Ninetails_cqc_2797824011619' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'BluePanda' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_victim_player_name(entry)
+    result = get_victim_name(entry)
 
     expected_result = 'npc'
     assert result == expected_result
 
 def test_get_victim_player_name_from_police_npc_returns_npc():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'AIModule_Unmanned_PU_Advocacy_2741197288355' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'BluePanda' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_victim_player_name(entry)
+    result = get_victim_name(entry)
 
     expected_result = 'npc'
     assert result == expected_result
 
 def test_get_victim_player_name_from_pet_npc_returns_npc():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Kopion_cheescake_pet_2793406094804' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'BluePanda' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_victim_player_name(entry)
+    result = get_victim_name(entry)
 
     expected_result = 'npc'
     assert result == expected_result
@@ -61,38 +62,39 @@ def test_get_victim_player_name_from_pet_npc_returns_npc():
 # [KILLED BY]
 
 def test_get_killed_by_return_player_name():
-    result = get_killed_by(log_entry)
+    result = get_killer_name(log_entry)
 
     expected_result = 'BlackHole'
     assert result == expected_result
 
 def test_get_killed_with_dash_return_player_name():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'Ecelli-Telumehtar' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_killed_by(entry)
+    result = get_killer_name(entry)
 
     expected_result = 'Ecelli-Telumehtar'
     assert result == expected_result
 
 def test_get_killed_with_npc_return_npc():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'PU_Human_Enemy_GroundCombat_NPC_Ninetails_cqc_2797824011619' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_killed_by(entry)
+    result = get_killer_name(entry)
 
     expected_result = 'npc'
     assert result == expected_result
 
 def test_get_killed_with_police_npc_return_npc():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'AIModule_Unmanned_PU_Advocacy_2741197288355' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_killed_by(entry)
+    result = get_killer_name(entry)
 
     expected_result = 'npc'
     assert result == expected_result
 
 def test_get_killed_with_pet_npc_return_npc():
     entry = "<2025-04-20T23:31:49.481Z> [Notice] <Actor Death> CActor::Kill: 'Ecelli-Telumehtar' [202063597757] in zone 'AEGS_Gladius_2849401400456' killed by 'Kopion_cheescake_pet_2793406094804' [202139681949] using 'Ecelli-Telumehtar' [Class unknown] with damage type 'Suicide' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech][Actor]"
-    result = get_killed_by(entry)
+    result = get_killer_name(entry)
 
     expected_result = 'npc'
     assert result == expected_result
+
 
 # [VICTIM ZONE]
 
@@ -133,6 +135,7 @@ def test_get_victim_zone_in_lobby_returns_zone_without_prefix():
     expected_result = 'Ground Lobby'
     assert result == expected_result
 
+
 # [USING]
 
 def test_get_using_returns_weapon_name():
@@ -156,6 +159,7 @@ def test_get_using_from_crash_returns_dash():
 
     expected_result = '-'
     assert result == expected_result
+
 
 # [DAMAGE]
 
@@ -186,6 +190,7 @@ def test_get_damage_with_crash_returns_crash():
 
     expected_result = 'Crash'
     assert result == expected_result
+
 
 # [GAME MODE]
 
@@ -285,6 +290,7 @@ def test_get_game_pu_with_alternative_log_entry_returns_type_pu():
     expected_result = 'PU'
     assert result == expected_result
 
+
 # [SHIP NAME]
 
 def test_ship_name_in_squadron_battle_returns_ship_name():
@@ -312,6 +318,7 @@ def test_get_ship_name_with_hornet_returns_hornet_f7a():
     expected_result = 'Hornet F7C Mk2'
     assert result == expected_result
 
+
 # [PILOT NAME]
 
 def test_get_pilot_name_returns_pilot_name():
@@ -328,9 +335,18 @@ def test_get_pilot_name_with_another_name_returns_pilot_name():
     expected_result = 'CBCORP'
     assert result == expected_result
 
+
+
 def test_get_pilot_name_with_long_name_returns_pilot_name():
     entry = '<2025-04-07T15:59:37.784Z> [Notice] <OnClientConnected> Player[ThisNameIsWeird] has connected. [Team_ActorFeatures][Inventory]'
     result = get_pilot_name(entry)
 
     expected_result = 'ThisNameIsWeird'
+    assert result == expected_result
+
+def test_get_pilot_name_with_dash_returns_pilot_name():
+    entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[DASH-NAME] has connected. [Team_ActorFeatures][Inventory]'
+    result = get_pilot_name(entry)
+
+    expected_result = 'DASH-NAME'
     assert result == expected_result

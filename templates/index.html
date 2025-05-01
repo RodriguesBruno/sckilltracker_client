@@ -33,13 +33,14 @@
             <div class="status-card-content">
                 <div class="status-left">
                     <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+                    <div><strong>Pilot Org:</strong> <span id="pilot-org">{{pilot_org_name}}</span></div>
                     <div>
                         <span id="month">
-                            <strong>{{pilot_month_kills.month}} Kills:</strong>
-                        </span><span id="pilot-kills">{{pilot_month_kills.kills}}</span>
-                        <strong>| Deaths: </strong><span id="pilot-deaths">{{pilot_month_kills.deaths}}</span>
-                        <strong>| Suicides: </strong><span id="pilot-suicides">{{pilot_month_kills.suicides}}</span>
-                        <strong>| KDR: </strong><span id="pilot-kdr">{{pilot_month_kills.kdr}}</span>
+                            <strong>{{player_month_statistics.month}} Kills:</strong>
+                        </span><span id="pilot-kills">{{player_month_statistics.kills}}</span>
+                        <strong>| Deaths: </strong><span id="pilot-deaths">{{player_month_statistics.deaths}}</span>
+                        <strong>| Suicides: </strong><span id="pilot-suicides">{{player_month_statistics.suicides}}</span>
+                        <strong>| KDR: </strong><span id="pilot-kdr">{{player_month_statistics.kdr}}</span>
                     </div>
                     <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
                     <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
@@ -103,9 +104,11 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Player Death</th>
-                    <th>Victim Zone</th>
-                    <th>Killed By</th>
+                    <th>Victim</th>
+                    <th>Org</th>
+                    <th>Death Zone</th>
+                    <th>Killer</th>
+                    <th>Org</th>
                     <th>Ship Name</th>
                     <th>Using</th>
                     <th>Damage</th>
@@ -117,9 +120,122 @@
                 {% for player_event in player_events %}
                 <tr>
                     <td>{{ player_event.date }}</td>
-                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_player_name }}"> {{ player_event.victim_player_name }}</a> </td>
+                    <td class="tooltip-cell">
+                      <span class="tooltip-trigger">
+                        <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.victim_profile.name }}">
+                          {{ player_event.victim_profile.name }}
+                        </a>
+                      </span>
+
+                      {% if player_event.victim_profile.icon_url != '-'
+                            or player_event.victim_profile.enlisted_date != '-'
+                            or player_event.victim_profile.location != '-' %}
+                        <div class="tooltip-content">
+                          {% if player_event.victim_profile.icon_url != '-' %}
+                            <img src="{{ player_event.victim_profile.icon_url }}" alt="Player icon" width="128" height="128" />
+                          {% endif %}
+
+                          {% if player_event.victim_profile.enlisted_date != '-' %}
+                            <div><strong>Enlisted:</strong> {{ player_event.victim_profile.enlisted_date }}</div>
+                          {% endif %}
+
+                          {% if player_event.victim_profile.location != '-' %}
+                            <div><strong>Location:</strong> {{ player_event.victim_profile.location }}</div>
+                          {% endif %}
+
+                          {% if player_event.victim_profile.fluency != '-' %}
+                            <div><strong>Fluency:</strong> {{ player_event.victim_profile.fluency }}</div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </td>
+
+                    <td class="tooltip-cell">
+                      {% if player_event.victim_profile.org.name != '-' %}
+                          <span class="tooltip-trigger">
+                            <a href="{{ player_event.victim_profile.org.icon_url }}">
+                                {{ player_event.victim_profile.org.name }}
+                            </a>
+                          </span>
+                      {% else %}
+                        {{ player_event.victim_profile.org.name }}
+
+                      {% endif %}
+
+                      {% if player_event.victim_profile.org.url != '-' %}
+                        <div class="tooltip-content">
+                          {% if player_event.victim_profile.org.icon_url != '-' %}
+                            <img src="{{ player_event.victim_profile.org.icon_url }}" alt="Player icon" width="128" height="128" />
+                            <div><strong>Org:</strong> {{ player_event.victim_profile.org.name }}</div>
+                          {% endif %}
+
+                          {% if player_event.victim_profile.org.rank != '-' %}
+                            <div><strong>Rank:</strong> {{ player_event.victim_profile.org.rank }}</div>
+                          {% endif %}
+
+                        </div>
+                      {% endif %}
+                    </td>
+
                     <td>{{ player_event.victim_zone_name }}</td>
-                    <td> <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killed_by }}"> {{ player_event.killed_by }}</a></td>
+
+                    <td class="tooltip-cell">
+                      <span class="tooltip-trigger">
+                        <a href="https://robertsspaceindustries.com/en/citizens/{{ player_event.killer_profile.name }}">
+                          {{ player_event.killer_profile.name }}
+                        </a>
+                      </span>
+
+                      {% if player_event.killer_profile.icon_url != '-'
+                            or player_event.killer_profile.enlisted_date != '-'
+                            or player_event.killer_profile.location != '-' %}
+                        <div class="tooltip-content">
+                          {% if player_event.killer_profile.icon_url != '-' %}
+                            <img src="{{ player_event.killer_profile.icon_url }}" alt="Player icon" width="128" height="128" />
+                          {% endif %}
+
+                          {% if player_event.killer_profile.enlisted_date != '-' %}
+                            <div><strong>Enlisted:</strong> {{ player_event.killer_profile.enlisted_date }}</div>
+                          {% endif %}
+
+                          {% if player_event.killer_profile.location != '-' %}
+                            <div><strong>Location:</strong> {{ player_event.killer_profile.location }}</div>
+                          {% endif %}
+
+                          {% if player_event.killer_profile.fluency != '-' %}
+                            <div><strong>Fluency:</strong> {{ player_event.killer_profile.fluency }}</div>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </td>
+
+                    <td class="tooltip-cell">
+                      {% if player_event.killer_profile.org.name != '-' %}
+                          <span class="tooltip-trigger">
+                            <a href="{{ player_event.killer_profile.org.url }}">
+                                {{ player_event.killer_profile.org.name }}
+                            </a>
+                          </span>
+                      {% else %}
+                        {{ player_event.killer_profile.org.name }}
+
+                      {% endif %}
+
+                      {% if player_event.killer_profile.org.url != '-' %}
+                        <div class="tooltip-content">
+                          {% if player_event.killer_profile.org.icon_url != '-' %}
+                            <img src="{{ player_event.killer_profile.org.icon_url }}" alt="Org icon" width="128" height="128" />
+                            <div><strong>Org:</strong> {{ player_event.killer_profile.org.name }}</div>
+                          {% endif %}
+
+                          {% if player_event.killer_profile.org.rank != '-' %}
+                            <div><strong>Rank:</strong> {{ player_event.killer_profile.org.rank }}</div>
+                          {% endif %}
+
+                        </div>
+                      {% endif %}
+                    </td>
+
                     <td>{{ player_event.ship_name }}</td>
                     <td>{{ player_event.using }}</td>
                     <td>{{ player_event.damage }}</td>
@@ -156,6 +272,7 @@
         const recordingsQuantity = document.getElementById("recordings-qty");
 
         const pilotName = document.getElementById("pilot-name");
+        const pilotOrg = document.getElementById("pilot-org");
         const monthStrong = document.querySelector("#month strong");
         const pilotKills = document.getElementById("pilot-kills");
         const pilotDeaths = document.getElementById("pilot-deaths");
@@ -181,29 +298,31 @@
             const message = JSON.parse(event.data);
 
             // [PILOT NAME]
-            if (message.hasOwnProperty('pilot_name')) {
+            if (message.hasOwnProperty('player_profile')) {
                 console.log(message)
 
-                pilotName.textContent = message.pilot_name
-                monthStrong.textContent = `${message.month} Kills:`
+                pilotName.textContent = message.player_profile.name
+                pilotOrg.textContent = message.player_profile.org.name
 
-                if (pilotKills.textContent !== String(message.pilot_kills)) {
-                    pilotKills.textContent = message.pilot_kills;
+                monthStrong.textContent = `${message.player_statistics.month} Kills:`
+
+                if (pilotKills.textContent !== String(message.player_statistics.kills)) {
+                    pilotKills.textContent = message.player_statistics.kills;
                     flashElement(pilotKills, 'green');
                 }
 
-                if (pilotDeaths.textContent !== String(message.pilot_deaths)) {
-                    pilotDeaths.textContent = message.pilot_deaths;
+                if (pilotDeaths.textContent !== String(message.player_statistics.deaths)) {
+                    pilotDeaths.textContent = message.player_statistics.deaths;
                     flashElement(pilotDeaths, 'red');
                 }
 
-                if (pilotSuicides.textContent !== String(message.pilot_suicides)) {
-                    pilotSuicides.textContent = message.pilot_suicides;
+                if (pilotSuicides.textContent !== String(message.player_statistics.suicides)) {
+                    pilotSuicides.textContent = message.player_statistics.suicides;
                     flashElement(pilotSuicides, 'blue');
                 }
 
-                if (pilotKdr.textContent !== String(message.pilot_kdr)) {
-                    pilotKdr.textContent = message.pilot_kdr;
+                if (pilotKdr.textContent !== String(message.player_statistics.kdr)) {
+                    pilotKdr.textContent = message.player_statistics.kdr;
                     flashElement(pilotKdr, 'orange');
                 }
                 shipName.textContent = message.ship_name
@@ -258,6 +377,7 @@
 
             // [PLAYER EVENT]
             if (message.hasOwnProperty('uuid')) {
+                console.log(message)
                 const tableRows = messageContainer.getElementsByTagName("tr");
 
 			    while (tableRows.length >= maxEntries) {
@@ -267,24 +387,36 @@
 				const tableRow = document.createElement("tr");
 				const dateCell = document.createElement("td");
 
-				const victimPlayerTD = document.createElement("td");
+                const victimPlayerTD = createPlayerTooltipTD(
+                    message.victim_profile.name,
+                    message.victim_profile.icon_url,
+                    message.victim_profile.enlisted_date,
+                    message.victim_profile.location,
+                    message.victim_profile.fluency
+                );
 
-				const playerLinkCell = document.createElement("a");
-				playerLinkCell.href = `${rsi_url}${message.victim_player_name}`;
-                playerLinkCell.textContent = message.victim_player_name;
+                const victimOrgTD = createPlayerOrgTooltipTD(
+                message.victim_profile.org.name,
+                message.victim_profile.org.url,
+                message.victim_profile.org.icon_url,
+                message.victim_profile.org.rank
+                );
 
-                victimPlayerTD.append(playerLinkCell)
+                const killedByTD = createPlayerTooltipTD(
+                    message.killer_profile.name,
+                    message.killer_profile.icon_url,
+                    message.killer_profile.enlisted_date,
+                    message.killer_profile.location,
+                    message.killer_profile.fluency
 
-				const killedByTD = document.createElement("td");
+                );
 
-				const killedByLinkCell = document.createElement("a");
-				if (message.killed_by !== '-') {
-				    killedByLinkCell.href = `${rsi_url}${message.killed_by}`;
-				}
-
-                killedByLinkCell.textContent = message.killed_by;
-
-                killedByTD.append(killedByLinkCell)
+                const killedByOrgTD = createPlayerOrgTooltipTD(
+                message.killer_profile.org.name,
+                message.killer_profile.org.url,
+                message.killer_profile.org.icon_url,
+                message.killer_profile.org.rank
+                );
 
 				const victimZoneCell = document.createElement("td");
 				const shipCell = document.createElement("td");
@@ -316,10 +448,12 @@
 
 				tableRow.appendChild(dateCell);
 				tableRow.appendChild(victimPlayerTD);
+				tableRow.appendChild(victimOrgTD);
 				tableRow.appendChild(victimZoneCell);
 
 				tableRow.appendChild(killedByTD);
-				tableRow.appendChild(shipCell);
+				tableRow.appendChild(killedByOrgTD);
+                tableRow.appendChild(shipCell);
                 tableRow.appendChild(usingCell);
                 tableRow.appendChild(damageCell);
 				tableRow.appendChild(gameModeCell);
@@ -404,22 +538,27 @@
         const endpoint = this.checked ? '/recordings_controller/classic_race/enable' : '/recordings_controller/classic_race/disable';
         fetchData(endpoint)
     });
+
     document.getElementById('recordings-battle-royale-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/battle_royale/enable' : '/recordings_controller/battle_royale/disable';
         fetchData(endpoint)
     });
+
     document.getElementById('recordings-free-flight-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/free_flight/enable' : '/recordings_controller/free_flight/disable';
         fetchData(endpoint)
     });
+
     document.getElementById('recordings-pirate-swarm-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/pirate_swarm/enable' : '/recordings_controller/pirate_swarm/disable';
         fetchData(endpoint)
     });
+
     document.getElementById('recordings-vanduul-swarm-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/vanduul_swarm/enable' : '/recordings_controller/vanduul_swarm/disable';
         fetchData(endpoint)
     });
+
     document.getElementById('recordings-other-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/other/enable' : '/recordings_controller/other/disable';
         fetchData(endpoint)
@@ -438,6 +577,110 @@
                 recordingPanel.style.display = "none";
             }
         });
+    </script>
+
+    <script>
+        function createPlayerOrgTooltipTD(orgName, orgUrl, iconUrl, rank) {
+        const td = document.createElement("td");
+        td.classList.add("tooltip-cell");
+
+        const span = document.createElement("span");
+        span.classList.add("tooltip-trigger");
+
+        if (orgUrl !== '-') {
+            const link = document.createElement("a");
+            link.href = `${orgUrl}`;
+            link.textContent = orgName;
+            span.appendChild(link);
+        }
+        else {
+            span.textContent = orgName;
+        }
+        td.appendChild(span);
+
+        const shouldShowTooltip = orgUrl !== '-' || rank !== '-';
+        if (shouldShowTooltip) {
+            const tooltipDiv = document.createElement("div");
+            tooltipDiv.classList.add("tooltip-content");
+            console.log(orgName)
+
+            if (iconUrl !== '-') {
+                const img = document.createElement("img");
+                img.src = iconUrl;
+                img.alt = "Org icon";
+                img.width = 128;
+                img.height = 128;
+                tooltipDiv.appendChild(img);
+
+                const orgNameDiv = document.createElement("div");
+                orgNameDiv.innerHTML = `<strong>Org:</strong> ${orgName}`;
+                tooltipDiv.appendChild(orgNameDiv);
+
+            }
+            if (rank !== '-') {
+                const rankDiv = document.createElement("div");
+                rankDiv.innerHTML = `<strong>Rank:</strong> ${rank}`;
+                tooltipDiv.appendChild(rankDiv);
+            }
+
+            td.appendChild(tooltipDiv);
+        }
+
+        return td;
+    }
+    </script>
+
+    <script>
+        function createPlayerTooltipTD(playerName, iconUrl, enlistedDate, location, fluency) {
+        const td = document.createElement("td");
+        td.classList.add("tooltip-cell");
+
+        const span = document.createElement("span");
+        span.classList.add("tooltip-trigger");
+
+        const link = document.createElement("a");
+        link.href = `${rsi_url}${playerName}`;
+        link.textContent = playerName;
+        span.appendChild(link);
+        td.appendChild(span);
+
+        const shouldShowTooltip = iconUrl !== '-' || enlistedDate !== '-' || location !== '-' || fluency !== '-';
+        if (shouldShowTooltip) {
+            const tooltipDiv = document.createElement("div");
+            tooltipDiv.classList.add("tooltip-content");
+
+            if (iconUrl !== '-') {
+                const img = document.createElement("img");
+                img.src = iconUrl;
+                img.alt = "Player icon";
+                img.width = 128;
+                img.height = 128;
+                tooltipDiv.appendChild(img);
+            }
+
+            if (enlistedDate !== '-') {
+                const enlistInfo = document.createElement("div");
+                enlistInfo.innerHTML = `<strong>Enlisted:</strong> ${enlistedDate}`;
+                tooltipDiv.appendChild(enlistInfo);
+            }
+
+            if (location !== '-') {
+                const locationInfo = document.createElement("div");
+                locationInfo.innerHTML = `<strong>Location:</strong> ${location}`;
+                tooltipDiv.appendChild(locationInfo);
+            }
+
+            if (fluency !== '-') {
+                const fluencyInfo = document.createElement("div");
+                fluencyInfo.innerHTML = `<strong>Fluency:</strong> ${fluency}`;
+                tooltipDiv.appendChild(fluencyInfo);
+            }
+
+            td.appendChild(tooltipDiv);
+        }
+
+        return td;
+    }
     </script>
 
 {% endblock %}

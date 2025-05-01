@@ -149,8 +149,8 @@ table {
     margin-bottom: 10px;
 }
 th, td {
-    padding: 3px;
-    min-width: 150px;
+    padding: 12px;
+    max-width: 300px;
 }
 .dot {
     height: 15px;
@@ -473,4 +473,61 @@ input:checked + .slider:before {
 .flash-orange {
   background-color: rgba(241, 196, 15, 0.8);
   transition: background-color 0.3s ease;
+}
+
+.accordion {
+  background-color: #2a2a2a;
+  color: #f0f0f0;
+  cursor: pointer;
+  padding: 12px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  transition: background-color 0.3s ease;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+
+.accordion:hover {
+  background-color: #3a3a3a;
+}
+
+.panel {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 0 0 8px 8px;
+  margin-bottom: 20px;
+}
+
+.tooltip-cell {
+  position: relative;
+}
+
+.tooltip-trigger {
+  cursor: pointer;
+
+}
+
+.tooltip-content {
+  display: none;
+  position: absolute;
+  top: 200%;
+  left: 0%;
+  z-index: 1000;
+  min-width: 250px;
+  padding: 12px;
+  background-color: #1c1c1c; /* nearly black background */
+  border: 2px solid #333;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.05);
+  color: #eee; /* light text for readability */
+  font-size: 14px;
+  border-radius: 16px;
+}
+
+.tooltip-cell:hover .tooltip-content {
+  display: block;
 }

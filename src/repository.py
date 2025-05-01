@@ -17,7 +17,7 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def create(self, entry: Any):
+    def create(self, entries: Any):
         pass
 
     @abstractmethod

@@ -5,6 +5,8 @@ from typing import Optional
 
 import pandas as pd
 
+from src.models.models import PlayerMonthStatistics
+
 
 class StatisticsController:
     def __init__(self) -> None:
@@ -28,22 +30,22 @@ class StatisticsController:
 
         filtered_df = df[df['damage'] != 'Suicide']
 
-        top = filtered_df['victim_player_name'].value_counts().head(limit).to_frame(name='count').reset_index()
+        top = filtered_df['victim_name'].value_counts().head(limit).to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
         
         return top.to_dict(orient='records')
 
-    def kills_this_month_for_pilot(self, pilot_name: str) -> dict[str, None | int | str]:
+    def kills_for_player_this_month(self, player_name: str) -> PlayerMonthStatistics:
         """Return the number of kills a pilot made in the current month."""
         if self._df is None or self._df.empty:
-            return {
-                "month": datetime.now().strftime("%B"),
-                "kills": 0,
-                "pilot": pilot_name,
-                "deaths": 0,
-                "suicides": 0,
-                "kdr": 0
-            }
+            return PlayerMonthStatistics(
+                player_name=player_name,
+                month=datetime.now().strftime("%B"),
+                kills=0,
+                deaths=0,
+                suicides=0,
+                kdr=0
+            )
 
         df: pd.DataFrame = self._get_prepared_df()
 
@@ -54,8 +56,8 @@ class StatisticsController:
 
         is_this_month = (df["date"].dt.year == current_year) & (df["date"].dt.month == current_month)
 
-        monthly_kills = df[is_this_month & (df["killed_by"] == pilot_name)]
-        monthly_deaths = df[is_this_month & (df["victim_player_name"] == pilot_name)]
+        monthly_kills = df[is_this_month & (df["killer_name"] == player_name)]
+        monthly_deaths = df[is_this_month & (df["victim_name"] == player_name)]
 
         non_suicide_kills = monthly_kills[monthly_kills["damage"] != "Suicide"]
         suicide_kills = monthly_kills[monthly_kills["damage"] == "Suicide"]
@@ -67,14 +69,15 @@ class StatisticsController:
         except ZeroDivisionError:
             kdr = 0
 
-        return {
-            "pilot": pilot_name,
-            "month": month_name,
-            "kills": len(non_suicide_kills),
-            "deaths": len(non_suicide_deaths),
-            "suicides": len(suicide_kills),
-            "kdr": kdr
-        }
+        player_statistics: PlayerMonthStatistics = PlayerMonthStatistics(
+            player_name=player_name,
+            month=month_name,
+            kills=len(non_suicide_kills),
+            deaths=len(non_suicide_deaths),
+            suicides=len(suicide_kills),
+            kdr=kdr
+        )
+        return player_statistics
 
     def top_killers(self, limit: int = 5) -> list[dict[str, int]]:
         if self._df.empty:
@@ -84,7 +87,7 @@ class StatisticsController:
 
         filtered_df = df[df['damage'] != 'Suicide']
 
-        top = filtered_df['killed_by'].value_counts().head(limit).to_frame(name='count').reset_index()
+        top = filtered_df['killer_name'].value_counts().head(limit).to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
 
         return top.to_dict(orient='records')
@@ -146,7 +149,7 @@ class StatisticsController:
         if self._df is None or self._df.empty:
             return []
 
-        result = self._get_table(name="killer", filter_by="killed_by", limit=limit)
+        result = self._get_table(name="killer", filter_by="killer_name", limit=limit)
 
         return result.to_dict(orient="records")
 
@@ -154,6 +157,6 @@ class StatisticsController:
         if self._df is None or self._df.empty:
             return []
 
-        result = self._get_table(name="victim", filter_by="victim_player_name", limit=limit)
+        result = self._get_table(name="victim", filter_by="victim_name", limit=limit)
 
         return result.to_dict(orient="records")

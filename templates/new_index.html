@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="display: inline-flex; justify-content: center; align-items: flex-start; gap: 20px;">
+    <div class="status-card">
+
+        <div class="accordion-section">
+            <label class="switch" style="margin-right: 10px;">
+                <input type="checkbox" id="botToggle" {% if client_enabled %} checked {% endif %}>
+                <span class="slider round" title="Push Notifications to BOT or not"></span>
+            </label>
+            <strong>Bot Push</strong>
+            {% if client_enabled %}
+            <details>
+                <summary>Options</summary>
+                <div style="padding: 10px 0;">Bot options could go here...</div>
+            </details>
+            {% endif %}
+        </div>
+
+        <div class="accordion-section">
+            <label class="switch" style="margin-right: 10px;">
+                <input type="checkbox" id="recordTriggerToggle" {% if trigger_controller_enabled %} checked {% endif %}>
+                <span class="slider round" title="Trigger Replay Recording Hotkey or not"></span>
+            </label>
+            <strong>Video Recording</strong>
+            {% if trigger_controller_enabled %}
+            <details>
+                <summary>Recording Options</summary>
+                <div id="recording-control-panel" style="margin: 10px 0; background-color: #1c1c1c; padding: 10px; border-radius: 10px; color: #f0f0f0; border: 1px solid #333;">
+                    <div style="margin-bottom: 10px;"><strong>Video Recording Options:</strong></div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;">
+                        {% for option in [
+                            ('suicide', 'Suicide Death'), ('own_death', 'Own Death'), ('pu', 'PU'),
+                            ('gun_rush', 'Gun Rush'), ('squadron_battle', 'Squadron Battle'),
+                            ('arena_commander', 'Arena Commander'), ('classic_race', 'Classic Race'),
+                            ('battle_royale', 'Battle Royale'), ('free_flight', 'Free Flight'),
+                            ('pirate_swarm', 'Pirate Swarm'), ('vanduul_swarm', 'Vanduul Swarm'),
+                            ('other', 'Other Modes')
+                        ] %}
+                        <div class="slide_btn">
+                            <span>{{ option[1] }}</span>
+                            <label class="switch">
+                                <input type="checkbox" id="recordings--toggle" checked >
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </details>
+            {% endif %}
+        </div>
+
+        <div class="accordion-section">
+            <label class="switch" style="margin-right: 10px;">
+                <input type="checkbox" id="verboseLoggingToggle" {% if verbose_logging %} checked {% endif %}>
+                <span class="slider round" title="Enable Verbose Logging"></span>
+            </label>
+            <strong>Verbose Logging</strong>
+            {% if verbose_logging %}
+            <details>
+                <summary>Log Options</summary>
+                <div style="padding: 10px 0;">Verbose log options could go here...</div>
+            </details>
+            {% endif %}
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="status-card-content">
+            <div class="status-left">
+                <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
+                <div>
+                    <span id="month">
+                        <strong>{{pilot_month_kills.month}} Kills:</strong>
+                    </span><span id="pilot-kills">{{pilot_month_kills.kills}}</span>
+                    <strong>| Deaths: </strong><span id="pilot-deaths">{{pilot_month_kills.deaths}}</span>
+                    <strong>| Suicides: </strong><span id="pilot-suicides">{{pilot_month_kills.suicides}}</span>
+                    <strong>| KDR: </strong><span id="pilot-kdr">{{pilot_month_kills.kdr}}</span>
+                </div>
+                <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
+                <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
+            </div>
+
+            <div class="status-right">
+                <div><strong>Game Running:</strong>
+                    <span id="game-indicator" class="{{ 'green-circle' if game_is_running else 'red-circle' }}"
+                          title="Last checked: {{game_is_running_last_checked}}">
+                    </span>
+                </div>
+                <div><strong>LogFile Scanner:</strong>
+                    <span id="status-indicator"
+                          class="{{ 'green-circle' if logfile_date else 'red-circle' }}"
+                          title="Reading every {{logfile_frequency}}s, last: {{logfile_date}}">
+                    </span>
+                </div>
+                <div><strong>Video Recordings:</strong>
+                    <span id="recordings-qty" title="{{latest_recordings[0] if latest_recordings else 'No recordings found'}}">
+                        {{recordings_qty}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

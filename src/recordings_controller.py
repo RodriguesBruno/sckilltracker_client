@@ -208,7 +208,7 @@ class RecordingsController:
             logging.error(f"[RECORDINGS CONTROLLER - RENAME VIDEO ERROR] {e}")
 
     async def must_record_video(self, player_name: str, player_event: PlayerEvent) -> tuple[bool, str]:
-        is_self: bool = player_event.victim_player_name == player_name
+        is_self: bool = player_event.victim_profile.name == player_name
 
         if is_self:
             if player_event.damage == 'Suicide' and self._record_suicide:
@@ -287,9 +287,9 @@ class RecordingsController:
 
                 new_name: str = (
                     f"{player_event.date.replace(':', '_')}_"
-                    f"{player_event.victim_player_name}_"
+                    f"{player_event.victim_profile.name}_"
                     f"{player_event.victim_zone_name}_"
-                    f"{player_event.killed_by}_"
+                    f"{player_event.killer_profile.name}_"
                     f"{player_event.ship_name}_"
                     f"{player_event.using}_"
                     f"{player_event.damage}_"

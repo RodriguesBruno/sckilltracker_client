@@ -26,15 +26,15 @@ def get_log_date(line: str) -> str:
     match = re.search(r"<(?P<date>[\d:T-]*)[.\dZ]*>\s\[", line)
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
-def get_victim_player_name(line: str) -> str:
+def get_victim_name(line: str) -> str:
     if 'PU_Human_Enemy' and '_NPC_' in line:
         return 'npc'
 
-    match = re.search(r"(?:_+?\w+?_PU_Advocacy_\d*)", line)
+    match = re.search(r"_+?\w+?_PU_Advocacy_\d*", line)
     if match:
         return 'npc'
 
-    match = re.search(r"(?:_+?\w+?_pet_\d*)", line)
+    match = re.search(r"_+?\w+?_pet_\d*", line)
     if match:
         return 'npc'
 
@@ -55,15 +55,15 @@ def get_victim_zone(line: str) -> str:
 
     return '-'
 
-def get_killed_by(line: str) -> str:
+def get_killer_name(line: str) -> str:
     if 'PU_Human_Enemy' and '_NPC_' in line:
         return 'npc'
 
-    match = re.search(r"(?:_+?\w+?_PU_Advocacy_\d*)", line)
+    match = re.search(r"_+?\w+?_PU_Advocacy_\d*", line)
     if match:
         return 'npc'
 
-    match = re.search(r"(?:_+?\w+?_pet_\d*)", line)
+    match = re.search(r"_+?\w+?_pet_\d*", line)
     if match:
         return 'npc'
 
@@ -139,5 +139,5 @@ def get_ship_name(line: str) -> str:
     return '-'
 
 def get_pilot_name(line: str) -> str:
-    match = re.search(r"<OnClientConnected>\sPlayer\[(?P<pilot_name>\w*)]\s", line)
+    match = re.search(r"<OnClientConnected>\sPlayer\[(?P<pilot_name>[\w-]*)]\s", line)
     return match.group('pilot_name') if match else '-'

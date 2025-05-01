@@ -1,6 +1,7 @@
 import logging
 
 from src.csv_repository import CSVRepository
+from src.models.models import PlayerEvent
 from src.repository import RepositoryType
 from src.sql_repository import SQLRepository
 
