@@ -85,7 +85,6 @@ class SCClient:
         self._trigger_controller: TriggerController = trigger_controller
         self._recordings_controller: RecordingsController = recordings_controller
 
-        # self._profile_scrapper: ProfileScrapper = ProfileScrapper()
         self._profile_manager: ProfileManager = ProfileManager()
 
         self._startup_date: str = get_date()
@@ -95,12 +94,6 @@ class SCClient:
         self._ship_name: str = '-'
 
         self._player_profile: PlayerProfile = PlayerProfile()
-        # self._pilot_name: str = '-'
-        # self._pilot_org: str = '-'
-        # self._pilot_org_icon_url: str = '-'
-        # self._pilot_enlisted_date: str = '-'
-        # self._pilot_icon_url: str = '-'
-        # self._pilot_location: str = '-'
 
         self._pilot_name_keyword: str = '<OnClientConnected> Player'
         self._ship_name_keywords: list[str] = ['[VEHICLE SPAWN] CPlayerShipRespawnManager:', '<Jump Drive Requesting State Change>']

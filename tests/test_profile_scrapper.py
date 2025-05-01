@@ -24,9 +24,9 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_with_no_corp_returns_da
         mock_get.return_value = pilot_with_no_corp_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org()
+        result = await scrapper.get_org_name()
 
         expected_result = '-'
         assert result == expected_result
@@ -39,9 +39,9 @@ async def test_profile_scrapper_get_enlisted_date_from_pilot_returns_date(pilot_
         mock_get.return_value = pilot_with_no_corp_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_enlisted_date()
+        result = await scrapper.get_player_enlisted_date()
 
         expected_result = 'Feb 17, 2021'
         assert result == expected_result
@@ -55,9 +55,9 @@ async def test_profile_scrapper_get_location_from_pilot_with_no_location_returns
         mock_get.return_value = pilot_with_no_corp_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_location()
+        result = await scrapper.get_player_location()
 
         expected_result = '-'
         assert result == expected_result
@@ -70,9 +70,9 @@ async def test_profile_scrapper_get_pilot_icon_url_from_pilot_with_returns_somet
         mock_get.return_value = pilot_with_no_corp_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_icon_url()
+        result = await scrapper.get_player_icon_url()
 
         expected_result = 'https://robertsspaceindustries.com/media/0rixm629l5bwwr/heap_infobox/A5ce2752-Ce33-446e-Ae18-2dab9f9ead8a.jpg'
         assert result == expected_result
@@ -86,9 +86,9 @@ async def test_profile_scrapper_get_enlisted_date_from_pilot_with_corp_returns_d
         mock_get.return_value = pilot_with_corp_and_location_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_enlisted_date()
+        result = await scrapper.get_player_enlisted_date()
 
         expected_result = 'May 5, 2017'
         assert result == expected_result
@@ -102,9 +102,9 @@ async def test_profile_scrapper_get_location_from_pilot_with_location_returns_lo
         mock_get.return_value = pilot_with_corp_and_location_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_location()
+        result = await scrapper.get_player_location()
 
         expected_result = 'Finland, Uusimaa'
         assert result == expected_result
@@ -118,9 +118,9 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_with_corp_returns_dash(
         mock_get.return_value = pilot_with_corp_and_location_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org()
+        result = await scrapper.get_org_name()
 
         expected_result = 'SCS'
         assert result == expected_result
@@ -135,9 +135,9 @@ async def test_profile_scrapper_get_pilot_org_url_from_pilot_with_corp_returns_c
         mock_get.return_value = pilot_with_corp_and_location_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_url()
+        result = await scrapper.get_org_url()
 
         expected_result = 'https://robertsspaceindustries.com/orgs/SCSFIN'
         assert result == expected_result
@@ -152,9 +152,9 @@ async def test_profile_scrapper_get_pilot_icon_url_from_pilot_with_default_icon_
         mock_get.return_value = pilot_with_corp_and_location_profile
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_icon_url()
+        result = await scrapper.get_player_icon_url()
 
         expected_result = 'https://cdn.robertsspaceindustries.com/static/images/account/avatar_default_big.jpg'
         assert result == expected_result
@@ -169,9 +169,9 @@ async def test_profile_scrapper_get_pilot_icon_url_from_pilot_with_custom_icon_r
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_icon_url()
+        result = await scrapper.get_player_icon_url()
 
         expected_result = 'https://robertsspaceindustries.com/media/va66xhawk8k9mr/heap_infobox/D528d0f9e6560e707aecc9c1ae9d84ae.jpg'
         assert result == expected_result
@@ -189,9 +189,9 @@ async def test_profile_scrapper_get_pilot_org_from_npc_returns_dash(npc_profile)
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_url()
+        result = await scrapper.get_org_url()
 
         expected_result = '-'
         assert result == expected_result
@@ -207,9 +207,9 @@ async def test_profile_scrapper_get_pilot_icon_url_from_npc_returns_dash(npc_pro
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_icon_url()
+        result = await scrapper.get_player_icon_url()
 
         expected_result = '-'
         assert result == expected_result
@@ -225,9 +225,9 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_npc_returns_dash(npc
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_icon_url()
+        result = await scrapper.get_org_icon_url()
 
         expected_result = '-'
         assert result == expected_result
@@ -243,9 +243,9 @@ async def test_profile_scrapper_get_enlisted_date_from_npc_returns_dash(npc_prof
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_enlisted_date()
+        result = await scrapper.get_player_enlisted_date()
 
         expected_result = '-'
         assert result == expected_result
@@ -260,9 +260,9 @@ async def test_profile_scrapper_get_location_from_npc_returns_dash(npc_profile):
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_location()
+        result = await scrapper.get_player_location()
 
         expected_result = '-'
         assert result == expected_result
@@ -280,9 +280,9 @@ async def test_profile_scrapper_get_location_from_pilot_nanoart_with_corp_return
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_location()
+        result = await scrapper.get_player_location()
 
         expected_result = 'Thailand, Krung Thep Maha Nakhon [Bangkok]'
         assert result == expected_result
@@ -297,9 +297,9 @@ async def test_profile_scrapper_get_enlisted_date_from_pilot_nanoart_with_corp_r
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_enlisted_date()
+        result = await scrapper.get_player_enlisted_date()
 
         expected_result = 'Jan 21, 2022'
         assert result == expected_result
@@ -314,9 +314,9 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_nanoart_with_corp_retur
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org()
+        result = await scrapper.get_org_name()
 
         expected_result = 'Invicta Corporation'
         assert result == expected_result
@@ -331,9 +331,9 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_pilot_nanoart_with_c
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_icon_url()
+        result = await scrapper.get_org_icon_url()
 
         expected_result = 'https://robertsspaceindustries.com/media/9yuww3zgrjvw2r/heap_infobox/IDSCORP-Logo.png'
         assert result == expected_result
@@ -348,9 +348,9 @@ async def test_profile_scrapper_get_pilot_org_url_from_pilot_nanoart_with_corp_r
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_url()
+        result = await scrapper.get_org_url()
 
         expected_result = 'https://robertsspaceindustries.com/orgs/IDSCORP'
         assert result == expected_result
@@ -367,9 +367,9 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_with_redacted_corp_retu
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org()
+        result = await scrapper.get_org_name()
 
         expected_result = '-R-'
         assert result == expected_result
@@ -384,9 +384,9 @@ async def test_profile_scrapper_get_pilot_org_url_from_pilot_with_redacted_corp_
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_url()
+        result = await scrapper.get_org_url()
 
         expected_result = '-'
         assert result == expected_result
@@ -401,9 +401,9 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_pilot_with_redacted_
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_icon_url()
+        result = await scrapper.get_org_icon_url()
 
         expected_result = 'https://cdn.robertsspaceindustries.com/static/images/organization/public-orgs-thumb-redacted-bg.png'
         assert result == expected_result
@@ -418,9 +418,9 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_pilot_with_redacted_
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_icon_url()
+        result = await scrapper.get_org_icon_url()
 
         expected_result = 'https://cdn.robertsspaceindustries.com/static/images/organization/defaults/logo/faith.jpg'
         assert result == expected_result
@@ -435,9 +435,9 @@ async def test_profile_scrapper_get_pilot_with_one_fluency_from_pilot_returns_en
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_fluency()
+        result = await scrapper.get_player_fluency()
 
         expected_result = 'English'
         assert result == expected_result
@@ -452,9 +452,9 @@ async def test_profile_scrapper_get_pilot_with_two_fluency_from_pilot_returns_fr
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_fluency()
+        result = await scrapper.get_player_fluency()
 
         expected_result = 'French, English'
         assert result == expected_result
@@ -470,9 +470,9 @@ async def test_profile_scrapper_get_pilot_rank_with_chamberlain_rank_returns_cha
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org_rank()
+        result = await scrapper.get_org_rank()
 
         expected_result = 'Chamberlain'
         assert result == expected_result
@@ -488,9 +488,9 @@ async def test_profile_scrapper_get_pilot_org_with_weird_long_org_name_returns_o
 
 
         scrapper = ProfileScrapper()
-        await scrapper.fetch_pilot(pilot_name)
+        await scrapper.fetch_player(pilot_name)
 
-        result = await scrapper.get_pilot_org()
+        result = await scrapper.get_org_name()
 
         expected_result = 'Vanguard'
         assert result == expected_result
