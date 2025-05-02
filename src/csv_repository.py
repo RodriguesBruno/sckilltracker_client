@@ -122,12 +122,14 @@ class CSVRepository(Repository):
     def __init__(self, path: str) -> None:
         self._file_name: str = path
         self._key_names: list[str] = keys
+        self._encoding: str = 'utf-8'
         self._initialize()
+
 
     def _initialize(self) -> None:
         write_header = not os.path.exists(self._file_name) or os.stat(self._file_name).st_size == 0
         if write_header:
-            with open(self._file_name, 'w', newline='') as f:
+            with open(self._file_name, 'w', newline='', encoding=self._encoding) as f:
                 writer = csv.DictWriter(f, fieldnames=self._key_names)
                 writer.writeheader()
 
@@ -137,7 +139,7 @@ class CSVRepository(Repository):
 
     @property
     def count(self) -> int:
-        with open(self._file_name, newline='') as f:
+        with open(self._file_name, newline='', encoding=self._encoding) as f:
             reader = csv.DictReader(f)
             return sum(1 for _ in reader)
 
@@ -146,13 +148,13 @@ class CSVRepository(Repository):
         return self._file_name
 
     def create(self, entries: list[dict]):
-        with open(self._file_name, 'a', newline='') as f:
+        with open(self._file_name, 'a', newline='', encoding=self._encoding) as f:
             writer = csv.DictWriter(f, fieldnames=self._key_names)
             for e in entries:
                 writer.writerow({key: e.get(key) for key in self._key_names})
 
     def read(self) -> list[dict]:
-        with open(self._file_name, newline='') as f:
+        with open(self._file_name, newline='', encoding=self._encoding) as f:
             reader = csv.DictReader(f)
 
             result = []

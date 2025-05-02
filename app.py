@@ -23,13 +23,13 @@ from src.models.models import (
     TopKillersTable,
     KillsGameMode,
     DamageTypeDistribution,
-    PilotMonthKills,
     Game,
     DB,
     ClientStatus,
     TriggerControllerStatus,
     LoggingStatus,
-    ClientEnabledStatus, RecordingsControllerStatus
+    ClientEnabledStatus,
+    RecordingsControllerStatus
 )
 from src.recordings_controller import RecordingsController
 from src.statistics_controller import StatisticsController

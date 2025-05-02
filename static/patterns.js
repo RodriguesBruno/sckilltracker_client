@@ -58,8 +58,6 @@ document.getElementById('deleteForm').addEventListener('submit', function (event
 
     const payload = {"pattern_id": patternId};
 
-    console.log(payload)
-
     // Send a DELETE request to the backend
     fetch(ignore_pattern_url, {
         method: 'DELETE',

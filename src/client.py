@@ -128,8 +128,8 @@ class SCClient:
                 if self._verbose_logging:
                     logging.debug(f"[CLIENT] {msg}")
 
-            logging.info(
-                f"[CLIENT - UI NOTIFICATION - GAME EXECUTABLE] is running: {self._game_is_running}, date: {date}")
+            # logging.info(
+            #     f"[CLIENT - UI NOTIFICATION - GAME EXECUTABLE] is running: {self._game_is_running}, date: {date}")
 
             await broadcast(
                 GameExecutableNotification(
@@ -264,7 +264,7 @@ class SCClient:
 
         logfile_is_running: bool = False if not self._logfile_monitor.log_is_validated else self._game_is_running
 
-        logging.info(f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}")
+        # logging.info(f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}")
 
         await broadcast(
             LogFileNotification(
@@ -393,15 +393,19 @@ class SCClient:
 
                 await self._handle_logfile_notifications(broadcast=broadcast)
 
+                logfile_changed: bool = False
                 if not self._logfile_monitor.log_is_validated:
                     await self.validate_logfile()
+                    logfile_changed = True
+
 
                 if self._logfile_monitor.log_is_validated and self._game_is_running:
-                    if self._verbose_logging:
-                        logging.debug(f"[CLIENT - CHECKING FOR NEW EVENTS]")
+                    # if self._verbose_logging:
+                    #     logging.debug(f"[CLIENT - CHECKING FOR NEW EVENTS]")
 
                     if await self._logfile_monitor.has_rolled_over():
                         await self.validate_logfile()
+                        logfile_changed = True
 
                     new_lines: list[str] = await self._logfile_monitor.get_new_lines()
                     self._event_manager.set_event_lines(lines=new_lines)
@@ -509,7 +513,7 @@ class SCClient:
 
                         await broadcast(game_notification.model_dump())
 
-                    if any((pilot_name_changed, ship_name_changed, game_mode_changed)):
+                    if any((logfile_changed, pilot_name_changed, ship_name_changed, game_mode_changed)):
                         logging.info(
                             f"[CLIENT - UI NOTIFICATION - GAME] Pilot Name: {self._player_profile.name}, "
                             f"Ship Name: {self._ship_name}, "
@@ -540,10 +544,16 @@ class SCClient:
 
     # [STATISTICS METHODS]
 
-    def statistics_top_victims(self) -> list[dict]:
+    def statistics_top_victims(self, exclude_player: bool = True) -> list[dict]:
+        if exclude_player:
+            return self._statistics_controller.top_victims(exclude_player=self._player_profile.name)
+
         return self._statistics_controller.top_victims()
 
-    def statistics_top_victims_table(self) -> list[dict[str, int]]:
+    def statistics_top_victims_table(self, exclude_player: bool = True) -> list[dict[str, int]]:
+        if exclude_player:
+            return self._statistics_controller.get_top_victims_table(exclude_player=self._player_profile.name)
+
         return self._statistics_controller.get_top_victims_table()
 
     def statistics_for_pilot_this_month(self, pilot_name: str = None) -> PlayerMonthStatistics:
@@ -552,10 +562,16 @@ class SCClient:
 
         return self._statistics_controller.kills_for_player_this_month(player_name=pilot_name)
 
-    def statistics_top_killers(self) -> list[dict]:
+    def statistics_top_killers(self, exclude_player: bool = True) -> list[dict]:
+        if exclude_player:
+            return self._statistics_controller.top_killers(exclude_player=self._player_profile.name)
+
         return self._statistics_controller.top_killers()
 
-    def statistics_top_killers_table(self) -> list[dict[str, int]]:
+    def statistics_top_killers_table(self,exclude_player: bool = True) -> list[dict[str, int]]:
+        if exclude_player:
+            return self._statistics_controller.get_top_killers_table(exclude_player=self._player_profile.name)
+
         return self._statistics_controller.get_top_killers_table()
 
     def statistics_kills_by_game_mode(self) -> list[dict[str, int]]:
