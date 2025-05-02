@@ -123,8 +123,6 @@ async def serve_video(filename: str):
 async def index_page(request: Request):
     player_events = reversed(client.player_events())
 
-    print(client.pilot_icon_url, client.pilot_name)
-
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,

@@ -37,7 +37,7 @@ class ProfileManager:
             fluency=await self._profile_scraper.get_player_fluency(),
             org=org
         )
-        print(player_profile)
+
         self._profile_cache[name] = player_profile
 
         return player_profile
