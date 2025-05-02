@@ -12,13 +12,13 @@ async def get_from_url(url: str) -> str:
             logging.error(f"Request failed: {e}")
 
 
-class ProfileScrapper:
+class ProfileScraper:
     def __init__(self) -> None:
         self._url = f"https://robertsspaceindustries.com/en/citizens"
         self._player_data: str = ""
 
     async def fetch_player(self, name: str) -> None:
-        logging.info(f"[PROFILE SCRAPPER] FETCHING DATA FOR PLAYER: {name}")
+        logging.info(f"[PROFILE SCRAPER] FETCHING DATA FOR PLAYER: {name}")
         url = f"{self._url}/{name}"
         html = await get_from_url(url)
 

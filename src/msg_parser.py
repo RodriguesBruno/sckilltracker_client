@@ -138,6 +138,6 @@ def get_ship_name(line: str) -> str:
 
     return '-'
 
-def get_pilot_name(line: str) -> str:
-    match = re.search(r"<OnClientConnected>\sPlayer\[(?P<pilot_name>[\w-]*)]\s", line)
-    return match.group('pilot_name') if match else '-'
+def get_player_name(line: str) -> str:
+    match = re.search(r"<OnClientConnected>\sPlayer\[(?P<player_name>[\w-]*)]\s", line)
+    return match.group('player_name') if match else '-'

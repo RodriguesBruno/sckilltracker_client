@@ -6,7 +6,7 @@ from src.msg_parser import (
     get_damage,
     get_game_mode,
     get_ship_name,
-    get_pilot_name
+    get_player_name
 )
 
 from tests.conftest import log_entry
@@ -323,14 +323,14 @@ def test_get_ship_name_with_hornet_returns_hornet_f7a():
 
 def test_get_pilot_name_returns_pilot_name():
     entry = '<2025-04-07T15:59:37.784Z> [Notice] <OnClientConnected> Player[RedPanda] has connected. [Team_ActorFeatures][Inventory]'
-    result = get_pilot_name(entry)
+    result = get_player_name(entry)
 
     expected_result = 'RedPanda'
     assert result == expected_result
 
 def test_get_pilot_name_with_another_name_returns_pilot_name():
     entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[CBCORP] has connected. [Team_ActorFeatures][Inventory]'
-    result = get_pilot_name(entry)
+    result = get_player_name(entry)
 
     expected_result = 'CBCORP'
     assert result == expected_result
@@ -339,14 +339,14 @@ def test_get_pilot_name_with_another_name_returns_pilot_name():
 
 def test_get_pilot_name_with_long_name_returns_pilot_name():
     entry = '<2025-04-07T15:59:37.784Z> [Notice] <OnClientConnected> Player[ThisNameIsWeird] has connected. [Team_ActorFeatures][Inventory]'
-    result = get_pilot_name(entry)
+    result = get_player_name(entry)
 
     expected_result = 'ThisNameIsWeird'
     assert result == expected_result
 
 def test_get_pilot_name_with_dash_returns_pilot_name():
     entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[DASH-NAME] has connected. [Team_ActorFeatures][Inventory]'
-    result = get_pilot_name(entry)
+    result = get_player_name(entry)
 
     expected_result = 'DASH-NAME'
     assert result == expected_result

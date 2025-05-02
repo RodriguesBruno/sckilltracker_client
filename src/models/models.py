@@ -73,7 +73,7 @@ class RecordingNotification(BaseModel):
 
 
 class TopVictim(BaseModel):
-    victim_player_name: str
+    victim_name: str
     count: int
 
 
@@ -86,7 +86,7 @@ class TopVictimsTable(BaseModel):
 
 
 class TopKiller(BaseModel):
-    killed_by: str
+    killer_name: str
     count: int
 
 
@@ -123,7 +123,7 @@ class StatisticsData(BaseModel):
     top_killers_table: list[TopKillersTable]
     kills_by_game_mode: list[KillsGameMode]
     damage_type_distribution: list[DamageTypeDistribution]
-    pilot_month_kills: PilotMonthKills
+    player_month_statistics: PlayerMonthStatistics
 
 
 class Game(BaseModel):

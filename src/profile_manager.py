@@ -1,12 +1,12 @@
 import logging
 
 from src.models.models import PlayerProfile, Organization
-from src.profile_scraper import ProfileScrapper
+from src.profile_scraper import ProfileScraper
 
 
 class ProfileManager:
     def __init__(self) -> None:
-        self._profile_scrapper: ProfileScrapper = ProfileScrapper()
+        self._profile_scraper: ProfileScraper = ProfileScraper()
         self._profile_cache: dict[str, PlayerProfile] = {}
 
     async def get_profile(self, name: str) -> PlayerProfile:
@@ -20,24 +20,24 @@ class ProfileManager:
 
     async def create_profile(self, name: str) -> PlayerProfile:
         logging.info(f"[PROFILE MANAGER] CREATING PROFILE FOR PLAYER: {name}")
-        await self._profile_scrapper.fetch_player(name)
+        await self._profile_scraper.fetch_player(name)
 
         org: Organization = Organization(
-            name=await self._profile_scrapper.get_org_name(),
-            url=await self._profile_scrapper.get_org_url(),
-            icon_url=await self._profile_scrapper.get_org_icon_url(),
-            rank=await self._profile_scrapper.get_org_rank()
+            name=await self._profile_scraper.get_org_name(),
+            url=await self._profile_scraper.get_org_url(),
+            icon_url=await self._profile_scraper.get_org_icon_url(),
+            rank=await self._profile_scraper.get_org_rank()
         )
 
         player_profile: PlayerProfile = PlayerProfile(
             name=name,
-            icon_url=await self._profile_scrapper.get_player_icon_url(),
-            enlisted_date=await self._profile_scrapper.get_player_enlisted_date(),
-            location=await self._profile_scrapper.get_player_location(),
-            fluency=await self._profile_scrapper.get_player_fluency(),
+            icon_url=await self._profile_scraper.get_player_icon_url(),
+            enlisted_date=await self._profile_scraper.get_player_enlisted_date(),
+            location=await self._profile_scraper.get_player_location(),
+            fluency=await self._profile_scraper.get_player_fluency(),
             org=org
         )
-
+        print(player_profile)
         self._profile_cache[name] = player_profile
 
         return player_profile

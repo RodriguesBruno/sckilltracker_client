@@ -79,7 +79,7 @@
 
       // Top Victims (vertical bar)
       Plotly.newPlot('topVictimsPlot', [{
-        x: data.top_victims.map(v => v.victim_player_name),
+        x: data.top_victims.map(v => v.victim_name),
         y: data.top_victims.map(v => v.count),
         type: 'bar', marker: { color: '#0d6efd' }
       }], Object.assign({
@@ -98,7 +98,7 @@
 
       // Top Killers (vertical bar)
       Plotly.newPlot('topKillersPlot', [{
-        x: data.top_killers.map(k => k.killed_by),
+        x: data.top_killers.map(k => k.killer_name),
         y: data.top_killers.map(k => k.count),
         type: 'bar', marker: { color: '#0d6efd' }
       }], Object.assign({

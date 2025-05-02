@@ -100,6 +100,7 @@ def csv_to_player_event_adapter(entry: dict) -> PlayerEvent:
             icon_url=entry["killer_name_icon_url"],
             enlisted_date=entry["killer_enlisted_date"],
             location=entry["killer_location"],
+            fluency=entry["killer_fluency"],
             org = Organization(
                 name=entry["killer_org"],
                 url=entry["killer_org_url"],

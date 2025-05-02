@@ -2,7 +2,6 @@ import calendar
 import logging
 from datetime import timedelta, datetime
 from typing import Optional
-
 import pandas as pd
 
 from src.models.models import PlayerMonthStatistics

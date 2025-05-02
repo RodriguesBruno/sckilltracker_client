@@ -1,32 +1,23 @@
 import asyncio
 import logging
 import subprocess
-import uuid
 from typing import Callable, Optional
 import httpx
 
 from src.client_utils import generate_client_id
 from src.csv_repository import player_event_to_csv_adapter, csv_to_player_event_adapter
+from src.event_manager import EventManager
 from src.logfile_monitor import LogFileMonitor
 from src.models.models import (
     PlayerEvent,
     GameNotification,
     LogFileNotification,
     GameExecutableNotification,
-    RecordingNotification, PlayerProfile, PlayerMonthStatistics
+    RecordingNotification,
+    PlayerProfile,
+    PlayerMonthStatistics
 )
-from src.msg_parser import (
-    get_game_mode,
-    get_log_date,
-    get_victim_name,
-    get_victim_zone,
-    get_killer_name,
-    get_using,
-    get_damage,
-    get_pilot_name,
-    get_ship_name
-)
-from src.profile_manager import ProfileManager
+
 from src.recordings_controller import RecordingsController
 from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
@@ -56,10 +47,6 @@ SHIP_PREFIXES: list[str] = [
 ]
 
 
-def find_event_line(lines: list[str], keywords: list[str]) -> str | None:
-    return next((line for line in lines if any(k in line for k in keywords)), None)
-
-
 class SCClient:
     def __init__(
             self,
@@ -85,7 +72,7 @@ class SCClient:
         self._trigger_controller: TriggerController = trigger_controller
         self._recordings_controller: RecordingsController = recordings_controller
 
-        self._profile_manager: ProfileManager = ProfileManager()
+        self._event_manager: EventManager = EventManager()
 
         self._startup_date: str = get_date()
         self._client_id: str = generate_client_id()
@@ -95,21 +82,13 @@ class SCClient:
 
         self._player_profile: PlayerProfile = PlayerProfile()
 
-        self._pilot_name_keyword: str = '<OnClientConnected> Player'
-        self._ship_name_keywords: list[str] = ['[VEHICLE SPAWN] CPlayerShipRespawnManager:', '<Jump Drive Requesting State Change>']
-        self._game_mode_keywords: list[str] = ['> Loading screen for ', '> Mode[EA']
-
-        self._player_event_keyword: str = "<Actor Death>"
-
         self._current_date: str = ''
 
         self._game_is_running: bool = False
         self._game_is_running_last_checked: str = ''
 
 
-    async def _initialize_statistics_controller(self):
-        events = self._repo.read()
-        print(events)
+    async def _initialize_statistics_controller(self) -> None:
         self._statistics_controller.set_data(events=self._repo.read())
 
     async def _check_if_game_is_running(self, broadcast: Callable) -> None:
@@ -185,6 +164,14 @@ class SCClient:
         return self._player_profile.org.name
 
     @property
+    def pilot_icon_url(self) -> str:
+        return self._player_profile.icon_url
+
+    @property
+    def pilot_org_icon_url(self) -> str:
+        return self._player_profile.org.icon_url
+
+    @property
     def ship_name(self) -> str:
         return self._ship_name
 
@@ -245,11 +232,11 @@ class SCClient:
 
     def verbose_logging_enable(self) -> None:
         self._verbose_logging = True
-        logging.debug(f"[CLIENT] Verbose Logging Enabled")
+        logging.debug(f"[CLIENT - Verbose Logging] Enabled")
 
     def verbose_logging_disable(self) -> None:
         self._verbose_logging = False
-        logging.debug(f"[CLIENT] Verbose Logging Disabled")
+        logging.debug(f"[CLIENT - Verbose Logging] Disabled")
 
     def get_config(self) -> dict:
         return {
@@ -261,63 +248,14 @@ class SCClient:
             "game_executable_check_frequency": self._game_executable_check_frequency
         }
 
-    async def _get_player_event(self, log_entry: str) -> PlayerEvent | None:
-        date = get_log_date(log_entry)
-        victim_name: str = get_victim_name(log_entry)
-        victim_zone_name: str = get_victim_zone(log_entry)
-        killer_name: str = get_killer_name(log_entry)
-        using: str = get_using(log_entry)
-        damage: str = get_damage(log_entry)
-
-        victim_profile: PlayerProfile = await self._profile_manager.get_profile(name=victim_name)
-
-        killer_profile: PlayerProfile = await self._profile_manager.get_profile(name=killer_name)
-
-        if killer_name == 'npc' or victim_name == 'npc':
-            return None
-
-        if self._verbose_logging:
-            logging.debug(f"[CLIENT - PLAYER EVENT LOG] {log_entry}")
-
-        if killer_name == self._player_profile.name:
-            ship_name = self._ship_name
-
-        elif self._game_mode == 'Elimination':
-            ship_name = '-'
-        else:
-            ship_name: str = get_ship_name(log_entry)
-
-        result: PlayerEvent = PlayerEvent(
-            uuid=str(uuid.uuid4()),
-            date=date,
-            victim_profile=victim_profile,
-
-            victim_zone_name=victim_zone_name,
-
-            killer_profile=killer_profile,
-            # killed_by=killed_by,
-            # killed_by_player_icon_url=killed_by_player_icon_url,
-            # killed_by_player_org=killed_by_player_org,
-            # killed_by_player_org_url=killed_by_player_org_url,
-            # killed_by_player_org_icon_url=killed_by_player_org_icon_url,
-            # killed_by_player_enlisted_date=killed_by_player_enlisted_date,
-            # killed_by_player_location=killed_by_player_location,
-
-            ship_name='-' if 'Suicide' in damage else ship_name,
-
-            using='-' if 'Suicide' in damage else using,
-            damage=damage,
-            game_mode=self._game_mode
-            )
-
-        return result
-
     async def _handle_logfile_notifications(self, broadcast: Callable) -> None:
         if self._game_is_running:
             if self._logfile_monitor.log_is_validated:
-                logfile_msg: str = (f'Reading log file every: {self._logfile_monitor.frequency}s, '
-                                    f'Last time read: {self._logfile_monitor.last_read_date}, '
-                                    f'Number of Lines: {self._logfile_monitor.lines}')
+                logfile_msg: str = (
+                    f'Reading log file every: {self._logfile_monitor.frequency}s, '
+                    f'Last time read: {self._logfile_monitor.last_read_date}, '
+                    f'Number of Lines: {self._logfile_monitor.lines}'
+                )
             else:
                 logfile_msg: str = f'Can\'t read log file: {self._logfile_monitor.logfile_with_path}, Please check settings...'
 
@@ -335,59 +273,6 @@ class SCClient:
                 logfile_scanner_is_running = logfile_is_running
             ).model_dump()
         )
-
-    async def _handle_game_mode_event(self, log_entry: str) -> bool:
-        if self._verbose_logging:
-            logging.debug(f'[CLIENT - GAME MODE EVENT LOG] {log_entry}')
-
-        game_mode: str = get_game_mode(log_entry)
-
-        if game_mode != self._game_mode:
-            if game_mode == 'PU':
-                self._ship_name = '-'
-
-                if self._verbose_logging:
-                    logging.debug(f'[CLIENT - GAME MODE EVENT] SHIP NAME RESET BECAUSE GAME MODE CHANGED FROM {self._game_mode} TO PU')
-
-            self._game_mode = game_mode
-            if self._verbose_logging:
-                logging.debug(f"[CLIENT - GAME MODE EVENT] Game Mode: {self._game_mode}")
-
-            return True
-
-        return False
-
-    async def _handle_ship_name_event(self, log_entry: str) -> bool:
-        if self._verbose_logging:
-            logging.debug(f'[CLIENT - SHIP NAME EVENT LOG] {log_entry}')
-
-        ship_name: str = get_ship_name(log_entry)
-
-        if ship_name != self._ship_name:
-            self._ship_name = ship_name
-            if self._verbose_logging:
-                logging.debug(f"[CLIENT - SHIP NAME EVENT] Ship Name: {self._ship_name}")
-
-            return True
-
-        return False
-
-    async def _handle_pilot_name_event(self, log_entry: str) -> bool:
-        if self._verbose_logging:
-            logging.debug(f'[CLIENT - PILOT NAME EVENT LOG] {log_entry}')
-
-        pilot_name: str = get_pilot_name(log_entry)
-
-        if pilot_name != self._player_profile.name:
-            player_profile: PlayerProfile = await self._profile_manager.get_profile(name=pilot_name)
-            self._player_profile = player_profile
-
-            if self._verbose_logging:
-                logging.debug(f"[CLIENT - PILOT NAME EVENT] Pilot Name: {self._player_profile.name}")
-
-            return True
-
-        return False
 
     async def _handle_offline_mode(self, broadcast: Callable, player_events: list[PlayerEvent]) -> list[PlayerEvent]:
 
@@ -436,37 +321,10 @@ class SCClient:
 
         return player_events
 
-    async def recordings_trigger(self, broadcast: Callable):
-
-        player_event: PlayerEvent = PlayerEvent(
-            uuid = str(uuid.uuid4()),
-            date = "2025-04-22 11:14:06 UTC",
-            victim_player_name = "CBCORP",
-            victim_zone_name = "Stanton",
-            killed_by = "Cellin",
-            ship_name = "Dicks",
-            using = "gmni lmg ballistic 01 green red01",
-            damage = "Bullet",
-            game_mode = "FPS Gun Game",
-            client_enabled = True,
-            push_result_message = "Oh yes",
-            push_result_is_success = True
-        )
-        await self._trigger_controller.trigger_hotkey()
-        video_filename = await self._recordings_controller.auto_rename_video(player_event=player_event)
-
-        logging.info(f"[CLIENT - UI NOTIFICATION - RECORDING TRIGGER]")
-
-        recording_notification: RecordingNotification = RecordingNotification(
-            recordings_qty=self._recordings_controller.video_files_quantity(),
-            latest_video_filename=video_filename
-        )
-        await broadcast(recording_notification.model_dump())
-
     async def recordings_video_files(self) -> list[str]:
         return self._recordings_controller.video_files()
 
-    async def recordings_latest_videos(self, qty = 3):
+    async def recordings_latest_videos(self, qty = 3) -> list[str]:
         return self._recordings_controller.latest_videos(qty=qty)
 
     async def recordings_rename_video(self, old_name: str, new_name: str) -> None:
@@ -485,19 +343,37 @@ class SCClient:
         logging.info(f"[CLIENT - REQUESTING LOGFILE VALIDATION]")
 
         pilot_name_event, ship_name_event, game_mode_event = await self._logfile_monitor.validate_logfile(
-            pilot_name_keyword=self._pilot_name_keyword,
-            ship_name_keywords=self._ship_name_keywords,
-            game_mode_keywords=self._game_mode_keywords
+            pilot_name_keyword=self._event_manager.pilot_name_keyword,
+            ship_name_keywords=self._event_manager.ship_name_keywords,
+            game_mode_keywords=self._event_manager.game_mode_keywords
             )
 
         if pilot_name_event:
-            await self._handle_pilot_name_event(log_entry=pilot_name_event.replace("\n", ""))
+            pilot_name_has_changed, player_profile = await self._event_manager.handle_pilot_name_event(
+                new_lines=[pilot_name_event],
+                current_pilot_name=self._player_profile.name
+            )
+            if pilot_name_has_changed:
+                self._player_profile = player_profile
 
         if ship_name_event:
-            await self._handle_ship_name_event(log_entry=ship_name_event.replace("\n", ""))
+            ship_name_has_changed, ship_name = await self._event_manager.handle_ship_name_event(
+                new_lines=[ship_name_event],
+                current_ship_name=self._ship_name
+            )
+            if ship_name_has_changed:
+                self._ship_name = ship_name
 
         if game_mode_event:
-            await self._handle_game_mode_event(log_entry=game_mode_event.replace("\n", ""))
+            game_mode_has_changed, game_mode = await self._event_manager.handle_game_mode_event(
+                new_lines=[game_mode_event],
+                current_game_mode=self._game_mode
+            )
+            if game_mode_has_changed:
+                if game_mode == 'PU':
+                    self._ship_name = '-'
+
+                self._game_mode = game_mode
 
         if self._verbose_logging:
             logging.debug(f"[CLIENT] State:\n"
@@ -515,7 +391,7 @@ class SCClient:
             try:
                 self._current_date: str = get_date()
 
-                await self._handle_logfile_notifications(broadcast)
+                await self._handle_logfile_notifications(broadcast=broadcast)
 
                 if not self._logfile_monitor.log_is_validated:
                     await self.validate_logfile()
@@ -528,48 +404,52 @@ class SCClient:
                         await self.validate_logfile()
 
                     new_lines: list[str] = await self._logfile_monitor.get_new_lines()
+                    self._event_manager.set_event_lines(lines=new_lines)
 
                     # [PILOT NAME EVENT]
-                    pilot_name_changed: bool = False
+                    pilot_name_changed, player_profile = await self._event_manager.handle_pilot_name_event(
+                        new_lines=new_lines,
+                        current_pilot_name=self._player_profile.name
+                    )
 
-                    pilot_name_event: str | None = find_event_line(lines=new_lines, keywords=[self._pilot_name_keyword])
-
-                    if pilot_name_event:
-                        pilot_name_changed = await self._handle_pilot_name_event(
-                            log_entry=pilot_name_event.replace("\n", "")
-                        )
+                    if pilot_name_changed:
+                        if self._verbose_logging:
+                            logging.info(f"[CLIENT EVENT - PILOT NAME CHANGED] to {player_profile.name}")
+                        self._player_profile = player_profile
 
                     # [SHIP NAME EVENT]
+                    ship_name_changed, ship_name = await self._event_manager.handle_ship_name_event(
+                        new_lines=new_lines,
+                        current_ship_name=self._ship_name
+                    )
+                    if ship_name_changed:
+                        if self._verbose_logging:
+                            logging.info(f"[CLIENT EVENT - SHIP NAME CHANGED] to {ship_name}")
+                        self._ship_name = ship_name
+
                     ship_name_changed: bool = False
 
-                    ship_name_event: str | None = find_event_line(lines=new_lines, keywords=self._ship_name_keywords)
-
-                    if ship_name_event:
-                        ship_name_changed: bool = await self._handle_ship_name_event(
-                            log_entry=ship_name_event.replace("\n", "")
-                        )
-
                     # [GAME MODE EVENT]
-                    game_mode_changed: bool = False
-
-                    game_mode_event: str | None = find_event_line(lines=new_lines, keywords=self._game_mode_keywords)
-
-                    if game_mode_event:
-                        game_mode_changed = await self._handle_game_mode_event(
-                            log_entry=game_mode_event.replace("\n", "")
-                        )
+                    game_mode_changed, game_mode = await self._event_manager.handle_game_mode_event(
+                        new_lines=new_lines,
+                        current_game_mode=self._game_mode
+                    )
+                    if game_mode_changed:
+                        if self._verbose_logging:
+                            logging.info(f"[CLIENT EVENT - GAME MODE CHANGED] to {game_mode}")
+                        self._game_mode = game_mode
 
                     # [PLAYER EVENTS]
-                    player_events: list[PlayerEvent] = [
-                        await self._get_player_event(log_entry=line)
-                        for line in new_lines
-                        if self._player_event_keyword in line
-                    ]
-
-                    player_events: list[PlayerEvent] = list(filter(lambda x: x is not None, player_events))
+                    player_events: list[PlayerEvent] = await self._event_manager.get_player_events(
+                        new_lines=new_lines,
+                        game_mode=self._game_mode
+                    )
 
                     if player_events:
                         for player_event in player_events:
+                            if self._player_profile.name == player_event.killer_profile.name:
+                                self._ship_name = player_event.ship_name
+
                             if self._trigger_controller.is_enabled:
                                 must_record_video, reason = await self._recordings_controller.must_record_video(
                                     player_name=self._player_profile.name,

@@ -3,6 +3,57 @@
 {% block content %}
 
     <div style="display: inline-flex; justify-content: center; align-items: flex-start; gap: 20px;">
+        <div class="player-card">
+            <div class="status-player-card-content" style="display: flex; align-items: flex-start; gap: 20px;">
+            <div>
+                <img id="pilot-icon"
+                     src="{{ pilot_icon_url if pilot_icon_url != '-' else '' }}"
+                     alt="Player icon"
+                     width="124"
+                     height="124"
+                     style="margin-bottom: 10px; visibility: {% if pilot_icon_url == '-' %}hidden{% else %}visible{% endif %};"
+                />
+
+                <img id="pilot-org-icon"
+                     src="{{ pilot_org_icon_url if pilot_org_icon_url != '-' else '' }}"
+                     alt="Org icon"
+                     width="100"
+                     height="100"
+                     style="visibility: {% if pilot_org_icon_url == '-' %}hidden{% else %}visible{% endif %};"
+                />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div><strong>Player:</strong> <span id="pilot-name">{{ pilot_name }}</span></div>
+                <div id="pilot-org-wrapper" style="{% if pilot_org_name == '-' %}display:none;{% endif %}">
+                    <strong>Org:</strong> <span id="pilot-org">{% if pilot_org_name != '-' %}{{ pilot_org_name }}{% endif %}</span>
+                </div>
+                <div>
+                    <span class="stat-block" id="pilot-kills-block">
+                      <strong id="month">{{ player_month_statistics.month }} Kills:</strong>
+                      <span id="pilot-kills">{{ player_month_statistics.kills }}</span>
+                    </span>
+
+                    <span class="stat-block" id="pilot-deaths-block">
+                      <strong>Deaths:</strong>
+                      <span id="pilot-deaths">{{ player_month_statistics.deaths }}</span>
+                    </span>
+
+                    <span class="stat-block" id="pilot-suicides-block">
+                      <strong>Suicides:</strong>
+                      <span id="pilot-suicides">{{ player_month_statistics.suicides }}</span>
+                    </span>
+
+                    <span class="stat-block" id="pilot-kdr-block">
+                      <strong>KDR:</strong>
+                      <span id="pilot-kdr">{{ player_month_statistics.kdr }}</span>
+                    </span>
+                </div>
+                <div><strong>Ship Name:</strong> <span id="ship-name">{{ ship_name }}</span></div>
+                <div><strong>Game Mode:</strong> <span id="game-mode">{{ game_mode }}</span></div>
+            </div>
+        </div>
+        </div>
+
         <div class="status-card">
             <div class="slide_btn">
                 <span>Bot Push</span>
@@ -31,22 +82,8 @@
             <hr class="section-divider">
 
             <div class="status-card-content">
-                <div class="status-left">
-                    <div><strong>Pilot Name:</strong> <span id="pilot-name">{{pilot_name}}</span></div>
-                    <div><strong>Pilot Org:</strong> <span id="pilot-org">{{pilot_org_name}}</span></div>
-                    <div>
-                        <span id="month">
-                            <strong>{{player_month_statistics.month}} Kills:</strong>
-                        </span><span id="pilot-kills">{{player_month_statistics.kills}}</span>
-                        <strong>| Deaths: </strong><span id="pilot-deaths">{{player_month_statistics.deaths}}</span>
-                        <strong>| Suicides: </strong><span id="pilot-suicides">{{player_month_statistics.suicides}}</span>
-                        <strong>| KDR: </strong><span id="pilot-kdr">{{player_month_statistics.kdr}}</span>
-                    </div>
-                    <div><strong>Ship Name:</strong> <span id="ship-name">{{ship_name}}</span></div>
-                    <div><strong>Game Mode:</strong> <span id="game-mode">{{game_mode}}</span></div>
-                </div>
 
-                <div class="status-right">
+                <div class="status-center-block">
                     <div><strong>Game Running:</strong>
                         <span id="game-indicator" class="{{ 'green-circle' if game_is_running else 'red-circle' }}"
                               title="Last checked: {{game_is_running_last_checked}}">
@@ -58,9 +95,12 @@
                               title="Reading every {{logfile_frequency}}s, last: {{logfile_date}}">
                         </span>
                     </div>
-                    <div><strong>Video Recordings:</strong>
-                        <span id="recordings-qty" title="{{latest_recordings[0] if latest_recordings else 'No recordings found'}}">
-                            {{recordings_qty}}
+                    <div>
+                        <span class="stat-block" id="recordings-qty-block">
+                            <strong>Video Recordings:</strong>
+                            <span id="recordings-qty" title="{{latest_recordings[0] if latest_recordings else 'No recordings found'}}">
+                                {{recordings_qty}}
+                            </span>
                         </span>
                     </div>
                 </div>
@@ -135,6 +175,8 @@
                             <img src="{{ player_event.victim_profile.icon_url }}" alt="Player icon" width="128" height="128" />
                           {% endif %}
 
+                            <div><strong>Player:</strong> {{ player_event.victim_profile.name }}</div>
+
                           {% if player_event.victim_profile.enlisted_date != '-' %}
                             <div><strong>Enlisted:</strong> {{ player_event.victim_profile.enlisted_date }}</div>
                           {% endif %}
@@ -151,7 +193,7 @@
                     </td>
 
                     <td class="tooltip-cell">
-                      {% if player_event.victim_profile.org.name != '-' %}
+                      {% if player_event.victim_profile.org.name != '-' and player_event.victim_profile.org.name != '-R-' %}
                           <span class="tooltip-trigger">
                             <a href="{{ player_event.victim_profile.org.icon_url }}">
                                 {{ player_event.victim_profile.org.name }}
@@ -160,6 +202,15 @@
                       {% else %}
                         {{ player_event.victim_profile.org.name }}
 
+                      {% endif %}
+
+                      {% if player_event.victim_profile.org.name == '-R-' %}
+                        <div class="tooltip-content">
+                          {% if player_event.victim_profile.org.icon_url != '-' %}
+                            <img src="{{ player_event.victim_profile.org.icon_url }}" alt="Player icon" width="128" height="128" />
+                          {% endif %}
+
+                        </div>
                       {% endif %}
 
                       {% if player_event.victim_profile.org.url != '-' %}
@@ -194,6 +245,8 @@
                             <img src="{{ player_event.killer_profile.icon_url }}" alt="Player icon" width="128" height="128" />
                           {% endif %}
 
+                            <div><strong>Player:</strong> {{ player_event.killer_profile.name }}</div>
+
                           {% if player_event.killer_profile.enlisted_date != '-' %}
                             <div><strong>Enlisted:</strong> {{ player_event.killer_profile.enlisted_date }}</div>
                           {% endif %}
@@ -210,7 +263,7 @@
                     </td>
 
                     <td class="tooltip-cell">
-                      {% if player_event.killer_profile.org.name != '-' %}
+                      {% if player_event.killer_profile.org.name != '-' and player_event.killer_profile.org.name != '-R-' %}
                           <span class="tooltip-trigger">
                             <a href="{{ player_event.killer_profile.org.url }}">
                                 {{ player_event.killer_profile.org.name }}
@@ -219,6 +272,15 @@
                       {% else %}
                         {{ player_event.killer_profile.org.name }}
 
+                      {% endif %}
+
+                      {% if player_event.killer_profile.org.name == '-R-' %}
+                        <div class="tooltip-content">
+                          {% if player_event.killer_profile.org.icon_url != '-' %}
+                            <img src="{{ player_event.killer_profile.org.icon_url }}" alt="Player icon" width="128" height="128" />
+                          {% endif %}
+
+                        </div>
                       {% endif %}
 
                       {% if player_event.killer_profile.org.url != '-' %}
@@ -259,10 +321,11 @@
 
     <script>
         function flashElement(el, color) {
-            el.classList.add(`flash-${color}`);
+            const className = `flash-${color}-border`;
+            el.classList.add(className);
             setTimeout(() => {
-                el.classList.remove(`flash-${color}`);
-            }, 8100);
+                el.classList.remove(className);
+            }, 2500);
         }
 
         const socket = new WebSocket("{{ ws_url }}");
@@ -273,7 +336,8 @@
 
         const pilotName = document.getElementById("pilot-name");
         const pilotOrg = document.getElementById("pilot-org");
-        const monthStrong = document.querySelector("#month strong");
+
+        const pilotOrgWrapper = document.getElementById("pilot-org-wrapper");
         const pilotKills = document.getElementById("pilot-kills");
         const pilotDeaths = document.getElementById("pilot-deaths");
         const pilotSuicides = document.getElementById("pilot-suicides");
@@ -301,30 +365,54 @@
             if (message.hasOwnProperty('player_profile')) {
                 console.log(message)
 
-                pilotName.textContent = message.player_profile.name
-                pilotOrg.textContent = message.player_profile.org.name
+                const pilotIcon = document.getElementById("pilot-icon");
+                if (message.player_profile.icon_url && message.player_profile.icon_url !== "-") {
+                    pilotIcon.src = message.player_profile.icon_url;
+                    pilotIcon.style.visibility = "visible";
+                } else {
+                    pilotIcon.src = "";
+                    pilotIcon.style.visibility = "hidden";
+                }
 
-                monthStrong.textContent = `${message.player_statistics.month} Kills:`
+                const pilotOrgIcon = document.getElementById("pilot-org-icon");
+                if (message.player_profile.org.icon_url && message.player_profile.org.icon_url !== "-") {
+                    pilotOrgIcon.src = message.player_profile.org.icon_url;
+                    pilotOrgIcon.style.visibility = "visible";
+                } else {
+                    pilotOrgIcon.src = "";
+                    pilotOrgIcon.style.visibility = "hidden";
+                }
+
+                pilotName.textContent = message.player_profile.name
+                const newOrg = message.player_profile.org.name;
+                if (newOrg && newOrg !== "-") {
+                    pilotOrg.textContent = newOrg;
+                    pilotOrgWrapper.style.display = "block";
+                } else {
+                    pilotOrg.textContent = "";
+                    pilotOrgWrapper.style.display = "none";
+                }
 
                 if (pilotKills.textContent !== String(message.player_statistics.kills)) {
                     pilotKills.textContent = message.player_statistics.kills;
-                    flashElement(pilotKills, 'green');
+                    flashElement(document.getElementById('pilot-kills-block'), 'green');
                 }
 
                 if (pilotDeaths.textContent !== String(message.player_statistics.deaths)) {
                     pilotDeaths.textContent = message.player_statistics.deaths;
-                    flashElement(pilotDeaths, 'red');
+                    flashElement(document.getElementById('pilot-deaths-block'), 'red');
                 }
 
                 if (pilotSuicides.textContent !== String(message.player_statistics.suicides)) {
                     pilotSuicides.textContent = message.player_statistics.suicides;
-                    flashElement(pilotSuicides, 'blue');
+                    flashElement(document.getElementById('pilot-suicides-block'), 'blue');
                 }
 
                 if (pilotKdr.textContent !== String(message.player_statistics.kdr)) {
                     pilotKdr.textContent = message.player_statistics.kdr;
-                    flashElement(pilotKdr, 'orange');
+                    flashElement(document.getElementById('pilot-kdr-block'), 'orange');
                 }
+
                 shipName.textContent = message.ship_name
                 gameMode.textContent = message.game_mode
 
@@ -349,9 +437,8 @@
                 if (recordingsQuantity.textContent !== String(message.recordings_qty)) {
                     recordingsQuantity.textContent = message.recordings_qty;
                     recordingsQuantity.title = message.latest_video_filename;
-                    flashElement(recordingsQuantity, 'blue');
+                    flashElement(document.getElementById('recordings-qty-block'), 'blue');
                 }
-
             }
 
             // [LOGFILE SCANNER]
@@ -587,22 +674,26 @@
         const span = document.createElement("span");
         span.classList.add("tooltip-trigger");
 
-        if (orgUrl !== '-') {
+        console.log(orgName)
+        if (orgUrl !== '-' && orgName !== '-R-') {
             const link = document.createElement("a");
-            link.href = `${orgUrl}`;
+            link.href = orgUrl;
             link.textContent = orgName;
             span.appendChild(link);
-        }
-        else {
+        } else  {
+
             span.textContent = orgName;
         }
+
         td.appendChild(span);
 
-        const shouldShowTooltip = orgUrl !== '-' || rank !== '-';
+        const shouldShowTooltip =
+            (orgName === '-R-' && iconUrl !== '-') ||
+            (orgUrl !== '-' || rank !== '-');
+
         if (shouldShowTooltip) {
             const tooltipDiv = document.createElement("div");
             tooltipDiv.classList.add("tooltip-content");
-            console.log(orgName)
 
             if (iconUrl !== '-') {
                 const img = document.createElement("img");
@@ -611,12 +702,14 @@
                 img.width = 128;
                 img.height = 128;
                 tooltipDiv.appendChild(img);
-
-                const orgNameDiv = document.createElement("div");
-                orgNameDiv.innerHTML = `<strong>Org:</strong> ${orgName}`;
-                tooltipDiv.appendChild(orgNameDiv);
-
             }
+
+            if (orgName !== '-') {
+                const nameDiv = document.createElement("div");
+                nameDiv.innerHTML = `<strong>Org:</strong> ${orgName}`;
+                tooltipDiv.appendChild(nameDiv);
+            }
+
             if (rank !== '-') {
                 const rankDiv = document.createElement("div");
                 rankDiv.innerHTML = `<strong>Rank:</strong> ${rank}`;
@@ -658,6 +751,12 @@
                 tooltipDiv.appendChild(img);
             }
 
+            if (playerName !== '-') {
+                const playerNameInfo = document.createElement("div");
+                playerNameInfo.innerHTML = `<strong>Player:</strong> ${playerName}`;
+                tooltipDiv.appendChild(playerNameInfo);
+            }
+
             if (enlistedDate !== '-') {
                 const enlistInfo = document.createElement("div");
                 enlistInfo.innerHTML = `<strong>Enlisted:</strong> ${enlistedDate}`;
@@ -681,6 +780,30 @@
 
         return td;
     }
+    </script>
+
+    <script>
+        document.querySelectorAll('.tooltip-cell').forEach(cell => {
+            const trigger = cell.querySelector('.tooltip-trigger');
+            const tooltip = cell.querySelector('.tooltip-content');
+
+            if (!tooltip || !trigger) return;
+
+            cell.addEventListener('mouseenter', () => {
+                const rect = tooltip.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
+
+                tooltip.classList.remove('tooltip-top', 'tooltip-bottom');
+
+                // Decide where to place the tooltip
+                if (spaceBelow < 200 && spaceAbove > 200) {
+                    tooltip.classList.add('tooltip-top');
+                } else {
+                    tooltip.classList.add('tooltip-bottom');
+                }
+            });
+        });
     </script>
 
 {% endblock %}

@@ -1,8 +1,8 @@
 from unittest.mock import AsyncMock, patch
 import pytest
 
-from src.profile_scraper import ProfileScrapper
-from tests.conftest_profile_scrapper import (
+from src.profile_scraper import ProfileScraper
+from tests.conftest_profile_scraper import (
     pilot_with_no_corp_profile,
     pilot_with_corp_and_location_profile,
     pilot_with_custom_icon_profile,
@@ -23,7 +23,7 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_with_no_corp_returns_da
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_no_corp_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_name()
@@ -38,7 +38,7 @@ async def test_profile_scrapper_get_enlisted_date_from_pilot_returns_date(pilot_
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_no_corp_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_enlisted_date()
@@ -54,7 +54,7 @@ async def test_profile_scrapper_get_location_from_pilot_with_no_location_returns
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_no_corp_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_location()
@@ -69,7 +69,7 @@ async def test_profile_scrapper_get_pilot_icon_url_from_pilot_with_returns_somet
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_no_corp_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_icon_url()
@@ -85,7 +85,7 @@ async def test_profile_scrapper_get_enlisted_date_from_pilot_with_corp_returns_d
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_corp_and_location_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_enlisted_date()
@@ -101,7 +101,7 @@ async def test_profile_scrapper_get_location_from_pilot_with_location_returns_lo
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_corp_and_location_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_location()
@@ -117,7 +117,7 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_with_corp_returns_dash(
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_corp_and_location_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_name()
@@ -134,7 +134,7 @@ async def test_profile_scrapper_get_pilot_org_url_from_pilot_with_corp_returns_c
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_corp_and_location_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_url()
@@ -151,7 +151,7 @@ async def test_profile_scrapper_get_pilot_icon_url_from_pilot_with_default_icon_
     with patch("src.profile_scraper.get_from_url", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = pilot_with_corp_and_location_profile
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_icon_url()
@@ -168,7 +168,7 @@ async def test_profile_scrapper_get_pilot_icon_url_from_pilot_with_custom_icon_r
         mock_get.return_value = pilot_with_custom_icon_profile
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_icon_url()
@@ -188,7 +188,7 @@ async def test_profile_scrapper_get_pilot_org_from_npc_returns_dash(npc_profile)
         mock_get.return_value = npc_profile
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_url()
@@ -206,7 +206,7 @@ async def test_profile_scrapper_get_pilot_icon_url_from_npc_returns_dash(npc_pro
         mock_get.return_value = npc_profile
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_icon_url()
@@ -224,7 +224,7 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_npc_returns_dash(npc
         mock_get.return_value = npc_profile
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_icon_url()
@@ -242,7 +242,7 @@ async def test_profile_scrapper_get_enlisted_date_from_npc_returns_dash(npc_prof
         mock_get.return_value = npc_profile
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_enlisted_date()
@@ -259,7 +259,7 @@ async def test_profile_scrapper_get_location_from_npc_returns_dash(npc_profile):
         mock_get.return_value = npc_profile
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_location()
@@ -279,7 +279,7 @@ async def test_profile_scrapper_get_location_from_pilot_nanoart_with_corp_return
         mock_get.return_value = pilot_nanoart_with_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_location()
@@ -296,7 +296,7 @@ async def test_profile_scrapper_get_enlisted_date_from_pilot_nanoart_with_corp_r
         mock_get.return_value = pilot_nanoart_with_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_enlisted_date()
@@ -313,7 +313,7 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_nanoart_with_corp_retur
         mock_get.return_value = pilot_nanoart_with_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_name()
@@ -330,7 +330,7 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_pilot_nanoart_with_c
         mock_get.return_value = pilot_nanoart_with_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_icon_url()
@@ -347,7 +347,7 @@ async def test_profile_scrapper_get_pilot_org_url_from_pilot_nanoart_with_corp_r
         mock_get.return_value = pilot_nanoart_with_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_url()
@@ -366,7 +366,7 @@ async def test_profile_scrapper_get_pilot_org_from_pilot_with_redacted_corp_retu
         mock_get.return_value = pilot_with_redacted_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_name()
@@ -383,7 +383,7 @@ async def test_profile_scrapper_get_pilot_org_url_from_pilot_with_redacted_corp_
         mock_get.return_value = pilot_with_redacted_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_url()
@@ -400,7 +400,7 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_pilot_with_redacted_
         mock_get.return_value = pilot_with_redacted_corp
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_icon_url()
@@ -417,7 +417,7 @@ async def test_profile_scrapper_get_pilot_org_icon_url_from_pilot_with_redacted_
         mock_get.return_value = astrotemplar_player
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_icon_url()
@@ -434,7 +434,7 @@ async def test_profile_scrapper_get_pilot_with_one_fluency_from_pilot_returns_en
         mock_get.return_value = astrotemplar_player
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_fluency()
@@ -451,7 +451,7 @@ async def test_profile_scrapper_get_pilot_with_two_fluency_from_pilot_returns_fr
         mock_get.return_value = pilot_with_more_than_one_fluency
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_player_fluency()
@@ -469,7 +469,7 @@ async def test_profile_scrapper_get_pilot_rank_with_chamberlain_rank_returns_cha
         mock_get.return_value = astrotemplar_player
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_rank()
@@ -487,7 +487,7 @@ async def test_profile_scrapper_get_pilot_org_with_weird_long_org_name_returns_o
         mock_get.return_value = pilot_with_weird_long_org_name
 
 
-        scrapper = ProfileScrapper()
+        scrapper = ProfileScraper()
         await scrapper.fetch_player(pilot_name)
 
         result = await scrapper.get_org_name()

@@ -17,8 +17,8 @@
         "frequency": 5
     },
     "trigger_controller": {
-        "enabled": false,
-        "selected_vendor": "nvidia",
+        "enabled": true,
+        "selected_vendor": "amd",
         "vendors": [
             {
                 "name": "nvidia",

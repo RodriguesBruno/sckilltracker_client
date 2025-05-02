@@ -121,6 +121,10 @@ async def serve_video(filename: str):
 
 @app.get("/")
 async def index_page(request: Request):
+    player_events = reversed(client.player_events())
+
+    print(client.pilot_icon_url, client.pilot_name)
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": title,
@@ -129,10 +133,12 @@ async def index_page(request: Request):
         "game_is_running": client.game_is_running,
         "game_is_running_last_checked": client.game_is_running_last_checked,
         "pilot_name": client.pilot_name,
+        "pilot_icon_url": client.pilot_icon_url,
         "pilot_org_name": client.pilot_org_name,
+        "pilot_org_icon_url": client.pilot_org_icon_url,
         "ship_name": client.ship_name,
         "game_mode": client.game_mode,
-        "player_events": reversed(client.player_events()),
+        "player_events": player_events,
         "startup_date": client.startup_date,
         "logfile_date": logfile_monitor.last_read_date,
         "max_entries": MAX_ENTRIES,
@@ -163,7 +169,7 @@ def statistics_data():
         top_killers_table=[TopKillersTable(**entry) for entry in client.statistics_top_killers_table()],
         kills_by_game_mode=[KillsGameMode(**entry) for entry in client.statistics_kills_by_game_mode()],
         damage_type_distribution=[DamageTypeDistribution(**entry) for entry in client.statistics_damage_type_distribution()],
-        pilot_month_kills=PilotMonthKills(**client.statistics_for_pilot_this_month())
+        player_month_statistics=client.statistics_for_pilot_this_month()
     )
 
 @app.get("/status", response_model=ClientStatus)
@@ -467,12 +473,6 @@ async def recordings_controller_other_disable():
         write_config(config_file=config_file, data=config)
 
     return RecordingsControllerStatus(**recordings_controller.get_config())
-
-@app.get("/recordings/trigger")
-async def recordings_trigger():
-    await client.recordings_trigger(broadcast=connection_manager.broadcast)
-
-    return 'ok'
 
 @app.get("/recordings")
 async def recordings_page(request: Request):
