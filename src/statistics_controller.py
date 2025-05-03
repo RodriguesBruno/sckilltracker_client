@@ -3,7 +3,6 @@ import logging
 from datetime import timedelta, datetime
 from typing import Optional
 import pandas as pd
-from pandas.core.interchange.dataframe_protocol import DataFrame
 
 from src.models.models import PlayerMonthStatistics
 
@@ -68,11 +67,6 @@ class StatisticsController:
         monthly_kills = df[is_this_month & (df["killer_name"] == player_name)]
         monthly_deaths = df[is_this_month & (df["victim_name"] == player_name)]
 
-        # non_suicide_kills = monthly_kills[
-        #     (monthly_kills["damage"] != "Suicide") &
-        #     (monthly_kills["killer_name"].str.strip().str.lower() != monthly_kills[
-        #         "victim_name"].str.strip().str.lower())
-        #     ]
         non_suicide_kills = monthly_kills[monthly_kills["damage"] != "Suicide"]
         suicide_kills = monthly_kills[monthly_kills["damage"] == "Suicide"]
         non_suicide_deaths = monthly_deaths[monthly_deaths["damage"] != "Suicide"]
@@ -149,7 +143,7 @@ class StatisticsController:
 
         return top.to_dict(orient='records')
 
-    def _get_table(self, name: str, filter_by: str, limit: int, exclude_player: Optional[str] = None):
+    def _get_table(self, name: str, filter_by: str, limit: int, exclude_player: Optional[str] = None) -> pd.DataFrame:
         df: pd.DataFrame = self._get_prepared_df()
         now = pd.Timestamp.utcnow()
 
