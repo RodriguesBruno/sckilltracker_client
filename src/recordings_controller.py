@@ -2,18 +2,28 @@ import asyncio
 import logging
 import os
 from pathlib import Path
+import msvcrt
 
 from src.models.models import PlayerEvent
 
 
+# def is_file_locked(file_path: Path) -> bool:
+#     try:
+#         with open(file_path, 'a'):
+#             return False
+#
+#     except OSError:
+#         return True
+
 def is_file_locked(file_path: Path) -> bool:
     try:
-        with open(file_path, 'a'):
+        with open(file_path, 'r+b') as f:
+            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, os.path.getsize(file_path))
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, os.path.getsize(file_path))
             return False
 
     except OSError:
         return True
-
 
 class RecordingsController:
     def __init__(self, config: dict) -> None:
@@ -263,7 +273,7 @@ class RecordingsController:
     async def auto_rename_video(self, player_event: PlayerEvent) -> str:
         logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING]")
 
-        sleep_time = 0.1
+        sleep_time = 0.5
         video_record_max_time: float = 6
 
         while video_record_max_time > 0:
@@ -274,6 +284,7 @@ class RecordingsController:
             )
 
             if new_files:
+                await asyncio.sleep(1)
                 file_name: str = new_files[0]
                 old_file: Path = Path(self._path, file_name)
 
@@ -311,7 +322,7 @@ class RecordingsController:
                     logging.error(
                         f"[RECORDING CONTROLLER - AUTO RENAMING ERROR] couldn't rename filename: {file_name} because {e}")
 
-                    return file_name
+                    return str(file_name)
 
             await asyncio.sleep(sleep_time)
             video_record_max_time -= sleep_time

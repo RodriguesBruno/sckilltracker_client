@@ -73,7 +73,6 @@ class StatisticsController:
 
         try:
             kdr = round(len(non_suicide_kills) / len(non_suicide_deaths), 2)
-            print(f"KDR: {kdr}")
 
         except ZeroDivisionError:
             kdr = 0

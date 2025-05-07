@@ -286,7 +286,7 @@ class SCClient:
 
         return player_events
 
-    async def _handle_online_mode(self, broadcast: Callable, player_events: list[PlayerEvent]) -> list[PlayerEvent]:
+    async def _handle_online_mode(self, broadcast: Callable, player_events: list[PlayerEvent]):
 
         async with httpx.AsyncClient(verify=False) as client:
             for player_event in player_events:
@@ -431,7 +431,7 @@ class SCClient:
                             logging.info(f"[CLIENT EVENT - SHIP NAME CHANGED] to {ship_name}")
                         self._ship_name = ship_name
 
-                    ship_name_changed: bool = False
+                    # ship_name_changed: bool = False
 
                     # [GAME MODE EVENT]
                     game_mode_changed, game_mode = await self._event_manager.handle_game_mode_event(
@@ -452,7 +452,13 @@ class SCClient:
                     if player_events:
                         for player_event in player_events:
                             if self._player_profile.name == player_event.killer_profile.name:
+                                player_event.ship_name = self._ship_name
+
+                            if self._player_profile.name == player_event.victim_profile.name:
                                 self._ship_name = player_event.ship_name
+                                player_event.ship_name = '-'
+                                ship_name_changed = True
+
 
                             if self._trigger_controller.is_enabled:
                                 must_record_video, reason = await self._recordings_controller.must_record_video(
