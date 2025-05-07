@@ -431,8 +431,6 @@ class SCClient:
                             logging.info(f"[CLIENT EVENT - SHIP NAME CHANGED] to {ship_name}")
                         self._ship_name = ship_name
 
-                    # ship_name_changed: bool = False
-
                     # [GAME MODE EVENT]
                     game_mode_changed, game_mode = await self._event_manager.handle_game_mode_event(
                         new_lines=new_lines,
