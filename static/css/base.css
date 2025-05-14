@@ -1,0 +1,202 @@
+/* ====== GLOBAL RESET ====== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #0e0e0e;
+  color: #AAAAAA;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+li {
+  list-style: none;
+}
+
+/* ====== NAVBAR ====== */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background-color: #000;
+  color: #fff;
+}
+
+.nav-links a {
+  color: #fff;
+}
+
+.logo {
+  font-size: 28px;
+  background-color: #000;
+  font-weight: bold;
+  margin-left: calc(100vw * 0.22);
+}
+
+.menu {
+  display: flex;
+  gap: 1em;
+  font-size: 18px;
+  right: calc(100vw * 0.22);
+  position: relative;
+}
+
+.menu a {
+  padding: 5px 14px;
+}
+
+.menu a:hover {
+  background-color: #d1007e;
+  border-radius: 5px;
+  transition: 0.5s ease;
+}
+
+/* Dropdown Menu */
+.services {
+  position: relative;
+}
+
+.dropdown {
+  background-color: rgb(1, 139, 139);
+  padding: 1em 0;
+  position: absolute;
+  display: none;
+  border-radius: 8px;
+  top: 35px;
+}
+
+.dropdown li + li {
+  margin-top: 10px;
+}
+
+.dropdown li {
+  padding: 0.5em 1em;
+  width: 8em;
+  text-align: center;
+}
+
+.dropdown li:hover {
+  background-color: #000;
+}
+
+.services:hover .dropdown {
+  display: block;
+}
+
+/* ====== RESPONSIVE NAVBAR ====== */
+input[type="checkbox"] {
+  display: none;
+}
+
+.hamburger {
+  display: none;
+  font-size: 24px;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .menu {
+    display: none;
+    position: absolute;
+    background-color: #1a1a1a;
+    right: 0;
+    left: 0;
+    text-align: center;
+    padding: 16px 0;
+  }
+
+  .menu li:hover {
+    display: inline-block;
+    background-color: #4c9e9e;
+    transition: 0.3s ease;
+  }
+
+  .menu li + li {
+    margin-top: 12px;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .dropdown {
+    left: 50%;
+    top: 30px;
+    transform: translateX(35%);
+  }
+
+  .dropdown li:hover {
+    background-color: #4c9e9e;
+  }
+
+  input[type="checkbox"]:checked ~ .menu {
+    display: block;
+  }
+}
+
+/* ====== GLOBAL UTILITY CLASSES ====== */
+.content {
+  margin: 10px auto;
+  text-align: center;
+  background-color: #0e0e0e;
+}
+
+.withMargin {
+  margin-top: 20px;
+}
+
+.withBorder {
+  border: 2px solid;
+  border-radius: 10px;
+}
+
+.bottom {
+  margin-top: 50px;
+}
+
+/* Buttons */
+input[type="submit"],
+a.button3 {
+  display: inline-block;
+  padding: 0.3em 1.2em;
+  margin: 1em;
+  border-radius: 2em;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  font-size: large;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  color: #212121;
+  background-color: #4eb5f1;
+}
+
+a.button3:hover {
+  background-color: #4095c6;
+}
+
+a.buttonDanger {
+  background-color: #FF851B;
+}
+
+/* Form Inputs */
+input,
+select,
+textarea {
+  border: none;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 5px;
+  font-weight: bold;
+  background-color: #DDDDDD;
+}

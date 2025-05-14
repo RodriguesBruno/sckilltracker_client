@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from src.models.models import PlayerEvent, PlayerProfile
@@ -32,6 +33,9 @@ class EventManager:
         self._game_mode_keywords: list[str] = ['> Loading screen for ', '> Mode[EA']
         self._player_event_keyword: str = "<Actor Death>"
 
+        self._verbose_logging: bool = True
+        self._debug_logging: bool = False
+
     @property
     def pilot_name_keyword(self) -> str:
         return self._pilot_name_keyword
@@ -43,6 +47,24 @@ class EventManager:
     @property
     def game_mode_keywords(self) -> list[str]:
         return self._game_mode_keywords
+
+    @property
+    def verbose_logging(self) -> bool:
+        return self._verbose_logging
+
+    @verbose_logging.setter
+    def verbose_logging(self, value: bool) -> None:
+        self._verbose_logging = value
+        logging.info(f"[EVENT MANAGER - Verbose Logging] {'Enabled' if value else 'Disabled'}")
+
+    @property
+    def debug_logging(self) -> bool:
+        return self._debug_logging
+
+    @debug_logging.setter
+    def debug_logging(self, value: bool) -> None:
+        logging.info(f'[EVENT MANAGER - Debug Logging] {"Enabled" if value else "Disabled"}')
+        self._debug_logging = value
 
     def set_event_lines(self, lines: list[str]) -> None:
         self._event_lines = lines

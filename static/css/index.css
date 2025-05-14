@@ -1,0 +1,270 @@
+/* index.css - Styles specific to index.html */
+
+/* Status Card Container */
+.status-card {
+  background-color: #1c1c1c;
+  color: #f0f0f0;
+  padding: 20px;
+
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.05);
+  min-width: 400px;
+  max-width: 400px;
+  border: 1px solid #333;
+}
+
+.player-card {
+  background-color: #1c1c1c;
+  color: #f0f0f0;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.05);
+  min-width: 25%;
+  max-width: 25%;
+  border: 1px solid #333;
+}
+
+.status-player-card-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  font-size: 18px;
+}
+
+/* Card Content Layout */
+.status-card-content {
+  display: flex;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.status-center-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Toggle Sections */
+.accordion-section {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.accordion-section details {
+  margin-top: 10px;
+  padding-left: 24px;
+  color: #ccc;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+/* Individual Slide Button Container */
+.slide_btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0;
+  padding: 6px 8px;
+  background-color: #292929;
+  border-radius: 8px;
+  color: #eee;
+  font-size: 14px;
+}
+
+/* Recording Control Panel */
+#recording-control-panel {
+  display: inline-flex;
+  flex-direction: column;
+  background-color: #1c1c1c;
+  padding: 20px;
+  border-radius: 10px;
+  color: #f0f0f0;
+  border: 1px solid #333;
+  min-width: 420px;
+  max-width: 620px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Status Indicators */
+.green-circle, .red-circle, .blue-circle {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.green-circle {
+  background-color: #3D9970;
+}
+
+.red-circle {
+  background-color: #e74c3c;
+}
+
+.blue-circle {
+  background-color: #3498db;
+}
+
+/* Divider */
+.section-divider {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid #444;
+  width: 100%;
+}
+
+/* Stat Block Highlights */
+.stat-block {
+  padding: 2px 6px;
+  border-radius: 10px;
+  display: inline-block;
+  margin: 0 5px;
+  transition: all 0.4s ease;
+}
+
+.flash-green-border {
+  border: 2px solid #3D9970;
+  box-shadow: 0 0 6px #3D9970;
+}
+
+.flash-red-border {
+  border: 2px solid #e74c3c;
+  box-shadow: 0 0 6px #e74c3c;
+}
+
+.flash-blue-border {
+  border: 2px solid #3498db;
+  box-shadow: 0 0 6px #3498db;
+}
+
+.flash-orange-border {
+  border: 2px solid #f39c12;
+  box-shadow: 0 0 6px #f39c12;
+}
+
+/* Tooltip Styles */
+.tooltip-cell {
+  position: relative;
+}
+
+.tooltip-trigger {
+  cursor: pointer;
+}
+
+.tooltip-content {
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: absolute;
+  z-index: 1000;
+  min-width: 300px;
+  padding: 15px;
+  background-color: #1c1c1c;
+  border: 2px solid #333;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.05);
+  color: #eee;
+  font-size: 16px;
+  border-radius: 16px;
+  left: 0;
+}
+
+.tooltip-top {
+  bottom: 100%;
+  margin-bottom: 8px;
+}
+
+.tooltip-bottom {
+  top: 100%;
+  margin-top: 8px;
+}
+
+.tooltip-cell:hover .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Event Table Scroll Limiter */
+.events-table-container {
+  height: 600px;
+  overflow-y: auto;
+  overflow-x: auto;
+  margin-top: 15px;
+  margin-bottom: 1rem;
+}
+
+#message-table {
+  width: 90%;
+  margin: auto;
+  border-collapse: collapse;
+  background-color: #111;
+  color: #fff;
+  font-size: 14px;
+}
+
+#message-table th, #message-table td {
+  padding: 0.5rem 1rem;
+  border: 1px solid #444;
+  text-align: center;
+}
+
+#message-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #323336;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+#top-panel {
+    display: inline-flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 15px;
+    width: 90%
+}

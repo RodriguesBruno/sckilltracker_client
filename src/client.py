@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import subprocess
-from typing import Callable, Optional
+from multiprocessing import Queue
+from typing import Callable, Optional, Any
 import httpx
 
 from src.client_utils import generate_client_id
@@ -55,13 +56,15 @@ class SCClient:
             repo: Repository,
             statistics_controller: StatisticsController,
             trigger_controller: TriggerController,
-            recordings_controller: RecordingsController
+            recordings_controller: RecordingsController,
+            overlay_queue: Optional[Queue] = None
     ) -> None:
 
         self._version: str = config.get('version')
         self._enabled: bool = config.get('enabled')
         self._api_url: str = config.get('api_url')
         self._verbose_logging: bool = config.get('verbose_logging')
+        self._debug_logging: bool = False
 
         self._game_executable_name: str = config.get('game_executable_name')
         self._game_executable_check_frequency: int = config.get('game_executable_check_frequency')
@@ -71,6 +74,7 @@ class SCClient:
         self._statistics_controller: StatisticsController = statistics_controller
         self._trigger_controller: TriggerController = trigger_controller
         self._recordings_controller: RecordingsController = recordings_controller
+        self._overlay_queue = overlay_queue
 
         self._event_manager: EventManager = EventManager()
 
@@ -125,11 +129,11 @@ class SCClient:
 
                 await broadcast(game_notification.model_dump())
 
-                if self._verbose_logging:
-                    logging.debug(f"[CLIENT] {msg}")
 
-            # logging.info(
-            #     f"[CLIENT - UI NOTIFICATION - GAME EXECUTABLE] is running: {self._game_is_running}, date: {date}")
+                logging.debug(f"[CLIENT] {msg}") and self._debug_logging
+
+            logging.info(
+                f"[CLIENT - UI NOTIFICATION - GAME EXECUTABLE] is running: {self._game_is_running}, date: {date}") and self._verbose_logging
 
             await broadcast(
                 GameExecutableNotification(
@@ -203,20 +207,30 @@ class SCClient:
 
     def player_events(self, limit: Optional[int] = None) -> list[PlayerEvent]:
         if limit:
-            res = [
-                csv_to_player_event_adapter(entry)
-                if self._repo.type == RepositoryType.CSV
-                else entry
-                for entry in self._repo.read()[-limit:]
-            ]
-            return res
+            entries = self._repo.read()[-limit:]
         else:
-            return [
+            entries = self._repo.read()
+
+        return [
                 csv_to_player_event_adapter(entry)
                 if self._repo.type == RepositoryType.CSV
                 else entry
-                for entry in self._repo.read()
+                for entry in entries
             ]
+        #     res = [
+        #         csv_to_player_event_adapter(entry)
+        #         if self._repo.type == RepositoryType.CSV
+        #         else entry
+        #         for entry in self._repo.read()[-limit:]
+        #     ]
+        #     return res
+        #
+        # return [
+        #     csv_to_player_event_adapter(entry)
+        #     if self._repo.type == RepositoryType.CSV
+        #     else entry
+        #     for entry in self._repo.read()
+        # ]
 
     @property
     def startup_date(self) -> str:
@@ -232,11 +246,31 @@ class SCClient:
 
     def verbose_logging_enable(self) -> None:
         self._verbose_logging = True
-        logging.debug(f"[CLIENT - Verbose Logging] Enabled")
+        logging.info(f"[CLIENT - Verbose Logging] Enabled")
 
     def verbose_logging_disable(self) -> None:
         self._verbose_logging = False
-        logging.debug(f"[CLIENT - Verbose Logging] Disabled")
+        logging.info(f"[CLIENT - Verbose Logging] Disabled")
+
+    def debug_logging_enable(self) -> None:
+        self._debug_logging = True
+        logging.info(f"[CLIENT - Debug Logging] Enabled")
+
+    def debug_logging_disable(self) -> None:
+        self._debug_logging = False
+        logging.info(f"[CLIENT - Debug Logging] Disabled")
+
+    def logfile_monitor_verbose_logging_enable(self) -> None:
+        self._logfile_monitor.verbose_logging = True
+
+    def logfile_monitor_verbose_logging_disable(self) -> None:
+        self._logfile_monitor.verbose_logging = False
+
+    def logfile_monitor_debug_logging_enable(self) -> None:
+        self._logfile_monitor.debug_logging = True
+
+    def logfile_monitor_debug_logging_disable(self) -> None:
+        self._logfile_monitor.debug_logging = False
 
     def get_config(self) -> dict:
         return {
@@ -264,7 +298,7 @@ class SCClient:
 
         logfile_is_running: bool = False if not self._logfile_monitor.log_is_validated else self._game_is_running
 
-        # logging.info(f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}")
+        logging.info(f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}") and self._verbose_logging
 
         await broadcast(
             LogFileNotification(
@@ -282,7 +316,11 @@ class SCClient:
             player_event.push_result_message = f"Offline mode: {self._current_date}"
             player_event.push_result_is_success = False
 
-            await broadcast(player_event.model_dump())
+            data = player_event.model_dump()
+            await broadcast(data)
+
+            if self._overlay_queue:
+                self._overlay_queue.put(data)
 
         return player_events
 
@@ -294,7 +332,13 @@ class SCClient:
                 data: dict = {
                     "client_id": self._client_id,
                     "client_version": self._version,
-                    "player_event": player_event.model_dump(exclude={"client_enabled", "push_result_message", "push_result_is_success"})
+                    "player_event": player_event.model_dump(
+                        exclude={
+                            "client_enabled",
+                            "push_result_message",
+                            "push_result_is_success"
+                        }
+                    )
                 }
 
                 message: str = ''
@@ -317,7 +361,11 @@ class SCClient:
                     player_event.push_result_message=message
                     player_event.push_result_is_success=is_success
 
-                    await broadcast(player_event.model_dump())
+                    data = player_event.model_dump()
+                    await broadcast(data)
+
+                    if self._overlay_queue:
+                        self._overlay_queue.put(data)
 
         return player_events
 
@@ -340,7 +388,7 @@ class SCClient:
         return self._recordings_controller.video_files_quantity()
 
     async def validate_logfile(self) -> None:
-        logging.info(f"[CLIENT - REQUESTING LOGFILE VALIDATION]")
+        logging.info(f"[CLIENT - REQUESTING LOGFILE VALIDATION]") and self._verbose_logging
 
         pilot_name_event, ship_name_event, game_mode_event = await self._logfile_monitor.validate_logfile(
             pilot_name_keyword=self._event_manager.pilot_name_keyword,
@@ -375,12 +423,11 @@ class SCClient:
 
                 self._game_mode = game_mode
 
-        if self._verbose_logging:
-            logging.debug(f"[CLIENT] State:\n"
-                  f"    Pilot Name: {self._player_profile.name}\n"
-                  f"    Ship Name: {self._ship_name}\n"
-                  f"    Game Mode: {self._game_mode}\n"
-                  f"*---------------------------------*")
+        logging.debug(f"[CLIENT] State:\n"
+              f"    Pilot Name: {self._player_profile.name}\n"
+              f"    Ship Name: {self._ship_name}\n"
+              f"    Game Mode: {self._game_mode}\n"
+              f"*---------------------------------*") and self._debug_logging
 
     async def run(self, broadcast: Callable) -> None:
         asyncio.create_task(self._recordings_controller.scan_video_files())
@@ -400,8 +447,7 @@ class SCClient:
 
 
                 if self._logfile_monitor.log_is_validated and self._game_is_running:
-                    # if self._verbose_logging:
-                    #     logging.debug(f"[CLIENT - CHECKING FOR NEW EVENTS]")
+                    logging.debug(f"[CLIENT - CHECKING FOR NEW EVENTS]") and self._debug_logging
 
                     if await self._logfile_monitor.has_rolled_over():
                         await self.validate_logfile()
@@ -417,8 +463,7 @@ class SCClient:
                     )
 
                     if pilot_name_changed:
-                        if self._verbose_logging:
-                            logging.info(f"[CLIENT EVENT - PILOT NAME CHANGED] to {player_profile.name}")
+                        logging.debug(f"[CLIENT EVENT - PILOT NAME CHANGED] to {player_profile.name}") and self._debug_logging
                         self._player_profile = player_profile
 
                     # [SHIP NAME EVENT]
@@ -427,8 +472,7 @@ class SCClient:
                         current_ship_name=self._ship_name
                     )
                     if ship_name_changed:
-                        if self._verbose_logging:
-                            logging.info(f"[CLIENT EVENT - SHIP NAME CHANGED] to {ship_name}")
+                        logging.debug(f"[CLIENT EVENT - SHIP NAME CHANGED] to {ship_name}") and self._debug_logging
                         self._ship_name = ship_name
 
                     # [GAME MODE EVENT]
@@ -437,8 +481,7 @@ class SCClient:
                         current_game_mode=self._game_mode
                     )
                     if game_mode_changed:
-                        if self._verbose_logging:
-                            logging.info(f"[CLIENT EVENT - GAME MODE CHANGED] to {game_mode}")
+                        logging.debug(f"[CLIENT EVENT - GAME MODE CHANGED] to {game_mode}") and self._debug_logging
                         self._game_mode = game_mode
 
                     # [PLAYER EVENTS]
@@ -465,7 +508,7 @@ class SCClient:
                                 )
 
                                 if must_record_video:
-                                    logging.info(f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}")
+                                    logging.info(f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
                                     await self._trigger_controller.trigger_hotkey()
 
                                     video_filename: str = await self._recordings_controller.auto_rename_video(
@@ -475,7 +518,7 @@ class SCClient:
                                     logging.info(
                                         f"[CLIENT - UI NOTIFICATION - RECORDING CONTROLLER] videos_qty: "
                                         f"{self._recordings_controller.video_files_quantity()}, "
-                                        f"latest_video_filename: {video_filename}")
+                                        f"latest_video_filename: {video_filename}") and self._verbose_logging
 
                                     recording_notification: RecordingNotification = RecordingNotification(
                                         recordings_qty=self._recordings_controller.video_files_quantity(),
@@ -484,7 +527,7 @@ class SCClient:
                                     await broadcast(recording_notification.model_dump())
 
                                 else:
-                                    logging.info(f"[CLIENT EVENT - VIDEO RECORDING BYPASSED] REASON: {reason}")
+                                    logging.info(f"[CLIENT EVENT - VIDEO RECORDING BYPASSED] REASON: {reason}") and self._verbose_logging
 
                         if self.is_enabled:
                             updated_player_events: list[PlayerEvent] = await self._handle_online_mode(broadcast, player_events)
@@ -505,7 +548,7 @@ class SCClient:
 
                         logging.info(
                             f"[CLIENT - UI NOTIFICATION - GAME] Pilot Name: {self._player_profile.name}, "
-                            f"Ship Name: {self._ship_name}, Game Mode: {self._game_mode}")
+                            f"Ship Name: {self._ship_name}, Game Mode: {self._game_mode}") and self._verbose_logging
 
                         game_notification: GameNotification = GameNotification(
                             player_profile = self._player_profile,
@@ -522,7 +565,7 @@ class SCClient:
                             f"[CLIENT - UI NOTIFICATION - GAME] Pilot Name: {self._player_profile.name}, "
                             f"Ship Name: {self._ship_name}, "
                             f"Game Mode: {self._game_mode}"
-                        )
+                        ) and self._verbose_logging
 
                         player_statistics: PlayerMonthStatistics = self.statistics_for_pilot_this_month()
 

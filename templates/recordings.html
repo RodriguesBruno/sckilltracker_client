@@ -1,7 +1,12 @@
 {% extends "base.html" %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/recordings.css') }}">
+{% endblock %}
+
 {% block content %}
 
-<h2 class="withMargin">Replay Recordings</h2>
+<h2 class="withMargin">Instant Replay Videos</h2>
 
 <div class="mb-3 text-center">
     <input type="text" id="filterInput" class="form-control w-50 mx-auto" placeholder="Filter recordings by keyword...">

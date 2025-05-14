@@ -2,6 +2,7 @@ import logging
 import re
 import httpx
 
+
 async def get_from_url(url: str) -> str:
     async with httpx.AsyncClient(verify=False) as client:
         try:
@@ -11,18 +12,41 @@ async def get_from_url(url: str) -> str:
         except httpx.RequestError as e:
             logging.error(f"Request failed: {e}")
 
+            return ''
+
 
 class ProfileScraper:
     def __init__(self) -> None:
-        self._url = f"https://robertsspaceindustries.com/en/citizens"
+        self._url: str = f"https://robertsspaceindustries.com/en/citizens"
         self._player_data: str = ""
 
-    async def fetch_player(self, name: str) -> None:
-        logging.info(f"[PROFILE SCRAPER] FETCHING DATA FOR PLAYER: {name}")
-        url = f"{self._url}/{name}"
-        html = await get_from_url(url)
+        self._verbose_logging: bool = True
+        self._debug_logging: bool = False
 
-        self._player_data = html
+    @property
+    def verbose_logging(self) -> bool:
+        return self._verbose_logging
+
+    @verbose_logging.setter
+    def verbose_logging(self, value: bool) -> None:
+        self._verbose_logging = value
+        logging.info(f"[PROFILE SCRAPPER - Verbose Logging] {'Enabled' if value else 'Disabled'}")
+
+    @property
+    def debug_logging(self) -> bool:
+        return self._debug_logging
+
+    @debug_logging.setter
+    def debug_logging(self, value: bool) -> None:
+        logging.info(f'[PROFILE SCRAPPER - Debug Logging] {"Enabled" if value else "Disabled"}')
+        self._debug_logging = value
+
+    async def fetch_player(self, name: str) -> None:
+        logging.info(f"[PROFILE SCRAPER] FETCHING DATA FOR PLAYER: {name}") and self._verbose_logging
+        url: str = f"{self._url}/{name}"
+        text: str = await get_from_url(url)
+
+        self._player_data = text
 
     async def get_player_icon_url(self) -> str:
         pattern = re.compile(
@@ -62,7 +86,7 @@ class ProfileScraper:
             if '&equiv;'in res:
                 return res.replace('&equiv;', '').replace('\\', '').replace('/', '').strip()
 
-            return res
+            return res.replace('amp;amp;', '')
 
         return '-'
 

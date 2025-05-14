@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 
+{% block head_extra %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/index.css') }}">
+{% endblock %}
+
+
 {% block content %}
 
-    <div style="display: inline-flex; justify-content: center; align-items: flex-start; gap: 20px;">
+    <div id="top-panel">
         <div class="player-card">
             <div class="status-player-card-content" style="display: flex; align-items: flex-start; gap: 20px;">
             <div>
@@ -50,7 +55,7 @@
                       <span id="pilot-kdr">{{ player_month_statistics.kdr }}</span>
                     </span>
                 </div>
-<!--                <div><strong>Ship Name:</strong> <span id="ship-name">{{ ship_name }}</span></div>-->
+
                 <div id="ship-name-wrapper" style="{% if ship_name == '-' %}display:none;{% endif %}">
                     <strong>Ship Name:</strong> <span id="ship-name">{% if ship_name != '-' %}{{ ship_name }}{% endif %}</span>
                 </div>
@@ -63,24 +68,32 @@
             <div class="slide_btn">
                 <span>Bot Push</span>
                 <label class="switch">
-                    <input type="checkbox" id="botToggle" {% if client_enabled %} checked {% endif %}>
-                    <span class="slider round" title="Push Notifications to BOT or not"></span>
+                    <input type="checkbox" id="botToggle"  class="toggle" data-title-enable="Enable Push To Discord BOT" data-title-disable="Disable Push To Discord BOT" {% if client_enabled %} checked {% endif %}>
+                    <span class="slider round" title="{{ 'Disable Push To Discord BOT' if client_enabled else 'Enable Push To Discord BOT' }}"></span>
                 </label>
             </div>
 
             <div class="slide_btn">
-                <span>Video Recording</span>
+                <span>Instant Replay</span>
                 <label class="switch">
-                    <input type="checkbox" id="recordTriggerToggle" {% if trigger_controller_enabled %} checked {% endif %}>
-                    <span class="slider round" title="Trigger Replay Recording Hotkey or not"></span>
+                    <input type="checkbox" id="recordTriggerToggle" class="toggle" data-title-enable="Enable Instant Replay" data-title-disable="Disable Instant Replay" {% if trigger_controller_enabled %} checked {% endif %}>
+                    <span class="slider round" title="{{ 'Disable Instant Replay' if trigger_controller_enabled else 'Enable Instant Replay' }}"></span>
+                </label>
+            </div>
+
+            <div class="slide_btn">
+                <span>Overlay</span>
+                <label class="switch">
+                    <input type="checkbox" id="overlayToggle" class="toggle" data-title-enable="Enable Overlay" data-title-disable="Disable Overlay" {% if overlay_enabled %} checked {% endif %}>
+                    <span class="slider round" title="{{ 'Disable Overlay' if overlay_enabled else 'Enable Overlay' }}"></span>
                 </label>
             </div>
 
             <div class="slide_btn">
                 <span>Verbose Logging</span>
                 <label class="switch">
-                    <input type="checkbox" id="verboseLoggingToggle" {% if verbose_logging %} checked {% endif %}>
-                    <span class="slider round" title="Enable Verbose Logging"></span>
+                    <input type="checkbox" id="verboseLoggingToggle" class="toggle" data-title-enable="Enable Verbose Logging" data-title-disable="Disable Verbose Logging" {% if verbose_logging %} checked {% endif %}>
+                    <span class="slider round" title="{{ 'Disable Verbose Logging' if verbose_logging else 'Enable Verbose Logging' }}"></span>
                 </label>
             </div>
 
@@ -102,7 +115,7 @@
                     </div>
                     <div>
                         <span class="stat-block" id="recordings-qty-block">
-                            <strong>Video Recordings:</strong>
+                            <strong>Instant Replay Videos:</strong>
                             <span id="recordings-qty" title="{{latest_recordings[0] if latest_recordings else 'No recordings found'}}">
                                 {{recordings_qty}}
                             </span>
@@ -112,20 +125,9 @@
             </div>
         </div>
 
-        <div id="recording-control-panel"
-             style="display: {% if trigger_controller_enabled %}inline-flex{% else %}none{% endif %};
-                    flex-direction: column;
-                    margin: 20px auto;
-                    background-color: #1c1c1c;
-                    padding: 20px;
-                    border-radius: 10px;
-                    color: #f0f0f0;
-                    border: 1px solid #333;
-                    min-width: 50%;
-                    box-shadow: 0 0 15px rgba(0,0,0,0.2);"
-        >
+        <div id="recording-control-panel" style="display: {{ 'flex' if trigger_controller_enabled else 'none' }};">
 
-            <div style="margin-bottom: 10px;"><strong>Video Recording Options:</strong></div>
+            <div style="margin-bottom: 10px;"><strong>Instant Replay Options:</strong></div>
 
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;">
                 <div class="slide_btn"><span>Suicide Death</span><label class="switch"><input type="checkbox" id="recordings-suicide-toggle" {% if recording_controller.record_suicide %} checked {% endif %}><span class="slider round"></span></label></div>
@@ -597,6 +599,11 @@
         fetchData(endpoint)
     });
 
+    document.getElementById('overlayToggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/enable' : '/overlay/disable';
+        fetchData(endpoint)
+    });
+
     document.getElementById('verboseLoggingToggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/verbose_logging/enable' : '/verbose_logging/disable';
         fetchData(endpoint)
@@ -818,6 +825,22 @@
                     tooltip.classList.add('tooltip-bottom');
                 }
             });
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.toggle').forEach((checkbox) => {
+            console.log(checkbox.dataset)
+            const sliderSpan = checkbox.nextElementSibling;
+            const titleEnable = checkbox.dataset.titleEnable;
+            const titleDisable = checkbox.dataset.titleDisable;
+
+            function updateTitle() {
+                sliderSpan.title = checkbox.checked ? titleDisable : titleEnable;
+            }
+
+            checkbox.addEventListener('change', updateTitle);
+            updateTitle();
         });
     </script>
 

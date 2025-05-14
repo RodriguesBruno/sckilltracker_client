@@ -1,5 +1,7 @@
 import logging
+from typing import Optional
 
+from src.exceptions import PlayerProfileNotFoundException
 from src.models.models import PlayerProfile, Organization
 from src.profile_scraper import ProfileScraper
 
@@ -9,9 +11,30 @@ class ProfileManager:
         self._profile_scraper: ProfileScraper = ProfileScraper()
         self._profile_cache: dict[str, PlayerProfile] = {}
 
+        self._verbose_logging: bool = True
+        self._debug_logging: bool = False
+
+    @property
+    def verbose_logging(self) -> bool:
+        return self._verbose_logging
+
+    @verbose_logging.setter
+    def verbose_logging(self, value: bool) -> None:
+        self._verbose_logging = value
+        logging.info(f"[PROFILE MANAGER - Verbose Logging] {'Enabled' if value else 'Disabled'}")
+
+    @property
+    def debug_logging(self) -> bool:
+        return self._debug_logging
+
+    @debug_logging.setter
+    def debug_logging(self, value: bool) -> None:
+        logging.info(f'[PROFILE MANAGER - Debug Logging] {"Enabled" if value else "Disabled"}')
+        self._debug_logging = value
+
     async def get_profile(self, name: str) -> PlayerProfile:
         if name in self._profile_cache:
-            logging.info(f"[PROFILE MANAGER] USING CACHED PROFILE FOR PLAYER: {name}")
+            logging.info(f"[PROFILE MANAGER] USING CACHED PROFILE FOR PLAYER: {name}") and self.verbose_logging
             return self._profile_cache[name]
 
         player_profile: PlayerProfile = await self.create_profile(name=name)
@@ -19,7 +42,7 @@ class ProfileManager:
         return player_profile
 
     async def create_profile(self, name: str) -> PlayerProfile:
-        logging.info(f"[PROFILE MANAGER] CREATING PROFILE FOR PLAYER: {name}")
+        logging.info(f"[PROFILE MANAGER] CREATING PROFILE FOR PLAYER: {name}") and self.verbose_logging
         await self._profile_scraper.fetch_player(name)
 
         org: Organization = Organization(
@@ -44,10 +67,12 @@ class ProfileManager:
 
     async def update_profile(self, name: str) -> PlayerProfile:
         if name in self._profile_cache:
-            logging.info(f"[PROFILE MANAGER] UPDATING PROFILE FOR PLAYER: {name}")
+            logging.info(f"[PROFILE MANAGER] UPDATING PROFILE FOR PLAYER: {name}") and self.verbose_logging
 
             player_profile: PlayerProfile = await self.create_profile(name=name)
 
             self._profile_cache[name] = player_profile
 
             return player_profile
+
+        raise PlayerProfileNotFoundException(f"[PROFILE MANAGER] PlayerProfile: {name} not found!")

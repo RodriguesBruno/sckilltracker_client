@@ -7,23 +7,17 @@ import msvcrt
 from src.models.models import PlayerEvent
 
 
-# def is_file_locked(file_path: Path) -> bool:
-#     try:
-#         with open(file_path, 'a'):
-#             return False
-#
-#     except OSError:
-#         return True
 
-def is_file_locked(file_path: Path) -> bool:
+def file_is_locked(file_path: Path) -> bool:
     try:
         with open(file_path, 'r+b') as f:
-            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, os.path.getsize(file_path))
-            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, os.path.getsize(file_path))
+            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
             return False
 
     except OSError:
         return True
+
 
 class RecordingsController:
     def __init__(self, config: dict) -> None:
@@ -197,6 +191,13 @@ class RecordingsController:
         except IndexError:
             return []
 
+        except FileNotFoundError:
+            return []
+
+        except Exception as e:
+            logging.error(e)
+            return []
+
     def video_files_quantity(self) -> int:
         return len(self._current_files)
 
@@ -258,13 +259,13 @@ class RecordingsController:
             file_path: Path = self._path / filename
 
             if file_path.exists():
-                if is_file_locked(file_path=file_path):
+                if file_is_locked(file_path=file_path):
                     logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO ERROR] File is locked: {filename}")
                     return
 
                 file_path.unlink()
                 self._current_files.remove(filename)
-                logging.info(f"[RECORDINGS CONTROLLER - DELETED VIDEO] filename: {filename}")
+                logging.info(f"[RECORDINGS CONTROLLER - DELETED VIDEO] Filename: {filename}")
 
         except Exception as e:
             logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO ERROR] {e}")
@@ -278,17 +279,21 @@ class RecordingsController:
 
         while video_record_max_time > 0:
             new_files: list[str] = sorted(
-                [f for f in self._path.iterdir() if f.is_file() and f.name not in self._current_files],
+                [
+                    f for f
+                    in self._path.iterdir()
+                    if f.is_file() and f.name not in self._current_files
+                ],
                 key=lambda f: f.stat().st_ctime,
                 reverse=True
             )
 
             if new_files:
-                await asyncio.sleep(1)
+                await asyncio.sleep(3)
                 file_name: str = new_files[0]
                 old_file: Path = Path(self._path, file_name)
 
-                if is_file_locked(old_file):
+                if file_is_locked(file_path=old_file):
                     logging.warning(f"[RECORDING CONTROLLER - AUTO RENAMING] File is locked: {file_name}")
                     await asyncio.sleep(sleep_time)
                     video_record_max_time -= sleep_time
@@ -305,7 +310,7 @@ class RecordingsController:
                     f"{player_event.using}_"
                     f"{player_event.damage}_"
                     f"{player_event.game_mode}_"
-                    f"{player_event.uuid[-12:]}"
+                    f"{player_event.uuid[-6:]}"
                     f"{old_file.suffix}"
                 )
 

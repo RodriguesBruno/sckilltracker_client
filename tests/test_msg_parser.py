@@ -328,6 +328,7 @@ def test_get_pilot_name_returns_pilot_name():
     expected_result = 'RedPanda'
     assert result == expected_result
 
+
 def test_get_pilot_name_with_another_name_returns_pilot_name():
     entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[CBCORP] has connected. [Team_ActorFeatures][Inventory]'
     result = get_player_name(entry)
@@ -343,6 +344,7 @@ def test_get_pilot_name_with_long_name_returns_pilot_name():
 
     expected_result = 'ThisNameIsWeird'
     assert result == expected_result
+
 
 def test_get_pilot_name_with_dash_returns_pilot_name():
     entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[DASH-NAME] has connected. [Team_ActorFeatures][Inventory]'

@@ -156,6 +156,10 @@ class LoggingStatus(BaseModel):
     is_verbose: bool
 
 
+class OverlayStatus(BaseModel):
+    is_enabled: bool
+
+
 class RecordingsControllerStatus(BaseModel):
     path: str
     record_suicide: bool

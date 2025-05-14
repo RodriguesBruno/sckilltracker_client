@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block head_extra %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/statistics.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="content">
   <h2>Statistics</h2>
@@ -121,7 +125,7 @@
         values: data.kills_by_game_mode.map(m => m.count),
         type: 'pie', textinfo: 'label+percent', hole: 0.4
       }], Object.assign({
-        margin: { b: 80, t: 60 },
+        margin: { b: 40, t: 100 },
         title: 'Kills/Game Mode'
         }, axisCommon, layoutDark));
 
@@ -131,7 +135,7 @@
         values: data.damage_type_distribution.map(d => d.count),
         type: 'pie', textinfo: 'label+percent', hole: 0.4
       }], Object.assign({
-        margin: { b: 80, t: 60 },
+        margin: { b: 40, t: 100 },
         title: 'Damage Type Distribution'
         }, axisCommon, layoutDark));
 
