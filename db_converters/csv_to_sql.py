@@ -17,4 +17,4 @@ def import_csv_to_sql(csv_path: str, repo: SQLRepository):
 if __name__ == "__main__":
     path = ""
     repo: SQLRepository = SQLRepository(path=path)
-    import_csv_to_sql('../events.csv', repo)
+    import_csv_to_sql('../some_file.csv', repo)

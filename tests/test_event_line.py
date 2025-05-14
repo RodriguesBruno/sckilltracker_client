@@ -1,4 +1,4 @@
-from src.client import find_event_line
+from src.event_manager import find_event_line
 
 
 def test_find_event_line_with_game_mode_returns_something():

@@ -11,23 +11,23 @@ class Repository(ABC):
 
     @abstractmethod
     def type(self) -> RepositoryType:
-        pass
+        ...
 
     def count(self) -> int:
-        pass
+        ...
 
     @abstractmethod
-    def create(self, entry: Any):
-        pass
+    def create(self, entries: Any):
+        ...
 
     @abstractmethod
     def read(self):
-        pass
+        ...
 
     @abstractmethod
     def update(self):
-        pass
+        ...
 
     @abstractmethod
     def delete(self):
-        pass
+        ...

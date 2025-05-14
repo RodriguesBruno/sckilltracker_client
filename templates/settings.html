@@ -1,61 +1,113 @@
 {% extends "base.html" %}
 
+{% block head_extra %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/settings.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="content">
 
-    <form action="/settings" method ="POST">
-    <div class="withBorder">
-        <h3 class="withMargin">Local API</h3>
+  <form action="/settings" method="POST">
+
+    <div class="settings-panel">
+      <h3>Local API</h3>
+      <div class="form-group">
         <label for="local_api_ip_address">IP Address Bind</label>
-        <input type="text" id="local_api_ip_address" name="local_api_ip_address" value="{{ config['local_api']['ip_address'] }}" readonly required><br>
+        <input type="text" id="local_api_ip_address" name="local_api_ip_address" value="{{ config['local_api']['ip_address'] }}" readonly required>
+      </div>
+      <div class="form-group">
         <label for="local_api_port">Port</label>
-        <input type="text" id="local_api_port" name="local_api_port" value="{{ config['local_api']['port'] }}" required><br>
-
-        <h3 class="withMargin">Discord BOT</h3>
-
-        <label for="api_url">URL</label>
-        <input type="text" id="api_url" name="api_url" value="{{ config['client']['api_url'] }}" size="45" required><br>
-
-        <label for="logfile">StarCitizen Log File</label>
-        <input type="text" id="logfile" name="logfile" value="{{ config['log_monitor']['logfile_with_path'] }}" size="55" required><br>
-
-        <label for="frequency">Log File Scan Frequency(s)</label>
-        <input type="text" id="frequency" name="frequency" value="{{ config['log_monitor']['frequency'] }}" required><br>
-
-        <h3 class="withMargin">Replay Recording</h3>
-
-        <label for="gpu_vendor">Overlay</label>
-        <select id="gpu_vendor" name="gpu_vendor">
-            {% for vendor in config['trigger_controller']['vendors'] %}
-                <option value="{{vendor.name}}" {% if config['trigger_controller']['selected_vendor'] == vendor.name %}selected{% endif %} title="Hotkey: {{vendor.hotkey | upper}}">{{vendor.name | upper}}</option>
-            {% endfor %}
-        </select><br>
-
-        <div id="key-combo-container" style="margin-top: 10px;">
-            <label for="hotkey_combo">Hotkey to Trigger Recording</label>
-                <input type="text"
-                   id="hotkey_combo"
-                   name="hotkey_combo"
-                   value=""
-                   placeholder="e.g. alt+k" required><br>
-
-        </div>
-
-        <label for="video_folder_path">Video Folder Path</label>
-        <input type="text" id="video_folder_path" name="video_folder_path" value="{{ config['recordings_controller']['path'] }}" size="55"><br>
-
+        <input type="text" id="local_api_port" name="local_api_port" value="{{ config['local_api']['port'] }}" required>
+      </div>
     </div>
-    <input type="submit" value="Submit"><br>
 
-    </form>
+    <div class="settings-panel">
+      <h3>Discord BOT</h3>
+      <div class="form-group">
+        <label for="api_url">URL</label>
+        <input type="text" id="api_url" name="api_url" value="{{ config['client']['api_url'] }}" required>
+      </div>
+      <div class="form-group">
+        <label for="logfile">StarCitizen Log File</label>
+        <input type="text" id="logfile" name="logfile" value="{{ config['log_monitor']['logfile_with_path'] }}" required>
+      </div>
+      <div class="form-group">
+        <label for="frequency">Log File Scan Frequency (s)</label>
+        <input type="text" id="frequency" name="frequency" value="{{ config['log_monitor']['frequency'] }}" required>
+      </div>
+    </div>
 
-    {% if errors %}
-        <ul class="error-messages">
-        {% for error in errors %}
-            <li>{{ error['loc'][0] }}: {{ error['msg'] }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
+    <div class="settings-panel">
+      <h3>Instant Replay</h3>
+      <div class="form-group">
+        <label for="gpu_vendor">Vendor</label>
+        <select id="gpu_vendor" name="gpu_vendor">
+          {% for vendor in config['trigger_controller']['vendors'] %}
+            <option value="{{vendor.name}}" {% if config['trigger_controller']['selected_vendor'] == vendor.name %}selected{% endif %} title="Hotkey: {{vendor.hotkey | upper}}">
+              {{vendor.name | upper}}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div id="key-combo-container" class="form-group">
+        <label for="hotkey_combo">Hotkey</label>
+        <input type="text" id="hotkey_combo" name="hotkey_combo" value="" placeholder="e.g. alt+k">
+      </div>
+
+      <div class="form-group">
+        <label for="video_folder_path">Video Folder Path</label>
+        <input type="text" id="video_folder_path" name="video_folder_path" value="{{ config['recordings_controller']['path'] }}">
+      </div>
+    </div>
+
+    <div class="settings-panel">
+      <h3>Overlay</h3>
+      <div class="form-group">
+        <label for="overlay_position">Position</label>
+        <select id="overlay_position" name="overlay_position">
+          {% for position in overlay_positions %}
+            <option value="{{position}}" {% if config['overlay']['position'] == position %}selected{% endif %}>{{position | upper}}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="overlay_font_color">Font Color</label>
+        <select id="overlay_font_color" name="overlay_font_color">
+          {% for color in overlay_font_colors %}
+            <option value="{{color}}" {% if config['overlay']['font_color'] == color %}selected{% endif %}>{{color | upper}}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="overlay_font_size">Font Size: <span id="font_size_value">{{ config['overlay']['font_size'] }}</span></label>
+        <input
+          type="range"
+          id="overlay_font_size"
+          name="overlay_font_size"
+          min="{{ overlay_font_sizes[0] }}"
+          max="{{ overlay_font_sizes[-1] }}"
+          value="{{ config['overlay']['font_size'] }}"
+          oninput="document.getElementById('font_size_value').textContent = this.value"
+        >
+      </div>
+    </div>
+
+    <div class="text-center">
+      <input type="submit" id="submit-button" value="Submit" disabled><br>
+    </div>
+
+  </form>
+
+  {% if errors %}
+    <ul class="error-messages">
+      {% for error in errors %}
+        <li>{{ error['loc'][0] }}: {{ error['msg'] }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 
 </div>
 
@@ -64,37 +116,29 @@
   const keyComboContainer = document.getElementById('key-combo-container');
   const hotkeyInput = document.getElementById('hotkey_combo');
 
-  // Show or hide key combo input based on GPU selection
   function toggleHotkeyVisibility() {
     const selectedVendorName = gpuSelect.value;
     const vendors = {{ config['trigger_controller']['vendors'] | tojson }};
-
     const selectedVendor = vendors.find(v => v.name === selectedVendorName);
 
     if (selectedVendorName === 'other') {
-        keyComboContainer.style.display = 'block';
-        hotkeyInput.required = true;
-
-        // Set the input value to the hotkey of the "other" vendor
-        if (selectedVendor) {
-            hotkeyInput.value = selectedVendor.hotkey;
-        }
+      keyComboContainer.style.display = 'flex';
+      hotkeyInput.required = true;
+      if (selectedVendor) {
+        hotkeyInput.value = selectedVendor.hotkey;
+      }
     } else {
-        keyComboContainer.style.display = 'none';
-        hotkeyInput.required = false;
-        hotkeyInput.value = '';  // Clear the value if not "other"
+      keyComboContainer.style.display = 'none';
+      hotkeyInput.required = false;
+      hotkeyInput.value = '';
     }
-}
+  }
 
   gpuSelect.addEventListener('change', toggleHotkeyVisibility);
-
-  // Initialize on page load
   window.addEventListener('DOMContentLoaded', toggleHotkeyVisibility);
 
-  // Optional: Format hotkey input
   hotkeyInput.addEventListener('keydown', function(event) {
-    event.preventDefault();  // Stop regular input
-
+    event.preventDefault();
     let keys = [];
     if (event.altKey) keys.push("alt");
     if (event.ctrlKey) keys.push("ctrl");
@@ -105,8 +149,33 @@
     if (!["alt", "ctrl", "shift", "meta"].includes(key)) {
       keys.push(key);
     }
-
     this.value = keys.join("+");
+  });
+</script>
+
+<script>
+  const form = document.querySelector('form');
+  const submitButton = document.getElementById('submit-button');
+  const inputs = form.querySelectorAll("input, select");
+
+  // Function to enable the button on change
+  function enableSubmit() {
+    submitButton.disabled = false;
+    submitButton.value = "Submit";
+    submitButton.style.opacity = "1";
+  }
+
+  // Attach listener to each field
+  inputs.forEach(input => {
+    input.addEventListener('input', enableSubmit);
+    input.addEventListener('change', enableSubmit);
+  });
+
+  // Disable button on submit
+  form.addEventListener('submit', function () {
+    submitButton.disabled = true;
+    submitButton.value = "Saving...";
+    submitButton.style.opacity = "0.6";
   });
 </script>
 

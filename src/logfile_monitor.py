@@ -11,8 +11,10 @@ class LogFileMonitor:
         self._is_validated: bool = False
         self._last_read_date: str = 'Never'
         self._lines: int = 0
-
         self._file_position: int = 0
+
+        self._verbose_logging: bool = True
+        self._debug_logging: bool = False
 
     @property
     def logfile_with_path(self) -> str:
@@ -46,6 +48,24 @@ class LogFileMonitor:
     def last_read_date(self) -> str:
         return self._last_read_date
 
+    @property
+    def verbose_logging(self) -> bool:
+        return self._verbose_logging
+
+    @verbose_logging.setter
+    def verbose_logging(self, value: bool) -> None:
+        self._verbose_logging = value
+        logging.info(f"[LOGFILE MONITOR - Verbose Logging] {'Enabled' if value else 'Disabled'}")
+
+    @property
+    def debug_logging(self) -> bool:
+        return self._debug_logging
+
+    @debug_logging.setter
+    def debug_logging(self, value: bool) -> None:
+        logging.info(f'[LOGFILE MONITOR - Debug Logging] {"Enabled" if value else "Disabled"}')
+        self._debug_logging = value
+
     def reset(self) -> None:
         self._is_validated = False
         self._file_position = 0
@@ -57,7 +77,7 @@ class LogFileMonitor:
         }
 
     async def validate_logfile(self, pilot_name_keyword: str, ship_name_keywords: list[str], game_mode_keywords: list[str]) ->  tuple[str, str, str]:
-        logging.info(f"[LOGFILE MONITOR] Validating: {self._logfile_with_path}")
+        logging.info(f"[LOGFILE MONITOR] Validating: {self._logfile_with_path}") and self._verbose_logging
 
         self._file_position: int = 0
 
@@ -90,7 +110,7 @@ class LogFileMonitor:
 
             self._lines = len(lines)
 
-            logging.info(f"[LOGFILE MONITOR] Validation Complete")
+            logging.info(f"[LOGFILE MONITOR] Validation Complete") and self._verbose_logging
 
         except Exception as _:
             self._file_position = 0
@@ -105,7 +125,7 @@ class LogFileMonitor:
             total_lines: int = file.tell()
 
             if self._file_position > total_lines:
-                logging.debug(f"[LOGFILE MONITOR] LOGFILE HAS ROLLED OVER")
+                logging.debug(f"[LOGFILE MONITOR] LOGFILE HAS ROLLED OVER") and self._debug_logging
                 return True
 
             return False

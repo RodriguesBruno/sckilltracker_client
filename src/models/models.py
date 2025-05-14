@@ -2,14 +2,40 @@ from pydantic import BaseModel, Field
 
 from src.repository import RepositoryType
 
+class Organization(BaseModel):
+    name: str = Field(default='-')
+    url: str = Field(default='-')
+    icon_url: str = Field(default='-')
+    rank: str = Field(default='-')
+
+
+class PlayerProfile(BaseModel):
+    name: str = Field(default='-')
+    icon_url: str = Field(default='-')
+    enlisted_date: str = Field(default='-')
+    location: str = Field(default='-')
+    fluency: str = Field(default='-')
+    org: Organization = Field(default=Organization())
+
+
+class PlayerMonthStatistics(BaseModel):
+    player_name: str
+    month: str
+    kills: int
+    deaths: int
+    suicides: int
+    kdr: float = Field(default=0)
+
 
 class PlayerEvent(BaseModel):
     uuid: str
     date: str
-    victim_player_name: str
+    victim_profile: PlayerProfile
+
     victim_zone_name: str
 
-    killed_by: str
+    killer_profile: PlayerProfile
+
     ship_name: str = Field(default='-')
 
     using: str
@@ -20,34 +46,36 @@ class PlayerEvent(BaseModel):
     push_result_message: str = Field(default='-')
     push_result_is_success: bool = Field(default=False)
 
+
 class GameNotification(BaseModel):
-    pilot_name: str
-    month: str
-    pilot_kills: int
-    pilot_deaths: int
-    pilot_suicides: int
-    pilot_kdr: float = Field(default=0)
+    player_profile: PlayerProfile
+    player_statistics: PlayerMonthStatistics
 
     ship_name: str
     game_mode: str
+
 
 class LogFileNotification(BaseModel):
     logfile_frequency: int
     logfile_msg: str
     logfile_scanner_is_running: bool
 
+
 class GameExecutableNotification(BaseModel):
     date: str
     game_is_running: bool
     msg: str
 
+
 class RecordingNotification(BaseModel):
     recordings_qty: int
     latest_video_filename: str
 
+
 class TopVictim(BaseModel):
-    victim_player_name: str
+    victim_name: str
     count: int
+
 
 class TopVictimsTable(BaseModel):
     victim: str
@@ -56,9 +84,11 @@ class TopVictimsTable(BaseModel):
     month: int
     all: int
 
+
 class TopKiller(BaseModel):
-    killed_by: str
+    killer_name: str
     count: int
+
 
 class TopKillersTable(BaseModel):
     killer: str
@@ -67,13 +97,16 @@ class TopKillersTable(BaseModel):
     month: int
     all: int
 
+
 class KillsGameMode(BaseModel):
     game_mode: str
     count: int
 
+
 class DamageTypeDistribution(BaseModel):
     damage: str
     count: int
+
 
 class PilotMonthKills(BaseModel):
     month: str
@@ -82,6 +115,7 @@ class PilotMonthKills(BaseModel):
     deaths: int
     pilot: str
 
+
 class StatisticsData(BaseModel):
     top_victims: list[TopVictim]
     top_victims_table: list[TopVictimsTable]
@@ -89,15 +123,18 @@ class StatisticsData(BaseModel):
     top_killers_table: list[TopKillersTable]
     kills_by_game_mode: list[KillsGameMode]
     damage_type_distribution: list[DamageTypeDistribution]
-    pilot_month_kills: PilotMonthKills
+    player_month_statistics: PlayerMonthStatistics
+
 
 class Game(BaseModel):
     executable_name: str
     is_running: bool
 
+
 class DB(BaseModel):
     type: RepositoryType
     records_qty: int
+
 
 class ClientStatus(BaseModel):
     title: str
@@ -105,15 +142,23 @@ class ClientStatus(BaseModel):
     game: Game
     db: DB
 
+
 class ClientEnabledStatus(BaseModel):
     is_enabled: bool
+
 
 class TriggerControllerStatus(BaseModel):
     enabled: bool
     selected_vendor: str
 
+
 class LoggingStatus(BaseModel):
     is_verbose: bool
+
+
+class OverlayStatus(BaseModel):
+    is_enabled: bool
+
 
 class RecordingsControllerStatus(BaseModel):
     path: str
@@ -129,3 +174,11 @@ class RecordingsControllerStatus(BaseModel):
     record_pirate_swarm: bool
     record_vanduul_swarm: bool
     record_other: bool
+
+
+class PilotProfile(BaseModel):
+    name: str
+    org: str
+    org_url: str
+    enlisted_date: str
+    location: str
