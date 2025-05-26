@@ -182,3 +182,18 @@ class PilotProfile(BaseModel):
     org_url: str
     enlisted_date: str
     location: str
+
+
+class OverlayControllerStatus(BaseModel):
+    on_suicide: bool
+    on_own_death: bool
+    on_pu: bool
+    on_gun_rush: bool
+    on_squadron_battle: bool
+    on_arena_commander: bool
+    on_classic_race: bool
+    on_battle_royale: bool
+    on_free_flight: bool
+    on_pirate_swarm: bool
+    ron_vanduul_swarm: bool
+    on_other: bool

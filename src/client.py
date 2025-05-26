@@ -18,6 +18,7 @@ from src.models.models import (
     PlayerProfile,
     PlayerMonthStatistics
 )
+from src.overlay_controller import OverlayController
 
 from src.recordings_controller import RecordingsController
 from src.statistics_controller import StatisticsController
@@ -57,6 +58,7 @@ class SCClient:
             statistics_controller: StatisticsController,
             trigger_controller: TriggerController,
             recordings_controller: RecordingsController,
+            overlay_controller: OverlayController,
             overlay_queue: Optional[Queue] = None
     ) -> None:
 
@@ -74,6 +76,7 @@ class SCClient:
         self._statistics_controller: StatisticsController = statistics_controller
         self._trigger_controller: TriggerController = trigger_controller
         self._recordings_controller: RecordingsController = recordings_controller
+        self._overlay_controller: OverlayController = overlay_controller
         self._overlay_queue = overlay_queue
 
         self._event_manager: EventManager = EventManager()
@@ -217,20 +220,6 @@ class SCClient:
                 else entry
                 for entry in entries
             ]
-        #     res = [
-        #         csv_to_player_event_adapter(entry)
-        #         if self._repo.type == RepositoryType.CSV
-        #         else entry
-        #         for entry in self._repo.read()[-limit:]
-        #     ]
-        #     return res
-        #
-        # return [
-        #     csv_to_player_event_adapter(entry)
-        #     if self._repo.type == RepositoryType.CSV
-        #     else entry
-        #     for entry in self._repo.read()
-        # ]
 
     @property
     def startup_date(self) -> str:
@@ -319,8 +308,20 @@ class SCClient:
             data = player_event.model_dump()
             await broadcast(data)
 
+
             if self._overlay_queue:
-                self._overlay_queue.put(data)
+                must_display, reason = await self._overlay_controller.must_display_overlay(
+                    player_name=self.pilot_name,
+                    player_event=player_event
+                )
+
+                if must_display:
+                    logging.info(f"[CLIENT - OVERLAY] Shown reason: {reason}") and self._verbose_logging
+
+                    self._overlay_queue.put(data)
+
+                else:
+                    logging.info(f"[CLIENT - OVERLAY] Not Shown reason: {reason}") and self._verbose_logging
 
         return player_events
 
@@ -364,7 +365,10 @@ class SCClient:
                     data = player_event.model_dump()
                     await broadcast(data)
 
-                    if self._overlay_queue:
+                    if self._overlay_queue and self._overlay_controller.must_display_overlay(
+                        player_name=self.pilot_name,
+                        player_event=player_event
+                    ):
                         self._overlay_queue.put(data)
 
         return player_events
