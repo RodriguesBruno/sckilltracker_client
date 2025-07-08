@@ -54,13 +54,43 @@ class OverlayColor(str, Enum):
 
 
 class Overlay(QWidget):
-    def __init__(self, position_value, color_value, font_size_value, overlay_enabled, queue: Queue) -> None:
+    def __init__(
+            self,
+            position_value,
+            color_value,
+            font_size_value,
+            overlay_enabled,
+            overlay_on_suicide,
+            overlay_on_own_death,
+            overlay_on_pu,
+            overlay_on_gun_rush,
+            overlay_on_squadron_battle,
+            overlay_on_arena_commander,
+            overlay_on_classic_race,
+            overlay_on_battle_royale,
+            overlay_on_free_flight,
+            overlay_on_pirate_swarm,
+            overlay_on_vanduul_swarm,
+            overlay_on_other,
+            queue: Queue) -> None:
         super().__init__()
 
         self.position_value = position_value
         self.color_value = color_value
         self.font_size_value = font_size_value
         self._enabled = overlay_enabled
+        self._on_suicide = overlay_on_suicide
+        self._on_own_death = overlay_on_own_death
+        self._on_pu = overlay_on_pu,
+        self._on_gun_rush = overlay_on_gun_rush,
+        self._on_squadron_battle = overlay_on_squadron_battle,
+        self._on_arena_commander = overlay_on_arena_commander,
+        self._on_classic_race = overlay_on_classic_race,
+        self._on_battle_royale = overlay_on_battle_royale,
+        self._on_free_flight = overlay_on_free_flight,
+        self._on_pirate_swarm = overlay_on_pirate_swarm,
+        self._on_vanduul_swarm = overlay_on_vanduul_swarm,
+        self._on_other = overlay_on_other
         self.queue = queue
 
         self.poll_timer = QTimer()
@@ -151,6 +181,7 @@ class Overlay(QWidget):
         y: int = screen.height() - self.height() - margin if is_bottom else margin
 
         self.setGeometry(x, y, self.width(), self.height())
+
 
 
     def display_notification(self, data: dict) -> None:
@@ -266,13 +297,43 @@ class Overlay(QWidget):
         self.fade_animation.start()
 
 
-def run_overlay(position_value: ValueProxy, color_value: ValueProxy, font_size_value: ValueProxy, overlay_enabled: ValueProxy, queue: Queue) -> None:
+def run_overlay(
+        position_value: ValueProxy,
+        color_value: ValueProxy,
+        font_size_value: ValueProxy,
+        overlay_enabled: ValueProxy,
+        overlay_on_suicide: ValueProxy,
+        overlay_on_own_death: ValueProxy,
+        overlay_on_pu: ValueProxy,
+        overlay_on_gun_rush: ValueProxy,
+        overlay_on_squadron_battle: ValueProxy,
+        overlay_on_arena_commander: ValueProxy,
+        overlay_on_classic_race: ValueProxy,
+        overlay_on_battle_royale: ValueProxy,
+        overlay_on_free_flight: ValueProxy,
+        overlay_on_pirate_swarm: ValueProxy,
+        overlay_on_vanduul_swarm: ValueProxy,
+        overlay_on_other: ValueProxy,
+        queue: Queue) -> None:
+
     app: QApplication = QApplication(sys.argv)
     overlay: Overlay = Overlay(
         position_value=position_value,
         color_value=color_value,
         font_size_value=font_size_value,
         overlay_enabled=overlay_enabled,
+        overlay_on_suicide=overlay_on_suicide,
+        overlay_on_own_death=overlay_on_own_death,
+        overlay_on_pu=overlay_on_pu,
+        overlay_on_gun_rush=overlay_on_gun_rush,
+        overlay_on_squadron_battle=overlay_on_squadron_battle,
+        overlay_on_arena_commander=overlay_on_arena_commander,
+        overlay_on_classic_race=overlay_on_classic_race,
+        overlay_on_battle_royale=overlay_on_battle_royale,
+        overlay_on_free_flight=overlay_on_free_flight,
+        overlay_on_pirate_swarm=overlay_on_pirate_swarm,
+        overlay_on_vanduul_swarm=overlay_on_vanduul_swarm,
+        overlay_on_other=overlay_on_other,
         queue=queue
     )
     overlay.show()

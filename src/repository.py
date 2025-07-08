@@ -7,6 +7,7 @@ class RepositoryType(Enum):
     CSV = 'csv'
     SQL = 'sql'
 
+
 class Repository(ABC):
 
     @abstractmethod

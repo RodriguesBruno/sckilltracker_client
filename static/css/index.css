@@ -118,7 +118,21 @@ input:checked + .slider:before {
 
 /* Recording Control Panel */
 #recording-control-panel {
-  display: inline-flex;
+  display: none;
+  flex-direction: column;
+  background-color: #1c1c1c;
+  padding: 20px;
+  border-radius: 10px;
+  color: #f0f0f0;
+  border: 1px solid #333;
+  min-width: 420px;
+  max-width: 620px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Recording Control Panel */
+#overlay-control-panel {
+  display: none;
   flex-direction: column;
   background-color: #1c1c1c;
   padding: 20px;
@@ -267,4 +281,19 @@ input:checked + .slider:before {
     align-items: flex-start;
     gap: 15px;
     width: 90%
+}
+
+.expand-icon {
+  font-size: 18px;
+  user-select: none;
+  transition: transform 0.3s ease;
+}
+
+.expand-icon.collapsed {
+  transform: rotate(180deg);
+}
+
+.expand-icon.hidden {
+    display: none;
+    pointer-events: none;
 }

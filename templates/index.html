@@ -75,19 +75,51 @@
 
             <div class="slide_btn">
                 <span>Instant Replay</span>
-                <label class="switch">
-                    <input type="checkbox" id="recordTriggerToggle" class="toggle" data-title-enable="Enable Instant Replay" data-title-disable="Disable Instant Replay" {% if trigger_controller_enabled %} checked {% endif %}>
-                    <span class="slider round" title="{{ 'Disable Instant Replay' if trigger_controller_enabled else 'Enable Instant Replay' }}"></span>
-                </label>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <label class="switch">
+                        <input type="checkbox" id="recordTriggerToggle" class="toggle"
+                            data-title-enable="Enable Instant Replay"
+                            data-title-disable="Disable Instant Replay"
+                            {% if trigger_controller_enabled %} checked {% endif %}>
+                        <span class="slider round"
+                            title="{{ 'Disable Instant Replay' if trigger_controller_enabled else 'Enable Instant Replay' }}"></span>
+                    </label>
+                    <span id="replay-expand-icon"
+                          class="expand-icon {% if not trigger_controller_enabled %}hidden{% endif %}"
+                          style="cursor: pointer;"
+                    >
+                        {% if trigger_controller_enabled %}◀{% else %}▶{% endif %}
+                    </span>
+                </div>
             </div>
 
             <div class="slide_btn">
                 <span>Overlay</span>
-                <label class="switch">
-                    <input type="checkbox" id="overlayToggle" class="toggle" data-title-enable="Enable Overlay" data-title-disable="Disable Overlay" {% if overlay_enabled %} checked {% endif %}>
-                    <span class="slider round" title="{{ 'Disable Overlay' if overlay_enabled else 'Enable Overlay' }}"></span>
-                </label>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <label class="switch">
+                        <input type="checkbox" id="overlayToggle" class="toggle"
+                            data-title-enable="Enable Overlay"
+                            data-title-disable="Disable Overlay"
+                            {% if overlay_enabled %} checked {% endif %}>
+                        <span class="slider round"
+                            title="{{ 'Disable Overlay' if overlay_enabled else 'Enable Overlay' }}"></span>
+                    </label>
+                    <span id="overlay-expand-icon"
+                          class="expand-icon {% if not overlay_enabled %}hidden{% endif %}"
+                          style="cursor: pointer;"
+                    >
+                        {% if trigger_controller_enabled %}◀{% else %}▶{% endif %}
+                    </span>
+                </div>
             </div>
+
+<!--            <div class="slide_btn">-->
+<!--                <span>Overlay</span>-->
+<!--                <label class="switch">-->
+<!--                    <input type="checkbox" id="overlayToggle" class="toggle" data-title-enable="Enable Overlay" data-title-disable="Disable Overlay" {% if overlay_enabled %} checked {% endif %}>-->
+<!--                    <span class="slider round" title="{{ 'Disable Overlay' if overlay_enabled else 'Enable Overlay' }}"></span>-->
+<!--                </label>-->
+<!--            </div>-->
 
             <div class="slide_btn">
                 <span>Verbose Logging</span>
@@ -104,7 +136,7 @@
                 <div class="status-center-block">
                     <div><strong>Game Running:</strong>
                         <span id="game-indicator" class="{{ 'green-circle' if game_is_running else 'red-circle' }}"
-                              title="Last checked: {{game_is_running_last_checked}}">
+                              title="Last checked: {{ game_is_running_last_checked }}">
                         </span>
                     </div>
                     <div><strong>LogFile Scanner:</strong>
@@ -125,7 +157,8 @@
             </div>
         </div>
 
-        <div id="recording-control-panel" style="display: {{ 'flex' if trigger_controller_enabled else 'none' }};">
+        <div id="recording-control-panel" style="display: none;">
+
 
             <div style="margin-bottom: 10px;"><strong>Instant Replay Options:</strong></div>
 
@@ -144,6 +177,28 @@
                 <div class="slide_btn"><span>Other Modes</span><label class="switch"><input type="checkbox" id="recordings-other-toggle" {% if recording_controller.record_other %} checked {% endif %}><span class="slider round"></span></label></div>
             </div>
         </div>
+
+        <div id="overlay-control-panel" style="display: none;">
+
+
+            <div style="margin-bottom: 10px;"><strong>Overlay Options:</strong></div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;">
+                <div class="slide_btn"><span>Suicide Death</span><label class="switch"><input type="checkbox" id="overlay-suicide-toggle" {% if overlay.on_suicide %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Own Death</span><label class="switch"><input type="checkbox" id="overlay-own-death-toggle" {% if overlay.on_own_death %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>PU</span><label class="switch"><input type="checkbox" id="overlay-pu-toggle" {% if overlay.on_pu %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Gun Rush</span><label class="switch"><input type="checkbox" id="overlay-gun-rush-toggle" {% if overlay.on_gun_rush %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Squadron Battle</span><label class="switch"><input type="checkbox" id="overlay-squadron-battle-toggle" {% if overlay.on_squadron_battle %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Arena Commander</span><label class="switch"><input type="checkbox" id="overlay-arena-commander-toggle" {% if overlay.on_arena_commander %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Classic Race</span><label class="switch"><input type="checkbox" id="overlay-classic-race-toggle" {% if overlay.on_classic_race %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Battle Royale</span><label class="switch"><input type="checkbox" id="overlay-battle-royale-toggle" {% if overlay.on_battle_royale %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Free Flight</span><label class="switch"><input type="checkbox" id="overlay-free-flight-toggle" {% if overlay.on_free_flight %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Pirate Swarm</span><label class="switch"><input type="checkbox" id="overlay-pirate-swarm-toggle" {% if overlay.on_pirate_swarm %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Vanduul Swarm</span><label class="switch"><input type="checkbox" id="overlay-vanduul-swarm-toggle" {% if overlay.on_vanduul_swarm %} checked {% endif %}><span class="slider round"></span></label></div>
+                <div class="slide_btn"><span>Other Modes</span><label class="switch"><input type="checkbox" id="overlay-other-toggle" {% if overlay.on_other %} checked {% endif %}><span class="slider round"></span></label></div>
+            </div>
+        </div>
+
     </div>
 
     <div class="events-table-container">
@@ -599,15 +654,81 @@
         fetchData(endpoint)
     });
 
+
+    // [OVERLAY]
     document.getElementById('overlayToggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/overlay/enable' : '/overlay/disable';
         fetchData(endpoint)
     });
 
+    document.getElementById('overlay-suicide-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/suicide/enable' : '/overlay/suicide/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-own-death-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/own_death/enable' : '/overlay/own_death/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-pu-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/pu/enable' : '/overlay/pu/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-gun-rush-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/gun_rush/enable' : '/overlay/gun_rush/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-squadron-battle-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/squadron_battle/enable' : '/overlay/squadron_battle/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-arena-commander-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/arena_commander/enable' : '/overlay/arena_commander/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-classic-race-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/classic_race/enable' : '/overlay/classic_race/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-battle-royale-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/battle_royale/enable' : '/overlay/battle_royale/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-free-flight-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/free_flight/enable' : '/overlay/free_flight/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-pirate-swarm-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/pirate_swarm/enable' : '/overlay/pirate_swarm/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-vanduul-swarm-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/vanduul_swarm/enable' : '/overlay/vanduul_swarm/disable';
+        fetchData(endpoint)
+    });
+
+    document.getElementById('overlay-other-toggle').addEventListener('change', function() {
+        const endpoint = this.checked ? '/overlay/other/enable' : '/overlay/other/disable';
+        fetchData(endpoint)
+    });
+
+    // [LOGGING]
+
     document.getElementById('verboseLoggingToggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/verbose_logging/enable' : '/verbose_logging/disable';
         fetchData(endpoint)
     });
+
+    // [RECORDING CONTROLLER]
 
     document.getElementById('recordings-suicide-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/suicide/enable' : '/recordings_controller/suicide/disable';
@@ -626,11 +747,6 @@
 
     document.getElementById('recordings-gun-rush-toggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/recordings_controller/gun_rush/enable' : '/recordings_controller/gun_rush/disable';
-        fetchData(endpoint)
-    });
-
-    document.getElementById('recordings-squadron-battle-toggle').addEventListener('change', function() {
-        const endpoint = this.checked ? '/recordings_controller/squadron_battle/enable' : '/recordings_controller/squadron_battle/disable';
         fetchData(endpoint)
     });
 
@@ -676,20 +792,7 @@
 
     </script>
 
-    <script>
-        const recordingToggle = document.getElementById("recordTriggerToggle");
-        const recordingPanel = document.getElementById("recording-control-panel");
-
-        recordingToggle.addEventListener("change", function() {
-            if (this.checked) {
-                recordingPanel.style.display = "flex";
-            } else {
-                recordingPanel.style.display = "none";
-            }
-        });
-    </script>
-
-    <script>
+        <script>
         function createPlayerOrgTooltipTD(orgName, orgUrl, iconUrl, rank) {
         const td = document.createElement("td");
         td.classList.add("tooltip-cell");
@@ -830,7 +933,6 @@
 
     <script>
         document.querySelectorAll('.toggle').forEach((checkbox) => {
-            console.log(checkbox.dataset)
             const sliderSpan = checkbox.nextElementSibling;
             const titleEnable = checkbox.dataset.titleEnable;
             const titleDisable = checkbox.dataset.titleDisable;
@@ -843,5 +945,91 @@
             updateTitle();
         });
     </script>
+
+    <script>
+        const recordingToggle = document.getElementById("recordTriggerToggle");
+        const recordingPanel = document.getElementById("recording-control-panel");
+        const expandIcon = document.getElementById("replay-expand-icon");
+
+        function updateExpandIconState() {
+            if (recordingToggle.checked) {
+                expandIcon.classList.remove("hidden");
+                expandIcon.textContent = "▶"; // Always collapsed by default
+            } else {
+                expandIcon.classList.add("hidden");
+                recordingPanel.style.display = "none";
+            }
+        }
+
+        // Backend toggle only
+        recordingToggle.addEventListener("change", function () {
+            const endpoint = this.checked ? '/trigger_controller/enable' : '/trigger_controller/disable';
+            fetch(endpoint).then(r => r.json()).then(data => console.log(data)).catch(console.error);
+
+            updateExpandIconState();
+        });
+
+        expandIcon.addEventListener("click", function () {
+            if (expandIcon.classList.contains("hidden")) return;
+
+            const isVisible = recordingPanel.style.display !== "none";
+
+            // Hide overlay panel if it's open
+            if (!isVisible) {
+                overlayPanel.style.display = "none";
+                overlayExpandIcon.textContent = "▶";
+            }
+
+            recordingPanel.style.display = isVisible ? "none" : "flex";
+            expandIcon.textContent = isVisible ? "▶" : "◀";
+        });
+
+        // Initial setup (run once on page load)
+        updateExpandIconState();
+    </script>
+
+    <script>
+        const overlayToggle = document.getElementById("overlayToggle");
+        const overlayPanel = document.getElementById("overlay-control-panel");
+        const overlayExpandIcon = document.getElementById("overlay-expand-icon");
+
+        function updateOverlayExpandIconState() {
+            if (overlayToggle.checked) {
+                overlayExpandIcon.classList.remove("hidden");
+                overlayExpandIcon.textContent = "▶"; // Always collapsed by default
+            } else {
+                overlayExpandIcon.classList.add("hidden");
+                overlayPanel.style.display = "none";
+            }
+        }
+
+        // Backend toggle only
+        overlayToggle.addEventListener("change", function () {
+            const endpoint = this.checked ? '/overlay/enable' : '/overlay/disable';
+            fetch(endpoint).then(r => r.json()).then(data => console.log(data)).catch(console.error);
+
+            updateOverlayExpandIconState();
+        });
+
+        overlayExpandIcon.addEventListener("click", function () {
+            if (overlayExpandIcon.classList.contains("hidden")) return;
+
+            const isVisible = overlayPanel.style.display !== "none";
+
+            // Hide recording panel if it's open
+            if (!isVisible) {
+                recordingPanel.style.display = "none";
+                expandIcon.textContent = "▶";
+            }
+
+            overlayPanel.style.display = isVisible ? "none" : "flex";
+            overlayExpandIcon.textContent = isVisible ? "▶" : "◀";
+        });
+
+        // Initial setup (run once on page load)
+        updateOverlayExpandIconState();
+    </script>
+
+
 
 {% endblock %}

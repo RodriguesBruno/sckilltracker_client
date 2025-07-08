@@ -108,7 +108,7 @@ class ProfileScraper:
 
         return '-'
 
-    async def get_org_icon_url(self):
+    async def get_org_icon_url(self) -> str:
 
         if 'NO MAIN ORG FOUND IN PUBLIC RECORDS' in self._player_data:
             return '-'
@@ -132,7 +132,7 @@ class ProfileScraper:
 
         return '-'
 
-    async def get_player_enlisted_date(self):
+    async def get_player_enlisted_date(self) -> str:
 
         pattern = re.compile(
             r'<span\s+class="label">\s*Enlisted\s*</span>\s*<strong\s+class="value">\s*(?P<enlisted_date>.*?)\s*</strong>',
@@ -146,7 +146,7 @@ class ProfileScraper:
 
         return '-'
 
-    async def get_player_location(self):
+    async def get_player_location(self) -> str:
 
         pattern = re.compile(
             r'<span\s+class="label">\s*Location\s*</span>\s*<strong\s+class="value">\s*(?P<location>.*?)\s*</strong>',
