@@ -26,18 +26,20 @@ def get_log_date(line: str) -> str:
     match = re.search(r"<(?P<date>[\d:T-]*)[.\dZ]*>\s\[", line)
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
+# Get the victim's name from the log line
+# If the name is longer than 23 characters, return 'npc'
+# qualquer nome com mais de 23 caracteres é um npc
+
 def get_victim_name(line: str) -> str:
-    if 'PU_Human_Enemy' and '_NPC_' in line:
-        return 'npc'
-
-    match = re.search(r"_+?\w+?_PU_Advocacy_\d*", line)
+    match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
     if match:
-        return 'npc'
-
-    match = re.search(r"_+?\w+?_pet_\d*", line)
-    if match:
-        return 'npc'
-
+        player_name = match.group("player_name")
+        if len(player_name) > 23:
+            return 'npc'
+        return player_name
+ 
+    # tenho quase a certeza que esta linha nao é usada
+    # mas vou deixar aqui para o caso de ser necessário
     match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
     return match.group('player_name') if match else '-'
 

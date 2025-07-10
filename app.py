@@ -4,6 +4,16 @@ from typing import Optional
 import uvicorn
 import asyncio
 import multiprocessing
+
+
+## Added imports for PyQt5 and system tray icon
+import sys
+import threading
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtGui import QIcon
+import os
+import ctypes
+
 from multiprocessing import Manager
 from contextlib import asynccontextmanager
 import logging
@@ -47,6 +57,7 @@ from src.repository_factory import RepositoryFactory
 from src.settings_form import SettingsForm
 from src.utils import get_local_ip, resource_path, setup_folders
 
+
 sc_client: Optional[SCClient] = None
 overlay_queue = None
 position_value = None
@@ -67,6 +78,86 @@ overlay_on_pirate_swarm = None
 overlay_on_vanduul_swarm = None
 overlay_on_other = None
 
+##Code for hidden console
+
+##def run_tray_icon():
+
+##    if os.name == 'nt':
+ ##       ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
+  ##  app = QApplication(sys.argv)
+
+ ##   tray_icon = QSystemTrayIcon(QIcon("sckticon.ico"), parent=app)
+  ##  tray_icon.setToolTip("SCKillTracker Client")
+
+  ##  menu = QMenu()
+  ##  open_action = QAction("Open Client")
+ ##   quit_action = QAction("Close Tracker")
+
+ ##   def open_ui():
+ ##       webbrowser.open("http://localhost:8082/")  # Adjust as needed
+
+##open_action.triggered.connect(open_ui)
+ ##   quit_action.triggered.connect(app.quit)
+##    quit_action.triggered.connect(lambda: os._exit(0))
+
+ ##   menu.addAction(open_action)
+ ##   menu.addAction(quit_action)
+ ##   tray_icon.setContextMenu(menu)
+
+ ##   tray_icon.show()
+ ##   sys.exit(app.exec_())
+    
+
+# Windows console handle
+def get_console_hwnd():
+    return ctypes.windll.kernel32.GetConsoleWindow()
+
+def hide_console():
+    hwnd = get_console_hwnd()
+    if hwnd:
+        ctypes.windll.user32.ShowWindow(hwnd, 0)
+
+def show_console():
+    hwnd = get_console_hwnd()
+    if hwnd:
+        ctypes.windll.user32.ShowWindow(hwnd, 1)
+
+def run_tray_icon():
+    if os.name == 'nt':
+        hide_console()  # Start hidden
+
+    app = QApplication(sys.argv)
+    tray_icon = QSystemTrayIcon(QIcon("sckticon.ico"), parent=app)
+    tray_icon.setToolTip("SCKillTracker Client")
+
+    menu = QMenu()
+
+    open_action = QAction("Open Client")
+    show_console_action = QAction("Show Console")
+    hide_console_action = QAction("Hide Console")
+    quit_action = QAction("Close Tracker")
+
+    def open_ui():
+        webbrowser.open("http://localhost:8082")
+        # No return value, so PyQt slot signature is correct
+
+    open_action.triggered.connect(open_ui)
+    show_console_action.triggered.connect(show_console)
+    hide_console_action.triggered.connect(hide_console)
+    quit_action.triggered.connect(lambda: os._exit(0))  # Force close all
+
+    menu.addAction(open_action)
+    menu.addSeparator()
+    menu.addAction(show_console_action)
+    menu.addAction(hide_console_action)
+    menu.addSeparator()
+    menu.addAction(quit_action)
+
+    tray_icon.setContextMenu(menu)
+    tray_icon.show()
+
+    sys.exit(app.exec_())
 
 setup_folders()
 
@@ -843,14 +934,12 @@ async def set_settings(
     return RedirectResponse(url="/settings", status_code=303)
 
 
-
 def main() -> None:
     global position_value, color_value, font_size_value, overlay_queue, sc_client, overlay_enabled, overlay_on_suicide, \
         overlay_on_own_death, overlay_on_pu, overlay_on_gun_rush, overlay_on_squadron_battle, \
         overlay_on_arena_commander, overlay_on_classic_race, overlay_on_battle_royale, overlay_on_free_flight, \
         overlay_on_pirate_swarm, overlay_on_vanduul_swarm, overlay_on_other
-
-
+  
     manager = Manager()
     overlay_queue = manager.Queue()
 
@@ -926,6 +1015,14 @@ def main() -> None:
             ssl_keyfile=str(key_path)
         )
 
+##if __name__ == "__main__":
+##   multiprocessing.freeze_support()
+##main()
+
 if __name__ == "__main__":
     multiprocessing.freeze_support()
+
+    tray_thread = threading.Thread(target=run_tray_icon, daemon=True)
+    tray_thread.start()
+
     main()
