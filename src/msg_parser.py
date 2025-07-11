@@ -37,11 +37,13 @@ def get_victim_name(line: str) -> str:
         if len(player_name) > 23:
             return 'npc'
         return player_name
+    
+    return '-'
  
     # tenho quase a certeza que esta linha nao é usada
     # mas vou deixar aqui para o caso de ser necessário
-    match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
-    return match.group('player_name') if match else '-'
+    # match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
+    # return match.group('player_name') if match else '-'
 
 def get_victim_zone(line: str) -> str:
     match = re.search(r"in\szone\s'(?P<zone>[a-zA-Z\d_-]*)'", line)

@@ -9,7 +9,7 @@ import multiprocessing
 ## Added imports for PyQt5 and system tray icon
 import sys
 import threading
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMainWindow
 from PyQt5.QtGui import QIcon
 import os
 import ctypes
@@ -78,36 +78,7 @@ overlay_on_pirate_swarm = None
 overlay_on_vanduul_swarm = None
 overlay_on_other = None
 
-##Code for hidden console
 
-##def run_tray_icon():
-
-##    if os.name == 'nt':
- ##       ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-
-  ##  app = QApplication(sys.argv)
-
- ##   tray_icon = QSystemTrayIcon(QIcon("sckticon.ico"), parent=app)
-  ##  tray_icon.setToolTip("SCKillTracker Client")
-
-  ##  menu = QMenu()
-  ##  open_action = QAction("Open Client")
- ##   quit_action = QAction("Close Tracker")
-
- ##   def open_ui():
- ##       webbrowser.open("http://localhost:8082/")  # Adjust as needed
-
-##open_action.triggered.connect(open_ui)
- ##   quit_action.triggered.connect(app.quit)
-##    quit_action.triggered.connect(lambda: os._exit(0))
-
- ##   menu.addAction(open_action)
- ##   menu.addAction(quit_action)
- ##   tray_icon.setContextMenu(menu)
-
- ##   tray_icon.show()
- ##   sys.exit(app.exec_())
-    
 
 # Windows console handle
 def get_console_hwnd():
@@ -123,29 +94,37 @@ def show_console():
     if hwnd:
         ctypes.windll.user32.ShowWindow(hwnd, 1)
 
+def kill_console():
+    hwnd = get_console_hwnd()
+    if hwnd:
+        ctypes.windll.user32.PostMessageW(hwnd, 0x0010, 0, 0)  # WM_CLOSE
+
 def run_tray_icon():
     if os.name == 'nt':
         hide_console()  # Start hidden
 
     app = QApplication(sys.argv)
-    tray_icon = QSystemTrayIcon(QIcon("sckticon.ico"), parent=app)
+    tray_icon = QSystemTrayIcon(QIcon("static/sckticon.ico"), parent=app)
     tray_icon.setToolTip("SCKillTracker Client")
 
     menu = QMenu()
 
-    open_action = QAction("Open Client")
+    open_action = QAction("Open UI")
     show_console_action = QAction("Show Console")
     hide_console_action = QAction("Hide Console")
-    quit_action = QAction("Close Tracker")
+    quit_action = QAction("Quit")
 
-    def open_ui():
-        webbrowser.open("http://localhost:8082")
-        # No return value, so PyQt slot signature is correct
-
-    open_action.triggered.connect(open_ui)
+    open_action.triggered.connect(lambda: webbrowser.open("http://localhost:8082"))
     show_console_action.triggered.connect(show_console)
     hide_console_action.triggered.connect(hide_console)
-    quit_action.triggered.connect(lambda: os._exit(0))  # Force close all
+
+    # Proper quit function
+    def quit_app():
+        tray_icon.hide()  # Hide tray icon
+        kill_console()    # Close the console window (if any)
+        os._exit(0)       # Forcefully terminate all threads and processes
+
+    quit_action.triggered.connect(quit_app)
 
     menu.addAction(open_action)
     menu.addSeparator()
@@ -158,6 +137,7 @@ def run_tray_icon():
     tray_icon.show()
 
     sys.exit(app.exec_())
+
 
 setup_folders()
 
