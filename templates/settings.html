@@ -95,6 +95,40 @@
       </div>
     </div>
 
+    <div class="settings-panel">
+      <h3>Kill Streak</h3>
+      <div class="form-group">
+        <label for="enable_kill_sounds">Enable Kill Sounds</label>
+        <select name="enable_kill_sounds" id="enable_kill_sounds">
+          <option value="true" {% if config.sound.enable_kill_sounds %}selected{% endif %}>Yes</option>
+          <option value="false" {% if not config.sound.enable_kill_sounds %}selected{% endif %}>No</option>
+        </select>
+      </div>
+          {% set volume_raw = config.sound.volume if config.sound.volume is defined else 1.0 %}
+          {% set volume_value = (volume_raw | float * 100) %}
+          <div class="form-group">
+            <label for="kill_volume">
+              Kill Sound Volume: <span id="kill_volume_value">{{ '%.2f' % volume_value }}%</span>
+            </label>
+            <input
+              type="range"
+              id="kill_volume"
+              name="kill_volume"
+              min="0"
+              max="100"
+              step="0.1"
+              value="{{ '%.2f' % volume_value }}"
+             oninput="document.getElementById('kill_volume_value').textContent = this.value + '%';
+            fetch(`/static/sounds/kill1.mp3?volume=${this.value / 100}`);"
+          >
+            <div>
+            <button type="button" onclick="playKillSound()">🔊</button>
+          </div>
+          <audio id="test-audio" src="/static/sounds/kill1.mp3" preload="auto"></audio>
+          </div>
+        </div>
+      </div>
+    </div>  
     <div class="text-center">
       <input type="submit" id="submit-button" value="Submit" disabled><br>
     </div>
@@ -177,6 +211,21 @@
     submitButton.value = "Saving...";
     submitButton.style.opacity = "0.6";
   });
+
+    const slider = document.getElementById('kill_volume');
+  const volumeLabel = document.getElementById('kill_volume_value');
+  const audio = document.getElementById('test-audio');
+
+  slider.addEventListener('input', () => {
+    const percent = parseFloat(slider.value);
+    volumeLabel.textContent = percent.toFixed(2) + '%';
+    audio.volume = percent / 100;
+  });
+
+  function playKillSound() {
+    audio.currentTime = 0;
+    audio.play();
+  }
 </script>
 
 {% endblock %}

@@ -129,6 +129,16 @@
                 </label>
             </div>
 
+<!-- IGNORE CRASH KILLS/DEADS  -->
+            <div class="slide_btn">
+                <span>Crash Tracking Off</span>
+                <label class="switch">
+                    <input type="checkbox" id="verboseLoggingToggle" class="toggle" data-title-enable="Untrack Crash Kills/Deads" data-title-disable="Track Crash Kills/Deads" {% if verbose_logging %} checked {% endif %}>
+                    <span class="slider round" title="{{ 'Untrack Crash Kills/Deads' if verbose_logging else 'Track Crash Kills/Deads' }}"></span>
+                </label>
+            </div>
+
+
             <hr class="section-divider">
 
             <div class="status-card-content">

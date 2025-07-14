@@ -1,19 +1,26 @@
+#TRAY ICON
+import threading
+import pystray
+from PIL import Image, ImageDraw
+import ctypes
+import os
+##import signal
+from pathlib import Path
+#import sys
+import psutil
+
+#SLASH SCREEN
+import tkinter as tk
+from PIL import ImageTk, Image
+import threading
+import time
+
+
 import webbrowser
 from typing import Optional
-
 import uvicorn
 import asyncio
 import multiprocessing
-
-
-## Added imports for PyQt5 and system tray icon
-import sys
-import threading
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMainWindow
-from PyQt5.QtGui import QIcon
-import os
-import ctypes
-
 from multiprocessing import Manager
 from contextlib import asynccontextmanager
 import logging
@@ -57,7 +64,6 @@ from src.repository_factory import RepositoryFactory
 from src.settings_form import SettingsForm
 from src.utils import get_local_ip, resource_path, setup_folders
 
-
 sc_client: Optional[SCClient] = None
 overlay_queue = None
 position_value = None
@@ -79,65 +85,106 @@ overlay_on_vanduul_swarm = None
 overlay_on_other = None
 
 
+#SLASH SCREEN
+def show_splash_screen(duration=2):
+    def splash():
+        splash_root = tk.Tk()
+        splash_root.overrideredirect(True)
+        splash_root.wm_attributes("-topmost", True)
+        splash_root.attributes("-alpha", 0.0)  # Start fully transparent
 
-# Windows console handle
-def get_console_hwnd():
-    return ctypes.windll.kernel32.GetConsoleWindow()
+        # Load splash image
+        try:
+            image = Image.open("static/splash.jpg")
+            photo = ImageTk.PhotoImage(image)
+            width, height = photo.width(), photo.height()
+        except Exception:
+            width, height = 400, 300
+            photo = None
 
+        # Center the window
+        screen_width = splash_root.winfo_screenwidth()
+        screen_height = splash_root.winfo_screenheight()
+        x = int((screen_width / 2) - (width / 2))
+        y = int((screen_height / 2) - (height / 2))
+        splash_root.geometry(f"{width}x{height}+{x}+{y}")
+
+        # Transparent background color
+        # splash_root.config(bg="white")
+        # splash_root.wm_attributes("-transparentcolor", "white")
+
+        if photo:
+            canvas = tk.Canvas(splash_root, width=width, height=height, highlightthickness=0, bg="white")
+            canvas.pack()
+            canvas.create_image(0, 0, anchor="nw", image=photo)
+            splash_root.image = photo
+        else:
+            tk.Label(splash_root, text="Loading...", font=("Helvetica", 18), bg="white").pack(expand=True)
+
+        # Fade in
+        def fade_in():
+            for i in range(0, 21):
+                splash_root.attributes("-alpha", i / 20)
+                time.sleep(0.01)
+
+        # Fade out
+        def fade_out():
+            for i in range(20, -1, -1):
+                splash_root.attributes("-alpha", i / 20)
+                time.sleep(0.01)
+
+        def run_fade():
+            fade_in()
+            time.sleep(duration)
+            fade_out()
+            splash_root.destroy()
+
+        threading.Thread(target=run_fade, daemon=True).start()
+        splash_root.mainloop()
+
+    threading.Thread(target=splash).start()
+
+## sytem tray icon functions
 def hide_console():
-    hwnd = get_console_hwnd()
-    if hwnd:
-        ctypes.windll.user32.ShowWindow(hwnd, 0)
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 def show_console():
-    hwnd = get_console_hwnd()
-    if hwnd:
-        ctypes.windll.user32.ShowWindow(hwnd, 1)
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 1)
 
-def kill_console():
-    hwnd = get_console_hwnd()
-    if hwnd:
-        ctypes.windll.user32.PostMessageW(hwnd, 0x0010, 0, 0)  # WM_CLOSE
+def load_tray_icon():
+    icon_path = Path("static/sckticon.ico")  # Update the path as needed
+    if not icon_path.exists():
+        raise FileNotFoundError(f"Tray icon not found at: {icon_path}")
+    return Image.open(icon_path)
 
-def run_tray_icon():
-    if os.name == 'nt':
-        hide_console()  # Start hidden
+def setup_system_tray(app_url: str):
+    def on_open_ui(icon, item):
+        webbrowser.open(app_url)
 
-    app = QApplication(sys.argv)
-    tray_icon = QSystemTrayIcon(QIcon("static/sckticon.ico"), parent=app)
-    tray_icon.setToolTip("SCKillTracker Client")
+    def on_hide_console(icon, item):
+        hide_console()
 
-    menu = QMenu()
+    def on_show_console(icon, item):
+        show_console()
 
-    open_action = QAction("Open UI")
-    show_console_action = QAction("Show Console")
-    hide_console_action = QAction("Hide Console")
-    quit_action = QAction("Quit")
+    def on_exit(icon, item):
+        show_console()
+        icon.stop()
+        parent = psutil.Process(os.getpid())
+        for child in parent.children(recursive=True):
+            child.kill()
+        parent.kill()
 
-    open_action.triggered.connect(lambda: webbrowser.open("http://localhost:8082"))
-    show_console_action.triggered.connect(show_console)
-    hide_console_action.triggered.connect(hide_console)
+    icon = pystray.Icon("app")
+    icon.icon = load_tray_icon()
+    icon.menu = pystray.Menu(
+        pystray.MenuItem("Open UI", on_open_ui),
+        pystray.MenuItem("Hide Console", on_hide_console),
+        pystray.MenuItem("Show Console", on_show_console),
+        pystray.MenuItem("Exit", on_exit)
+    )
 
-    # Proper quit function
-    def quit_app():
-        tray_icon.hide()  # Hide tray icon
-        kill_console()    # Close the console window (if any)
-        os._exit(0)       # Forcefully terminate all threads and processes
-
-    quit_action.triggered.connect(quit_app)
-
-    menu.addAction(open_action)
-    menu.addSeparator()
-    menu.addAction(show_console_action)
-    menu.addAction(hide_console_action)
-    menu.addSeparator()
-    menu.addAction(quit_action)
-
-    tray_icon.setContextMenu(menu)
-    tray_icon.show()
-
-    sys.exit(app.exec_())
-
+    threading.Thread(target=icon.run, daemon=True).start()
 
 setup_folders()
 
@@ -814,23 +861,23 @@ async def settings_page(request: Request):
         "overlay_font_sizes": list(range(5, 31))
     })
 
-
 @app.post("/settings")
-async def set_settings(
-        request: Request,
-        local_api_ip_address: str = Form(...),
-        local_api_port: str = Form(...),
-        api_url: str = Form(...),
-        logfile: str = Form(...),
-        frequency: str = Form(...),
-        gpu_vendor: str = Form(...),
-        hotkey_combo: str = Form(None),
-        video_folder_path: str = Form(...),
-        overlay_position: str = Form(...),
-        overlay_font_color: str = Form(...),
-        overlay_font_size: str = Form(...)
-    ):
-
+async def update_settings(
+    request: Request,
+    local_api_ip_address: str = Form(...),
+    local_api_port: str = Form(...),
+    api_url: str = Form(...),
+    logfile: str = Form(...),
+    frequency: str = Form(...),
+    gpu_vendor: str = Form(...),
+    hotkey_combo: str = Form(None),
+    video_folder_path: str = Form(...),
+    overlay_position: str = Form(...),
+    overlay_font_color: str = Form(...),
+    overlay_font_size: str = Form(...),
+    enable_kill_sounds: str = Form("true"),
+    kill_volume: str = Form("100")
+):
     try:
         form_data = SettingsForm(
             local_api_ip_address=local_api_ip_address,
@@ -842,46 +889,29 @@ async def set_settings(
             overlay_font_color=overlay_font_color,
             overlay_font_size=overlay_font_size
         )
-
     except ValidationError as e:
         return templates.TemplateResponse(
             "settings.html",
             {
                 "request": request,
-                "config": {
-                    "local_api": {
-                        "ip_address": local_api_ip_address,
-                        "port": local_api_port,
-                    },
-                    "client": {
-                        "version": sc_client.version,
-                        "enabled": sc_client.is_enabled,
-                        "api_url": api_url
-                    },
-                    "log_monitor": {
-                        "logfile_with_path": logfile,
-                        "frequency": frequency,
-                    },
-                    "trigger_controller": trigger_controller.get_config(),
-                    "recordings_controller": {
-                        "path": recordings_controller.path
-                    }
-                },
+                "config": config,
                 "errors": e.errors(),
+                "overlay_positions": [entry.value for entry in OverlayPosition],
+                "overlay_font_colors": [entry.value for entry in OverlayColor],
+                "overlay_font_sizes": list(range(5, 31)),
             },
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    sc_client.api_url = str(form_data.api_url)
+    # Update all config fields
+    config["local_api"]["ip_address"] = local_api_ip_address
+    config["local_api"]["port"] = int(local_api_port)
+    config["client"]["api_url"] = api_url
 
-    if form_data.logfile != logfile_monitor.logfile_with_path:
-        logfile_monitor.logfile_with_path = form_data.logfile
-        logfile_monitor.reset()
+    logfile_monitor.logfile_with_path = logfile
+    logfile_monitor.frequency = int(frequency)
 
-        await sc_client.validate_logfile()
-
-
-    logfile_monitor.frequency = int(form_data.frequency)
+    await sc_client.validate_logfile()
 
     trigger_controller.set_overlay(gpu_vendor=gpu_vendor, hotkey=hotkey_combo)
 
@@ -890,36 +920,43 @@ async def set_settings(
 
     await recordings_controller.set_path(path=Path(video_folder_path))
 
-    config['local_api']['port'] = int(form_data.local_api_port)
-    config['client'] = sc_client.get_config()
-    config['log_monitor'] = logfile_monitor.get_config()
-    config['trigger_controller'] = trigger_controller.get_config()
-    config['recordings_controller'] = recordings_controller.get_config()
+    config["log_monitor"] = logfile_monitor.get_config()
+    config["trigger_controller"] = trigger_controller.get_config()
+    config["recordings_controller"] = recordings_controller.get_config()
 
     overlay_controller.position = overlay_position
-    # config['overlay']['position'] = overlay_position
-    position_value.value = overlay_position
-
     overlay_controller.font_color = overlay_font_color
-    # config['overlay']['font_color'] = overlay_font_color
-    color_value.value = overlay_font_color
-
     overlay_controller.font_size = overlay_font_size
-    # config['overlay']['font_size'] = overlay_font_size
-    font_size_value.value = str(overlay_font_size)
 
-    config['overlay'] = overlay_controller.get_config()
+    config["overlay"] = overlay_controller.get_config()
+
+    # ✅ Handle kill sound toggle from dropdown
+    config.setdefault("sound", {})
+    config["sound"]["enable_kill_sounds"] = enable_kill_sounds.lower() == "true"
+
+    try:
+        volume_percent = float(kill_volume)
+        volume_percent = max(0.0, min(100.0, volume_percent))  # clamp between 0–100
+        config["sound"]["volume"] = round((volume_percent / 100), 4)  # precise float
+    except (ValueError, TypeError):
+        config["sound"]["volume"] = 1.0
+
+    # ✅ Save updated config
     write_config(config_file=config_file, data=config)
 
     return RedirectResponse(url="/settings", status_code=303)
 
 
 def main() -> None:
+    # Hide console window on Windows
+    hide_console() 
+
     global position_value, color_value, font_size_value, overlay_queue, sc_client, overlay_enabled, overlay_on_suicide, \
         overlay_on_own_death, overlay_on_pu, overlay_on_gun_rush, overlay_on_squadron_battle, \
         overlay_on_arena_commander, overlay_on_classic_race, overlay_on_battle_royale, overlay_on_free_flight, \
         overlay_on_pirate_swarm, overlay_on_vanduul_swarm, overlay_on_other
-  
+
+
     manager = Manager()
     overlay_queue = manager.Queue()
 
@@ -979,6 +1016,10 @@ def main() -> None:
     protoc: str = "https" if cert_path.exists() and key_path.exists() else "http"
     url: str = f"{protoc}://{hostname}:{port}"
 
+ #systray gets custom url
+    setup_system_tray(url)
+
+    show_splash_screen(duration=3)
     webbrowser.open(url)
 
     if not cert_path.exists() or not key_path.exists():
@@ -995,14 +1036,6 @@ def main() -> None:
             ssl_keyfile=str(key_path)
         )
 
-##if __name__ == "__main__":
-##   multiprocessing.freeze_support()
-##main()
-
 if __name__ == "__main__":
     multiprocessing.freeze_support()
-
-    tray_thread = threading.Thread(target=run_tray_icon, daemon=True)
-    tray_thread.start()
-
     main()

@@ -4,7 +4,7 @@
         "version": "1.5.1",
         "enabled": true,
         "api_url": "http://sckilltracker.servegame.com:8081/api/v1/event",
-        "verbose_logging": false,
+        "verbose_logging": true,
         "game_executable_name": "starcitizen.exe",
         "game_executable_check_frequency": 5
     },
@@ -17,7 +17,7 @@
         "frequency": 5
     },
     "trigger_controller": {
-        "enabled": true,
+        "enabled": false,
         "selected_vendor": "nvidia",
         "vendors": [
             {
@@ -53,10 +53,10 @@
         "type": "csv"
     },
     "overlay": {
-        "enabled": false,
+        "enabled": true,
         "position": "bottom-left",
-        "font_color": "yellow",
-        "font_size": "22",
+        "font_color": "orange",
+        "font_size": "20",
         "on_suicide": true,
         "on_own_death": true,
         "on_pu": true,
@@ -69,5 +69,9 @@
         "on_pirate_swarm": true,
         "on_vanduul_swarm": true,
         "on_other": true
+    },
+    "sound": {
+        "enable_kill_sounds": true,
+        "volume": 0.106
     }
 }

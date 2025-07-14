@@ -25,7 +25,7 @@ from src.statistics_controller import StatisticsController
 from src.trigger_controller import TriggerController
 from src.repository import Repository, RepositoryType
 from src.utils import get_date
-
+from src.sound_player import SoundPlayer
 
 SHIP_PREFIXES: list[str] = [
     "ORIG",
@@ -496,6 +496,29 @@ class SCClient:
 
                     if player_events:
                         for player_event in player_events:
+                            ##KILLSTREAKS
+                                    # KILL EVENT
+                            if (
+                                player_event.killer_profile.name == self._player_profile.name and
+                                player_event.victim_profile.name.lower() not in ["", "-", "npc"] and
+                                player_event.victim_profile.name != self._player_profile.name
+                            ):
+                                SoundPlayer.increment_kill_streak()
+
+                                if self._overlay_queue:
+                                    self._overlay_queue.put({"kill_streak": SoundPlayer._kill_count})
+
+                            # DEATH EVENT
+                            elif (
+                                player_event.victim_profile.name == self._player_profile.name and
+                                player_event.killer_profile.name.lower() not in ["", "-", "npc"] and
+                                player_event.killer_profile.name != self._player_profile.name
+                            ):
+                                SoundPlayer.reset_kill_streak()
+
+                                if self._overlay_queue:
+                                    self._overlay_queue.put({"kill_streak": 0})
+
                             if self._player_profile.name == player_event.killer_profile.name:
                                 player_event.ship_name = self._ship_name
 
