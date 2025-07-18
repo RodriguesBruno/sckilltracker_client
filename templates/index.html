@@ -133,7 +133,10 @@
             <div class="slide_btn">
                 <span>Crash Tracking Off</span>
                 <label class="switch">
-                    <input type="checkbox" id="verboseLoggingToggle" class="toggle" data-title-enable="Untrack Crash Kills/Deads" data-title-disable="Track Crash Kills/Deads" {% if verbose_logging %} checked {% endif %}>
+                    <input type="checkbox" id="crashtrackingoff" class="toggle"
+                    data-title-enable="Untrack Crash Kills/Deads"
+                    data-title-disable="Track Crash Kills/Deads"
+                    {% if not track_crash_deaths %} checked {% endif %}>
                     <span class="slider round" title="{{ 'Untrack Crash Kills/Deads' if verbose_logging else 'Track Crash Kills/Deads' }}"></span>
                 </label>
             </div>
@@ -663,8 +666,7 @@
         const endpoint = this.checked ? '/trigger_controller/enable' : '/trigger_controller/disable';
         fetchData(endpoint)
     });
-
-
+    
     // [OVERLAY]
     document.getElementById('overlayToggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/overlay/enable' : '/overlay/disable';

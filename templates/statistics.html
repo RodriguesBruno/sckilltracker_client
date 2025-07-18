@@ -27,6 +27,26 @@
       <div id="damagePlot"></div>
     </div>
   </div>
+  
+<div></div>
+  <div class="tables">
+  <div>
+    <h3>Your Kills and Deaths (Day / Week / Month / All)</h3>
+    <table class="stats-table" id="playerStatsTable">
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Kills</th>
+        <th>Deaths</th>
+        <th>Suicides</th>
+        <th>KDR</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  </div>
+</div>
+
 
 
   <div class="tables">
@@ -172,11 +192,31 @@
         ktBody.appendChild(tr);
       });
 
+      // Populate Player Kills/Deaths By Period Table
+      const periods = ['day', 'week', 'month', 'all'];
+      const pBody = document.querySelector('#playerStatsTable tbody');
+      const pdata = data.player_kills_deaths_by_period;
+
+      periods.forEach(period => {
+        const row = pdata[period];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${period.charAt(0).toUpperCase() + period.slice(1)}</td>
+          <td>${row.kills}</td>
+          <td>${row.deaths}</td>
+          <td>${row.suicides}</td>
+          <td>${row.kdr}</td>
+        `;
+        pBody.appendChild(tr);
+      });
+
     } catch (err) {
       console.error('Failed to load statistics:', err);
     }
   }
   document.addEventListener('DOMContentLoaded', loadStatistics);
+
+
 </script>
 
 {% endblock %}

@@ -195,3 +195,40 @@ class StatisticsController:
         result = self._get_table(name="victim", filter_by="victim_name", limit=limit, exclude_player=exclude_player)
 
         return result.to_dict(orient="records")
+    
+    ##Add a new method to summarize kills/deaths by period for a specific player:
+    def player_kills_deaths_by_period(self, player_name: str) -> dict:
+        if self._df is None or self._df.empty:
+            return {}
+
+        df = self._get_prepared_df()
+        now = pd.Timestamp.utcnow()
+
+        periods = {
+            "day": now - timedelta(days=1),
+            "week": now - timedelta(weeks=1),
+            "month": now - pd.DateOffset(months=1),
+            "all": None
+        }
+
+        result = {}
+
+        for period, since in periods.items():
+            if since:
+                df_period = df[df["date"] >= since]
+            else:
+                df_period = df
+
+            kills = df_period[(df_period["killer_name"] == player_name) & (df_period["damage"] != "Suicide")]
+            deaths = df_period[(df_period["victim_name"] == player_name) & (df_period["damage"] != "Suicide")]
+            suicides = df_period[(df_period["killer_name"] == player_name) & (df_period["damage"] == "Suicide")]
+
+            kdr = round(len(kills) / len(deaths), 2) if len(deaths) > 0 else len(kills)
+            result[period] = {
+                "kills": len(kills),
+                "deaths": len(deaths),
+                "suicides": len(suicides),
+                "kdr": kdr
+            }
+
+        return result

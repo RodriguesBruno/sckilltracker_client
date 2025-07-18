@@ -618,6 +618,7 @@ class SCClient:
 
     # [STATISTICS METHODS]
 
+
     def statistics_top_victims(self, exclude_player: bool = True) -> list[dict]:
         if exclude_player:
             return self._statistics_controller.top_victims(exclude_player=self._player_profile.name)
@@ -653,6 +654,9 @@ class SCClient:
 
     def statistics_damage_type_distribution(self) -> list[dict[str, int]]:
         return self._statistics_controller.damage_type_distribution()
+    
+    def statistics_kills_deaths_by_period(self) -> dict:
+        return self._statistics_controller.player_kills_deaths_by_period(self._player_profile.name)
 
     async def text_notification(self, broadcast: Callable) -> None:
         player_statistics: PlayerMonthStatistics = self.statistics_for_pilot_this_month()
@@ -664,5 +668,5 @@ class SCClient:
             ship_name=self._ship_name,
             game_mode=self._game_mode
         )
-
+    
         await broadcast(game_notification.model_dump())

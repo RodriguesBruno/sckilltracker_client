@@ -340,6 +340,8 @@ def statistics_page(request: Request):
 
 @app.get("/statistics/data", response_model=StatisticsData)
 def statistics_data():
+    player_name = sc_client.pilot_name  # get current player name
+
     return StatisticsData(
         top_victims=[TopVictim(**entry) for entry in sc_client.statistics_top_victims()],
         top_victims_table=[TopVictimsTable(**entry) for entry in sc_client.statistics_top_victims_table()],
@@ -347,7 +349,8 @@ def statistics_data():
         top_killers_table=[TopKillersTable(**entry) for entry in sc_client.statistics_top_killers_table()],
         kills_by_game_mode=[KillsGameMode(**entry) for entry in sc_client.statistics_kills_by_game_mode()],
         damage_type_distribution=[DamageTypeDistribution(**entry) for entry in sc_client.statistics_damage_type_distribution()],
-        player_month_statistics=sc_client.statistics_for_pilot_this_month()
+        player_month_statistics=sc_client.statistics_for_pilot_this_month(),
+        player_kills_deaths_by_period=sc_client.statistics_kills_deaths_by_period()
     )
 
 
@@ -1003,7 +1006,7 @@ def main() -> None:
         trigger_controller=trigger_controller,
         recordings_controller=recordings_controller,
         overlay_controller=overlay_controller,
-        overlay_queue=overlay_queue,
+        overlay_queue=overlay_queue,   
     )
 
     host: str = config.get("local_api").get("ip_address")
