@@ -14,6 +14,7 @@ import tkinter as tk
 from PIL import ImageTk, Image
 import threading
 import time
+from fastapi.responses import JSONResponse
 
 
 import webbrowser
@@ -337,6 +338,22 @@ def statistics_page(request: Request):
         "version": sc_client.version
     })
 
+@app.get("/statistics/ships")
+def statistics_ships():
+    try:
+        player_name = sc_client.pilot_name
+    except Exception:
+        player_name = None
+
+    if not player_name:
+        return {"most_killed_ships": [], "most_dead_ships": []}
+
+    return {
+        # Ships you flew when you got kills (ship_name, killer == you)
+        "most_killed_ships": statistics_controller.killer_ships_used(player_name),
+        # Zones where you died (victim_zone_name, victim == you)
+        "most_dead_ships": statistics_controller.deaths_by_zone(player_name),
+    }
 
 @app.get("/statistics/data", response_model=StatisticsData)
 def statistics_data():
@@ -851,6 +868,21 @@ async def disable_verbose_logging():
         is_verbose=sc_client.is_verbose_logging
     )
 
+track_crash_deaths = config.get("track_crash_deaths", True)
+
+@app.get("/crash_tracking/{action}")
+async def toggle_crash_tracking(action: RequestedAction):
+    global track_crash_deaths
+
+    if action == RequestedAction.ENABLE:
+        track_crash_deaths = True
+    else:
+        track_crash_deaths = False
+
+    config["track_crash_deaths"] = track_crash_deaths
+    write_config(config_file=config_file, data=config)
+
+    return JSONResponse({"track_crash_deaths": track_crash_deaths})
 
 @app.get("/settings")
 async def settings_page(request: Request):
@@ -879,7 +911,8 @@ async def update_settings(
     overlay_font_color: str = Form(...),
     overlay_font_size: str = Form(...),
     enable_kill_sounds: str = Form("true"),
-    kill_volume: str = Form("100")
+    kill_volume: str = Form("100"),
+    api_key: str = Form(None)
 ):
     try:
         form_data = SettingsForm(
@@ -910,6 +943,7 @@ async def update_settings(
     config["local_api"]["ip_address"] = local_api_ip_address
     config["local_api"]["port"] = int(local_api_port)
     config["client"]["api_url"] = api_url
+    config["client"]["api_key"] = api_key or ""
 
     logfile_monitor.logfile_with_path = logfile
     logfile_monitor.frequency = int(frequency)

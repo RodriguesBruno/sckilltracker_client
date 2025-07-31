@@ -8,6 +8,17 @@
 <div class="content">
   <h2>Statistics</h2>
 
+
+    <div class="chart-row">
+      <div class="chart-container shadowed-chart">
+        <div id="killerShipsPlot"></div>
+      </div>
+
+      <div class="chart-container shadowed-chart">
+        <div id="enemyKillerShipsPlot"></div>
+      </div>
+    </div>
+
   <div class="chart-row">
     <div class="chart-container shadowed-chart">
       <div id="topVictimsPlot"></div>
@@ -113,6 +124,42 @@
         title: 'Top Victims'
         }, axisCommon, layoutDark));
 
+        let shipsData = { most_killed_ships: [], most_dead_ships: [] };
+        try {
+          const resShips = await fetch('/statistics/ships');
+          if (resShips.ok) shipsData = await resShips.json();
+        } catch (e) {
+          console.warn('Ship aggregates fetch failed', e);
+        }
+
+        // Kills by Ship You Flew  (ship_name when YOU are the killer; excludes suicides)
+        const killsClean = (shipsData.most_killed_ships || []).filter(
+          s => s && typeof s.ship === 'string' && s.ship.trim() !== '-' && s.ship.trim() !== ''
+        );
+
+        Plotly.newPlot('killerShipsPlot', [{
+          x: killsClean.map(s => s.ship),
+          y: killsClean.map(s => s.count),
+          type: 'bar', marker: { color: '#016e1a' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Ship Name' },
+          yaxis: { title: 'Kills' },
+          title: 'Ships YOU were flying when you killed'
+        }, axisCommon, layoutDark));
+
+        // Deaths by Zone
+        Plotly.newPlot('enemyKillerShipsPlot', [{
+          x: shipsData.most_dead_ships.map(s => s.zone),
+          y: shipsData.most_dead_ships.map(s => s.count),
+          type: 'bar' , marker: { color: '#930013' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Zone' },
+          yaxis: { title: 'Deaths' },
+          title: 'Zones where YOU died'
+        }, axisCommon, layoutDark));
+
       // Add click handler for Top Victims
       document.getElementById('topVictimsPlot').on('plotly_click', function(eventData) {
         const name = eventData.points[0].x;
@@ -215,7 +262,6 @@
     }
   }
   document.addEventListener('DOMContentLoaded', loadStatistics);
-
 
 </script>
 

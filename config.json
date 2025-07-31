@@ -1,12 +1,13 @@
 {
     "title": "SCKillTracker Client",
     "client": {
-        "version": "1.5.1",
+        "version": "1.5.7 - junkiez",
         "enabled": true,
         "api_url": "http://sckilltracker.servegame.com:8081/api/v1/event",
-        "verbose_logging": true,
+        "verbose_logging": false,
         "game_executable_name": "starcitizen.exe",
-        "game_executable_check_frequency": 5
+        "game_executable_check_frequency": 5,
+        "api_key": ""
     },
     "local_api": {
         "ip_address": "0.0.0.0",
@@ -73,5 +74,6 @@
     "sound": {
         "enable_kill_sounds": true,
         "volume": 0.106
-    }
+    },
+    "track_crash_deaths": true
 }

@@ -232,3 +232,51 @@ class StatisticsController:
             }
 
         return result
+
+    def killer_ships_used(self, player_name: str, limit: int = 10) -> list[dict]:
+        """
+        Ships YOU were flying when you killed another player.
+        Counts 'ship_name' where killer_name == player_name and damage != 'Suicide'.
+        Excludes '-' and empty names.
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._df.copy()
+        df = df[(df.get("killer_name") == player_name) & (df.get("damage") != "Suicide")]
+
+        if "ship_name" not in df.columns:
+            return []
+
+        # drop '-', '', and NaN
+        df["ship_name"] = df["ship_name"].astype(str).str.strip()
+        df = df[(df["ship_name"] != "-") & (df["ship_name"] != "")]
+
+        top = df["ship_name"].value_counts().head(limit).reset_index()
+        top.columns = ["ship", "count"]
+        return top.to_dict(orient="records")
+
+    def deaths_by_zone(self, player_name: str, limit: int = 10) -> list[dict]:
+        """
+        Zones where YOU died (enemy killed you).
+        Counts 'victim_zone_name' where victim_name == player_name and damage != 'Suicide'.
+        Returns: [{ "zone": str, "count": int }, ...]
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._df.copy()
+        df = df[(df.get("victim_name") == player_name) & (df.get("damage") != "Suicide")]
+
+        if "victim_zone_name" not in df.columns:
+            return []
+
+        top = (
+            df["victim_zone_name"]
+            .fillna("-").replace("", "-")
+            .value_counts()
+            .head(limit)
+            .reset_index()
+        )
+        top.columns = ["zone", "count"]
+        return top.to_dict(orient="records")

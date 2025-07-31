@@ -859,7 +859,21 @@
         return td;
     }
     </script>
+<script>
+document.getElementById('crashtrackingoff').addEventListener('change', function () {
+    const isChecked = this.checked;
+    const endpoint = isChecked ? '/crash_tracking/disable' : '/crash_tracking/enable';
 
+    fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Crash Tracking status updated:", data.track_crash_deaths);
+        })
+        .catch(error => {
+            console.error("Failed to toggle crash tracking:", error);
+        });
+});
+</script>
     <script>
         function createPlayerTooltipTD(playerName, iconUrl, enlistedDate, location, fluency) {
         const td = document.createElement("td");
