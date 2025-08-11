@@ -8,7 +8,6 @@
 <div class="content">
   <h2>Statistics</h2>
 
-
     <div class="chart-row">
       <div class="chart-container shadowed-chart">
         <div id="killerShipsPlot"></div>
@@ -16,6 +15,15 @@
 
       <div class="chart-container shadowed-chart">
         <div id="enemyKillerShipsPlot"></div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-container shadowed-chart" style="width:100%">
+        <div id="topVictimOrgsPlot"></div>
+      </div>
+      <div class="chart-container shadowed-chart" style="width:100%">
+        <div id="topKillerOrgsPlot"></div>
       </div>
     </div>
 
@@ -54,11 +62,27 @@
       </tr>
     </thead>
     <tbody></tbody>
-  </table>
+    </table>
   </div>
+
+    <div >
+      <div style="width:100%">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <h3 style="margin:0;">Kills vs Deaths (Timeline)</h3>
+          <label style="font-size:14px;">
+            Period:
+            <select id="kdPeriodSelect">
+              <option value="week">Week</option>
+              <option value="month" selected>Month</option>
+              <option value="all">All time</option>
+            </select>
+          </label>
+        </div>
+        <div id="kdTimelinePlot"></div>
+      </div>
+    </div>
+
 </div>
-
-
 
   <div class="tables">
     <div>
@@ -140,7 +164,7 @@
         Plotly.newPlot('killerShipsPlot', [{
           x: killsClean.map(s => s.ship),
           y: killsClean.map(s => s.count),
-          type: 'bar', marker: { color: '#016e1a' }
+          type: 'bar', marker: { color: '#2F6542' }
         }], Object.assign({
           margin: { b: 80, t: 60 },
           xaxis: { title: 'Ship Name' },
@@ -152,7 +176,7 @@
         Plotly.newPlot('enemyKillerShipsPlot', [{
           x: shipsData.most_dead_ships.map(s => s.zone),
           y: shipsData.most_dead_ships.map(s => s.count),
-          type: 'bar' , marker: { color: '#930013' }
+          type: 'bar' , marker: { color: '#D77A7D' }
         }], Object.assign({
           margin: { b: 80, t: 60 },
           xaxis: { title: 'Zone' },
@@ -167,6 +191,65 @@
         window.open(url, '_blank');
       });
 
+      // --- Orgs You Kill Most  & Orgs That Kill You Most ---
+    try {
+      const resOrgs = await fetch('/statistics/orgs');
+      if (resOrgs.ok) {
+        const orgData = await resOrgs.json();
+        const vOrgs = orgData.top_victim_orgs || [];
+        const kOrgs = orgData.top_killer_orgs || [];
+
+        // You -> Them
+        Plotly.newPlot('topVictimOrgsPlot', [{
+          x: vOrgs.map(o => o.org),
+          y: vOrgs.map(o => o.count),
+          type: 'bar', marker: { color: '#2F6542' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Organization' },
+          yaxis: { title: 'Kills' },
+          title: 'Organizations YOU kill the most'
+        }, axisCommon, layoutDark));
+
+        // Them -> You
+        Plotly.newPlot('topKillerOrgsPlot', [{
+          x: kOrgs.map(o => o.org),
+          y: kOrgs.map(o => o.count),
+          type: 'bar', marker: { color: '#D77A7D' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Organization' },
+          yaxis: { title: 'Deaths' },
+          title: 'Organizations that kill YOU the most'
+        }, axisCommon, layoutDark));
+      } else {
+        console.warn('Failed to load org stats', resOrgs.status);
+      }
+    } catch (e) {
+      console.warn('Org aggregates fetch failed', e);
+    }
+
+async function drawKDTimeline(period = "month") {
+  try {
+    const resTL = await fetch(`/statistics/timeline?period=${encodeURIComponent(period)}`);
+    if (!resTL.ok) throw new Error(`HTTP ${resTL.status}`);
+    const tdata = (await resTL.json()).series || [];
+    const dates = tdata.map(r => r.date);
+    const kills = tdata.map(r => r.kills);
+    const deaths = tdata.map(r => r.deaths);
+
+    Plotly.newPlot('kdTimelinePlot', [
+      { x: dates, y: kills, marker: { color: '#2F6542'}, type: 'scatter', mode: 'lines+markers', name: 'Kills' },
+      { x: dates, y: deaths, marker: { color: '#D77A7D'}, type: 'scatter', mode: 'lines+markers', name: 'Deaths' }
+    ], Object.assign({
+      margin: { b: 80, t: 40 },
+      xaxis: { title: 'Date' },
+      yaxis: { title: 'Count' }
+    }, axisCommon, layoutDark));
+  } catch (e) {
+    console.warn('Timeline fetch failed', e);
+  }
+}
       // Top Killers (vertical bar)
       Plotly.newPlot('topKillersPlot', [{
         x: data.top_killers.map(k => k.killer_name),
@@ -256,6 +339,12 @@
         `;
         pBody.appendChild(tr);
       });
+
+    const kdSelect = document.getElementById('kdPeriodSelect');
+    if (kdSelect) {
+      kdSelect.addEventListener('change', () => drawKDTimeline(kdSelect.value));
+      drawKDTimeline(kdSelect.value); // initial
+    }
 
     } catch (err) {
       console.error('Failed to load statistics:', err);

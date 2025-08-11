@@ -1,35 +1,30 @@
 #TRAY ICON
-import threading
-import pystray
-from PIL import Image, ImageDraw
+import asyncio
 import ctypes
+import logging
+import multiprocessing
 import os
-##import signal
-from pathlib import Path
-#import sys
-import psutil
-
-#SLASH SCREEN
-import tkinter as tk
-from PIL import ImageTk, Image
 import threading
 import time
-from fastapi.responses import JSONResponse
-
-
+# SLASH SCREEN
+import tkinter as tk
 import webbrowser
-from typing import Optional
-import uvicorn
-import asyncio
-import multiprocessing
-from multiprocessing import Manager
 from contextlib import asynccontextmanager
-import logging
+from multiprocessing import Manager
 from pathlib import Path
+from typing import Optional
+
+##import signal
+# import sys
+import psutil
+import pystray
+import uvicorn
+from PIL import ImageTk, Image
 from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status, HTTPException
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 
 from src.client import SCClient
@@ -58,11 +53,11 @@ from src.models.models import (
 from src.overlay import OverlayPosition, OverlayColor
 from src.overlay_controller import OverlayController
 from src.recordings_controller import RecordingsController
-from src.statistics_controller import StatisticsController
-from src.trigger_controller import TriggerController
 from src.repository import Repository, RepositoryType
 from src.repository_factory import RepositoryFactory
 from src.settings_form import SettingsForm
+from src.statistics_controller import StatisticsController
+from src.trigger_controller import TriggerController
 from src.utils import get_local_ip, resource_path, setup_folders
 
 sc_client: Optional[SCClient] = None
@@ -322,10 +317,12 @@ async def index_page(request: Request):
         "overlay_enabled": overlay_enabled.value,
         "overlay": overlay_controller.get_config(),
         "verbose_logging": sc_client.is_verbose_logging,
+        "track_crash_deaths": track_crash_deaths,
         "player_month_statistics": sc_client.statistics_for_pilot_this_month(),
         "recordings_qty": await sc_client.recordings_video_files_quantity(),
         "latest_recordings": await sc_client.recordings_latest_videos(qty=1),
         "recording_controller": recordings_controller.get_config(),
+
         "ws_url": ws_url,
     })
 
@@ -337,6 +334,20 @@ def statistics_page(request: Request):
         "title": title,
         "version": sc_client.version
     })
+
+@app.get("/statistics/timeline")
+def statistics_timeline(period: str = "month"):
+    try:
+        player_name = sc_client.pilot_name
+    except Exception:
+        player_name = None
+
+    if not player_name:
+        return {"series": []}
+
+    return {
+        "series": statistics_controller.kills_deaths_timeline(player_name, period=period)
+    }
 
 @app.get("/statistics/ships")
 def statistics_ships():
@@ -354,7 +365,20 @@ def statistics_ships():
         # Zones where you died (victim_zone_name, victim == you)
         "most_dead_ships": statistics_controller.deaths_by_zone(player_name),
     }
+@app.get("/statistics/orgs")
+def statistics_orgs():
+    try:
+        player_name = sc_client.pilot_name
+    except Exception:
+        player_name = None
 
+    if not player_name:
+        return {"top_victim_orgs": [], "top_killer_orgs": []}
+
+    return {
+        "top_victim_orgs": statistics_controller.top_victim_orgs(player_name),
+        "top_killer_orgs": statistics_controller.top_killer_orgs(player_name),
+    }
 @app.get("/statistics/data", response_model=StatisticsData)
 def statistics_data():
     player_name = sc_client.pilot_name  # get current player name

@@ -1,11 +1,20 @@
-import logging
-from enum import Enum
-import requests
-import sys
 import json
+import logging
 import os
+import sys
+from enum import Enum
 from multiprocessing import Queue
 from multiprocessing.managers import ValueProxy
+
+import requests
+from PyQt5.QtCore import (
+    Qt,
+    QTimer,
+    QSize,
+    QPropertyAnimation,
+    QRect
+)
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import (
     QApplication,
     QLabel,
@@ -14,14 +23,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QSizePolicy
-)
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtCore import (
-    Qt,
-    QTimer,
-    QSize,
-    QPropertyAnimation,
-    QRect
 )
 
 CONFIG_PATH = "config.json"

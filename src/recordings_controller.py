@@ -1,11 +1,10 @@
 import asyncio
 import logging
+import msvcrt
 import os
 from pathlib import Path
-import msvcrt
 
 from src.models.models import PlayerEvent
-
 
 
 def file_is_locked(file_path: Path) -> bool:

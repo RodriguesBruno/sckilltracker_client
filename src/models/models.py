@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 from src.repository import RepositoryType
 
+
 class Organization(BaseModel):
     name: str = Field(default='-')
     url: str = Field(default='-')

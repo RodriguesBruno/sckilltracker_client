@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import mock_open, patch, MagicMock
+
+import pytest
 
 from src.logfile_monitor import LogFileMonitor
 

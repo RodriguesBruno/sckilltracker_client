@@ -1,5 +1,7 @@
 import logging
+
 import pyautogui
+
 
 class TriggerController:
     def __init__(self, config: dict) -> None:
