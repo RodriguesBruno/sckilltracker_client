@@ -365,11 +365,18 @@ class SCClient:
                     data = player_event.model_dump()
                     await broadcast(data)
 
-                    if self._overlay_queue and self._overlay_controller.must_display_overlay(
-                        player_name=self.pilot_name,
-                        player_event=player_event
-                    ):
-                        self._overlay_queue.put(data)
+                    # if self._overlay_queue and self._overlay_controller.must_display_overlay(
+                    #     player_name=self.pilot_name,
+                    #     player_event=player_event
+                    # ):
+                    #     self._overlay_queue.put(data)
+                    if self._overlay_queue:
+                        must_display, reason = await self._overlay_controller.must_display_overlay(
+                            player_name=self.pilot_name,
+                            player_event=player_event
+                        )
+                        if must_display:
+                            self._overlay_queue.put(data)
 
         return player_events
 
@@ -534,10 +541,71 @@ class SCClient:
                                     player_event=player_event
                                 )
 
+                                # if must_record_video:
+                                #     logging.info(f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
+                                #     await self._trigger_controller.trigger_hotkey()
+                                #
+                                #     video_filename: str = await self._recordings_controller.auto_rename_video(
+                                #         player_event=player_event
+                                #     )
+                                #
+                                #     logging.info(
+                                #         f"[CLIENT - UI NOTIFICATION - RECORDING CONTROLLER] videos_qty: "
+                                #         f"{self._recordings_controller.video_files_quantity()}, "
+                                #         f"latest_video_filename: {video_filename}") and self._verbose_logging
+                                #
+                                #     recording_notification: RecordingNotification = RecordingNotification(
+                                #         recordings_qty=self._recordings_controller.video_files_quantity(),
+                                #         latest_video_filename=video_filename
+                                #     )
+                                #     await broadcast(recording_notification.model_dump())
+
+                                # if must_record_video:
+                                #     # 1) Overlay first
+                                #     if self._overlay_queue:
+                                #         data_for_overlay = player_event.model_dump()
+                                #         if self._overlay_controller.must_display_overlay(
+                                #                 player_name=self.pilot_name,
+                                #                 player_event=player_event
+                                #         ):
+                                #             self._overlay_queue.put(data_for_overlay)
+                                #
+                                #     # 2) Then trigger recording
+                                #     logging.info(
+                                #         f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
+                                #     await self._trigger_controller.trigger_hotkey()
+                                #
+                                #     # 3) Post-trigger bookkeeping (unchanged)
+                                #     video_filename: str = await self._recordings_controller.auto_rename_video(
+                                #         player_event=player_event
+                                #     )
+                                #
+                                #     logging.info(
+                                #         f"[CLIENT - UI NOTIFICATION - RECORDING CONTROLLER] videos_qty: "
+                                #         f"{self._recordings_controller.video_files_quantity()}, "
+                                #         f"latest_video_filename: {video_filename}") and self._verbose_logging
+                                #
+                                #     recording_notification: RecordingNotification = RecordingNotification(
+                                #         recordings_qty=self._recordings_controller.video_files_quantity(),
+                                #         latest_video_filename=video_filename
+                                #     )
+                                #     await broadcast(recording_notification.model_dump())
                                 if must_record_video:
-                                    logging.info(f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
+                                    # 1) Overlay first
+                                    if self._overlay_queue:
+                                        data_for_overlay = player_event.model_dump()
+                                        if await self._overlay_controller.must_display_overlay(
+                                                player_name=self.pilot_name,
+                                                player_event=player_event
+                                        ):
+                                            self._overlay_queue.put(data_for_overlay)
+
+                                    # 2) Then trigger recording
+                                    logging.info(
+                                        f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
                                     await self._trigger_controller.trigger_hotkey()
 
+                                    # 3) Post-trigger bookkeeping (unchanged)
                                     video_filename: str = await self._recordings_controller.auto_rename_video(
                                         player_event=player_event
                                     )

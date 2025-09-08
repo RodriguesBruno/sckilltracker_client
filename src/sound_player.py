@@ -1,5 +1,4 @@
 import threading
-
 import pygame
 
 from src.file_handlers import read_config

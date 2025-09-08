@@ -28,20 +28,6 @@ def get_log_date(line: str) -> str:
     match = re.search(r"<(?P<date>[\d:T-]*)[.\dZ]*>\s\[", line)
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
-# Get the victim's name from the log line
-# If the name is longer than 23 characters, return 'npc'
-# qualquer nome com mais de 23 caracteres é um npc
-
-# def get_victim_name(line: str) -> str:
-#     match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
-#     if match:
-#         player_name = match.group("player_name")
-#         if len(player_name) > 23:
-#             return 'npc'
-#         return player_name
-#
-#     return '-'
-
 def get_victim_name(line: str) -> str:
     config = read_config(config_file="config.json")
     track_crash_deaths = config.get("track_crash_deaths", True)
@@ -155,6 +141,10 @@ def get_ship_name(line: str) -> str:
 
     return '-'
 
+# def get_player_name(line: str) -> str:
+#     match = re.search(r"<OnClientConnected>\sPlayer\[(?P<player_name>[\w-]*)]\s", line)
+#     return match.group('player_name') if match else '-'
+
 def get_player_name(line: str) -> str:
-    match = re.search(r"<OnClientConnected>\sPlayer\[(?P<player_name>[\w-]*)]\s", line)
+    match = re.search(r"Handle\[(?P<player_name>[\w-]+)]", line)
     return match.group('player_name') if match else '-'

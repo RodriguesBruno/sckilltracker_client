@@ -7,7 +7,6 @@ class OverlayController:
         self._font_color: str = config.get('font_color')
         self._font_size: str = config.get('font_size')
         self._enabled: bool = config.get('enabled')
-
         self._on_suicide: bool = config.get('on_suicide')
         self._on_own_death: bool = config.get('on_own_death')
         self._on_pu: bool = config.get('on_pu')

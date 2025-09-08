@@ -2,7 +2,7 @@
     "title": "SCKillTracker Client",
     "client": {
         "version": "1.5.7 - junkiez",
-        "enabled": true,
+        "enabled": false,
         "api_url": "http://sckilltracker.servegame.com:8081/api/v1/event",
         "verbose_logging": false,
         "game_executable_name": "starcitizen.exe",
@@ -33,11 +33,12 @@
                 "name": "other",
                 "hotkey": ""
             }
-        ]
+        ],
+        "delay_seconds": 0
     },
     "recordings_controller": {
         "path": "C:\\Users\\Davide\\Videos\\Squadron 42 - Star Citizen",
-        "record_suicide": false,
+        "record_suicide": true,
         "record_own_death": true,
         "record_pu": true,
         "record_gun_rush": true,
@@ -48,13 +49,14 @@
         "record_free_flight": true,
         "record_pirate_swarm": true,
         "record_vanduul_swarm": true,
-        "record_other": true
+        "record_other": true,
+        "rename_files": true
     },
     "db": {
         "type": "csv"
     },
     "overlay": {
-        "enabled": true,
+        "enabled": false,
         "position": "bottom-left",
         "font_color": "orange",
         "font_size": "20",

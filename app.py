@@ -80,7 +80,7 @@ overlay_on_pirate_swarm = None
 overlay_on_vanduul_swarm = None
 overlay_on_other = None
 
-
+#
 #SLASH SCREEN
 def show_splash_screen(duration=2):
     def splash():
@@ -104,10 +104,6 @@ def show_splash_screen(duration=2):
         x = int((screen_width / 2) - (width / 2))
         y = int((screen_height / 2) - (height / 2))
         splash_root.geometry(f"{width}x{height}+{x}+{y}")
-
-        # Transparent background color
-        # splash_root.config(bg="white")
-        # splash_root.wm_attributes("-transparentcolor", "white")
 
         if photo:
             canvas = tk.Canvas(splash_root, width=width, height=height, highlightthickness=0, bg="white")
@@ -254,6 +250,7 @@ repo: Repository = RepositoryFactory().get_repo(
 statistics_controller: StatisticsController = StatisticsController()
 
 trigger_controller: TriggerController = TriggerController(config=config.get('trigger_controller'))
+
 recordings_controller: RecordingsController = RecordingsController(config=config.get('recordings_controller'))
 
 overlay_controller: OverlayController = OverlayController(config=config.get('overlay'))
@@ -322,7 +319,6 @@ async def index_page(request: Request):
         "recordings_qty": await sc_client.recordings_video_files_quantity(),
         "latest_recordings": await sc_client.recordings_latest_videos(qty=1),
         "recording_controller": recordings_controller.get_config(),
-
         "ws_url": ws_url,
     })
 
@@ -330,6 +326,14 @@ async def index_page(request: Request):
 @app.get("/statistics")
 def statistics_page(request: Request):
     return templates.TemplateResponse("statistics.html", {
+        "request": request,
+        "title": title,
+        "version": sc_client.version
+    })
+
+@app.get("/global")
+def global_page(request: Request):
+    return templates.TemplateResponse("global.html", {
         "request": request,
         "title": title,
         "version": sc_client.version
@@ -799,23 +803,6 @@ async def overlay_on_free_flight(action: RequestedAction):
         is_enabled=overlay_on_free_flight.value
     )
 
-@app.get("/overlay/free_flight/{action}", response_model=OverlayStatus)
-async def overlay_on_free_flight(action: RequestedAction):
-    if action == RequestedAction.ENABLE:
-        overlay_on_free_flight.value = True
-        overlay_controller.on_free_flight = True
-    else:
-        overlay_on_free_flight.value = False
-        overlay_controller.on_free_flight = False
-
-    config['overlay'] = overlay_controller.get_config()
-
-    write_config(config_file=config_file, data=config)
-
-    return OverlayStatus(
-        is_enabled=overlay_on_free_flight.value
-    )
-
 @app.get("/overlay/pirate_swarm/{action}", response_model=OverlayStatus)
 async def overlay_on_pirate_swarm(action: RequestedAction):
     if action == RequestedAction.ENABLE:
@@ -839,16 +826,12 @@ async def overlay_on_vanduul_swarm(action: RequestedAction):
         overlay_on_vanduul_swarm.value = True
         overlay_controller.on_vanduul_swarm = True
     else:
-        overlay_on_pirate_swarm.value = False
+        overlay_on_vanduul_swarm.value = False
         overlay_controller.on_vanduul_swarm = False
 
     config['overlay'] = overlay_controller.get_config()
-
     write_config(config_file=config_file, data=config)
-
-    return OverlayStatus(
-        is_enabled=overlay_on_vanduul_swarm.value
-    )
+    return OverlayStatus(is_enabled=overlay_on_vanduul_swarm.value)
 
 @app.get("/overlay/other/{action}", response_model=OverlayStatus)
 async def overlay_on_other(action: RequestedAction):
@@ -918,6 +901,7 @@ async def settings_page(request: Request):
         "overlay_positions": [entry.value for entry in OverlayPosition],
         "overlay_font_colors": [entry.value for entry in OverlayColor],
         "overlay_font_sizes": list(range(5, 31))
+
     })
 
 @app.post("/settings")
@@ -936,7 +920,10 @@ async def update_settings(
     overlay_font_size: str = Form(...),
     enable_kill_sounds: str = Form("true"),
     kill_volume: str = Form("100"),
+    rename_files: str = Form("true"),
+    trigger_delay: str = Form("0"),
     api_key: str = Form(None)
+
 ):
     try:
         form_data = SettingsForm(
@@ -991,6 +978,30 @@ async def update_settings(
 
     config["overlay"] = overlay_controller.get_config()
 
+    # Rename files toggle (update runtime + config immediately)
+    rename_files_enabled = rename_files.lower() == "true"
+    config["recordings_controller"]["rename_files"] = rename_files_enabled
+    try:
+        recordings_controller.set_rename_files(rename_files_enabled)
+    except Exception as _e:
+        # non-fatal — still persist config
+        logging.warning(f"Could not update recordings_controller.rename_files at runtime: {_e}")
+
+    # Trigger delay slider (0–10) -> store under trigger_controller only
+    try:
+        td = int(trigger_delay)
+    except (ValueError, TypeError):
+        td = 0
+    td = max(0, min(10, td))
+
+    # Persist to trigger_controller config
+    config["trigger_controller"]["delay_seconds"] = td
+    # apply to runtime trigger controller
+    try:
+        trigger_controller.set_delay(td)
+    except Exception:
+        pass
+
     # ✅ Handle kill sound toggle from dropdown
     config.setdefault("sound", {})
     config["sound"]["enable_kill_sounds"] = enable_kill_sounds.lower() == "true"
@@ -1038,7 +1049,7 @@ def main() -> None:
     # overlay_on_vanduul_swarm = manager.Value("b", config.get("overlay").get("on_vanduul_swarm"))
     # overlay_on_other = manager.Value("b", config.get("overlay").get("on_other"))
 
-
+    # Initialize once from overlay_controller (single source of truth)
     position_value = manager.Value("u", overlay_controller.position)
     color_value = manager.Value("u", overlay_controller.font_color)
     font_size_value = manager.Value("u", overlay_controller.font_size)
