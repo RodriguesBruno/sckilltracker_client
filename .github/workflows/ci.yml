@@ -2,8 +2,8 @@ name: SCKillTracker Client Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'   # Runs whenever you push a tag like v1.0.0
+    branches:
+      - main   # trigger when merging/pushing to main
 
 jobs:
   build:
@@ -43,15 +43,34 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from config.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.client.version' config.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=v$VERSION" >> $GITHUB_ENV
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: sckilltracker_client
           path: .
 
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git tag $TAG
+          git push origin $TAG
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.TAG }}
+          name: Release ${{ env.VERSION }}
           files: sckilltracker_client.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
