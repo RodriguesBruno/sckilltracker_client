@@ -3,7 +3,7 @@ name: SCKillTracker Client Build and Release
 on:
   push:
     branches:
-      - main   # trigger when merging/pushing to main
+      - main
 
 jobs:
   build:
@@ -24,6 +24,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build executable with PyInstaller
+        shell: cmd
         run: |
           pyinstaller --clean -F ^
             --name "sckilltracker_client" ^
