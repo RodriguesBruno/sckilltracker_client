@@ -1,7 +1,6 @@
 import logging
 
 from src.csv_repository import CSVRepository
-from src.models.models import PlayerEvent
 from src.repository import RepositoryType
 from src.sql_repository import SQLRepository
 
@@ -17,7 +16,9 @@ class RepositoryFactory:
             path: str= "./db/events.csv"
             return CSVRepository(path=path)
 
-        if repository_type == RepositoryType.SQL:
+        elif repository_type == RepositoryType.SQL:
             logging.info(f"[REPOSITORY FACTORY] - SQL")
             path: str = './db/events.db'
             return SQLRepository(path=path)
+
+        return None

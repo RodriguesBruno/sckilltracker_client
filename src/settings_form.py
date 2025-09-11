@@ -12,6 +12,7 @@ class SettingsForm(BaseModel):
     overlay_position: str
     overlay_font_color: str
     overlay_font_size: int
+    trigger_delay: int
 
 
     @field_validator("local_api_port", mode='before')

@@ -13,11 +13,11 @@
       <h3>Local API</h3>
       <div class="form-group">
         <label for="local_api_ip_address">IP Address Bind</label>
-        <input type="text" id="local_api_ip_address" name="local_api_ip_address" value="{{ config['local_api']['ip_address'] }}" readonly required>
+        <input type="text" id="local_api_ip_address" name="local_api_ip_address" value="{{ config.local_api.ip_address }}" readonly required>
       </div>
       <div class="form-group">
         <label for="local_api_port">Port</label>
-        <input type="text" id="local_api_port" name="local_api_port" value="{{ config['local_api']['port'] }}" required>
+        <input type="text" id="local_api_port" name="local_api_port" value="{{ config.local_api.port }}" required>
       </div>
     </div>
 
@@ -25,25 +25,29 @@
       <h3>Discord BOT</h3>
       <div class="form-group">
         <label for="api_url">URL</label>
-        <input type="text" id="api_url" name="api_url" value="{{ config['client']['api_url'] }}" required>
+        <input type="text" id="api_url" name="api_url" value="{{ config.client.api_url }}" required>
       </div>
       <div class="form-group">
         <label for="logfile">StarCitizen Log File</label>
-        <input type="text" id="logfile" name="logfile" value="{{ config['log_monitor']['logfile_with_path'] }}" required>
+        <input type="text" id="logfile" name="logfile" value="{{ config.log_monitor.logfile_with_path }}" required>
       </div>
       <div class="form-group">
         <label for="frequency">Log File Scan Frequency (s)</label>
-        <input type="text" id="frequency" name="frequency" value="{{ config['log_monitor']['frequency'] }}" required>
+        <input type="text" id="frequency" name="frequency" value="{{ config.log_monitor.frequency }}" required>
       </div>
+<!--      <div class="form-group">-->
+<!--        <label for="api_key">API Key</label>-->
+<!--        <input type="password" id="api_key" name="api_key" value="{{ config['client'].get('api_key', '') }}" placeholder="Enter API Key">-->
+<!--      </div>-->
     </div>
 
     <div class="settings-panel">
       <h3>Instant Replay</h3>
       <div class="form-group">
-        <label for="gpu_vendor">Vendor</label>
+        <label for="gpu_vendor">Vendor Keybind</label>
         <select id="gpu_vendor" name="gpu_vendor">
-          {% for vendor in config['trigger_controller']['vendors'] %}
-            <option value="{{vendor.name}}" {% if config['trigger_controller']['selected_vendor'] == vendor.name %}selected{% endif %} title="Hotkey: {{vendor.hotkey | upper}}">
+          {% for vendor in config.trigger_controller.vendors %}
+            <option value="{{vendor.name}}" {% if config.trigger_controller.selected_vendor == vendor.name %}selected{% endif %} title="Hotkey: {{vendor.hotkey | upper}}">
               {{vendor.name | upper}}
             </option>
           {% endfor %}
@@ -57,8 +61,33 @@
 
       <div class="form-group">
         <label for="video_folder_path">Video Folder Path</label>
-        <input type="text" id="video_folder_path" name="video_folder_path" value="{{ config['recordings_controller']['path'] }}">
+        <input type="text" id="video_folder_path" name="video_folder_path" value="{{ config.recordings_controller.path }}">
       </div>
+
+      <div class="form-group">
+        <label for="rename_files">Rename Files Automatically</label>
+        <select id="rename_files" name="rename_files">
+          <option value=true {% if config.recordings_controller.rename_files %}selected{% endif %}>Yes</option>
+          <option value=false {% if not config.recordings_controller.rename_files %}selected{% endif %}>No</option>
+        </select>
+      </div>
+<div class="form-group">
+  <label for="trigger_delay">
+    Trigger Delay: <span id="trigger_delay_value">{{ config.trigger_controller.delay_seconds }}</span>s
+  </label>
+  <input
+    type="range"
+    id="trigger_delay"
+    name="trigger_delay"
+    min="0"
+    max="10"
+    step="1"
+    value="{{ config.trigger_controller.delay_seconds }}"
+    oninput="document.getElementById('trigger_delay_value').textContent = this.value"
+  >
+</div>
+
+
     </div>
 
     <div class="settings-panel">
@@ -67,7 +96,7 @@
         <label for="overlay_position">Position</label>
         <select id="overlay_position" name="overlay_position">
           {% for position in overlay_positions %}
-            <option value="{{position}}" {% if config['overlay']['position'] == position %}selected{% endif %}>{{position | upper}}</option>
+            <option value="{{position}}" {% if config.overlay.position == position %}selected{% endif %}>{{position | upper}}</option>
           {% endfor %}
         </select>
       </div>
@@ -76,25 +105,59 @@
         <label for="overlay_font_color">Font Color</label>
         <select id="overlay_font_color" name="overlay_font_color">
           {% for color in overlay_font_colors %}
-            <option value="{{color}}" {% if config['overlay']['font_color'] == color %}selected{% endif %}>{{color | upper}}</option>
+            <option value="{{color}}" {% if config.overlay.font_color == color %}selected{% endif %}>{{color | upper}}</option>
           {% endfor %}
         </select>
       </div>
 
       <div class="form-group">
-        <label for="overlay_font_size">Font Size: <span id="font_size_value">{{ config['overlay']['font_size'] }}</span></label>
+        <label for="overlay_font_size">Font Size: <span id="font_size_value">{{ config.overlay.font_size }}</span></label>
         <input
           type="range"
           id="overlay_font_size"
           name="overlay_font_size"
           min="{{ overlay_font_sizes[0] }}"
           max="{{ overlay_font_sizes[-1] }}"
-          value="{{ config['overlay']['font_size'] }}"
+          value="{{ config.overlay.font_size }}"
           oninput="document.getElementById('font_size_value').textContent = this.value"
         >
       </div>
     </div>
 
+    <div class="settings-panel">
+      <h3>Sound</h3>
+      <div class="form-group">
+        <label for="enable_kill_sounds">Enable Kill Sounds</label>
+        <select name="enable_kill_sounds" id="enable_kill_sounds">
+          <option value=true {% if config.sound_controller.kill_sounds.enabled %}selected{% endif %}>Yes</option>
+          <option value=false {% if not config.sound_controller.kill_sounds.enabled %}selected{% endif %}>No</option>
+        </select>
+      </div>
+          {% set volume_raw = config.sound_controller.volume if config.sound_controller.volume is defined else 1.0 %}
+          {% set volume_value = (volume_raw | float * 100) %}
+          <div class="form-group">
+            <label for="volume">
+              Sound Volume: <span id="volume_value">{{ '%.2f' % volume_value }}%</span>
+            </label>
+            <input
+              type="range"
+              id="volume"
+              name="volume"
+              min="0"
+              max="100"
+              step="0.1"
+              value="{{ '%.2f' % volume_value }}"
+             oninput="document.getElementById('volume_value').textContent = this.value + '%';
+            fetch(`/static/sounds/kill1.mp3?volume=${this.value / 100}`);"
+          >
+            <div>
+            <button type="button" onclick="playKillSound()">🔊</button>
+          </div>
+          <audio id="test-audio" src="/static/sounds/kill1.mp3" preload="auto"></audio>
+          </div>
+        </div>
+      </div>
+    </div>  
     <div class="text-center">
       <input type="submit" id="submit-button" value="Submit" disabled><br>
     </div>
@@ -118,7 +181,7 @@
 
   function toggleHotkeyVisibility() {
     const selectedVendorName = gpuSelect.value;
-    const vendors = {{ config['trigger_controller']['vendors'] | tojson }};
+    const vendors = {{ config.trigger_controller.vendors | tojson }};
     const selectedVendor = vendors.find(v => v.name === selectedVendorName);
 
     if (selectedVendorName === 'other') {
@@ -177,6 +240,21 @@
     submitButton.value = "Saving...";
     submitButton.style.opacity = "0.6";
   });
+
+    const slider = document.getElementById('volume');
+  const volumeLabel = document.getElementById('volume_value');
+  const audio = document.getElementById('test-audio');
+
+  slider.addEventListener('input', () => {
+    const percent = parseFloat(slider.value);
+    volumeLabel.textContent = percent.toFixed(2) + '%';
+    audio.volume = percent / 100;
+  });
+
+  function playKillSound() {
+    audio.currentTime = 0;
+    audio.play();
+  }
 </script>
 
 {% endblock %}

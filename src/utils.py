@@ -1,7 +1,7 @@
-from datetime import datetime
-import socket
 import os
+import socket
 import sys
+from datetime import datetime
 
 
 def get_date() -> str:

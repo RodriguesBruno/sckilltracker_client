@@ -2,6 +2,7 @@ import calendar
 import logging
 from datetime import timedelta, datetime
 from typing import Optional
+
 import pandas as pd
 
 from src.models.models import PlayerMonthStatistics
@@ -195,3 +196,184 @@ class StatisticsController:
         result = self._get_table(name="victim", filter_by="victim_name", limit=limit, exclude_player=exclude_player)
 
         return result.to_dict(orient="records")
+
+    # --- add inside StatisticsController (near the other aggregations) ---
+    def top_victim_orgs(self, player_name: str, limit: int = 10) -> list[dict]:
+        """
+        Organizations YOU kill the most.
+        Groups by victim's org where killer_name == player_name and damage != 'Suicide'.
+        Returns: [{ "org": str, "count": int }, ...]
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._df.copy()
+        df = df[(df.get("killer_name") == player_name) & (df.get("damage") != "Suicide")]
+
+        # try to locate an org column
+        org_col_candidates = ["victim_org_name", "victim_org", "victim_organization"]
+        col = next((c for c in org_col_candidates if c in df.columns), None)
+        if not col:
+            return []
+
+        top = (
+            df[col]
+            .fillna("-").replace("", "-")
+            .value_counts()
+            .head(limit)
+            .reset_index()
+        )
+        top.columns = ["org", "count"]
+        return top.to_dict(orient="records")
+
+    def top_killer_orgs(self, player_name: str, limit: int = 10) -> list[dict]:
+        """
+        Organizations that kill YOU the most.
+        Groups by killer's org where victim_name == player_name and damage != 'Suicide'.
+        Returns: [{ "org": str, "count": int }, ...]
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._df.copy()
+        df = df[(df.get("victim_name") == player_name) & (df.get("damage") != "Suicide")]
+
+        org_col_candidates = ["killer_org_name", "killer_org", "killer_organization"]
+        col = next((c for c in org_col_candidates if c in df.columns), None)
+        if not col:
+            return []
+
+        top = (
+            df[col]
+            .fillna("-").replace("", "-")
+            .value_counts()
+            .head(limit)
+            .reset_index()
+        )
+        top.columns = ["org", "count"]
+        return top.to_dict(orient="records")
+
+    def kills_deaths_timeline(self, player_name: str, period: str = "month") -> list[dict]:
+        """
+        Daily timeline of YOUR kills and deaths (non-suicides) over a selectable period.
+        period ∈ {"week","month","all"}
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._get_prepared_df()  # ensures a proper datetime "date" column
+
+        end = pd.Timestamp.utcnow().normalize() + pd.Timedelta(days=1)
+
+        if period == "week":
+            start = end - pd.Timedelta(days=7)
+        elif period == "month":
+            start = end - pd.Timedelta(days=30)
+        else:  # "all"
+            # guard if dataset starts in future/empty after filtering
+            start = (df["date"].min() or end).floor("D")
+
+        # window
+        dfw = df[(df["date"] >= start) & (df["date"] < end)]
+
+        kills = (
+            dfw[(dfw["killer_name"] == player_name) & (dfw["damage"] != "Suicide")]
+            .assign(day=lambda x: x["date"].dt.floor("D"))
+            .groupby("day").size().rename("kills")
+        )
+        deaths = (
+            dfw[(dfw["victim_name"] == player_name) & (dfw["damage"] != "Suicide")]
+            .assign(day=lambda x: x["date"].dt.floor("D"))
+            .groupby("day").size().rename("deaths")
+        )
+
+        idx = pd.date_range(start=start.floor("D"), end=end.floor("D") - pd.Timedelta(days=1), freq="D")
+        out = pd.DataFrame(index=idx).join([kills, deaths]).fillna(0).astype(int).reset_index()
+        out.rename(columns={"index": "date"}, inplace=True)
+        out["date"] = out["date"].dt.strftime("%Y-%m-%d")
+        return out.to_dict(orient="records")
+
+    ##Add a new method to summarize kills/deaths by period for a specific player:
+    def player_kills_deaths_by_period(self, player_name: str) -> dict:
+        if self._df is None or self._df.empty:
+            return {}
+
+        df = self._get_prepared_df()
+        now = pd.Timestamp.utcnow()
+
+        periods = {
+            "day": now - timedelta(days=1),
+            "week": now - timedelta(weeks=1),
+            "month": now - pd.DateOffset(months=1),
+            "all": None
+        }
+
+        result = {}
+
+        for period, since in periods.items():
+            if since:
+                df_period = df[df["date"] >= since]
+            else:
+                df_period = df
+
+            kills = df_period[(df_period["killer_name"] == player_name) & (df_period["damage"] != "Suicide")]
+            deaths = df_period[(df_period["victim_name"] == player_name) & (df_period["damage"] != "Suicide")]
+            suicides = df_period[(df_period["killer_name"] == player_name) & (df_period["damage"] == "Suicide")]
+
+            kdr = round(len(kills) / len(deaths), 2) if len(deaths) > 0 else len(kills)
+            result[period] = {
+                "kills": len(kills),
+                "deaths": len(deaths),
+                "suicides": len(suicides),
+                "kdr": kdr
+            }
+
+        return result
+
+    def killer_ships_used(self, player_name: str, limit: int = 10) -> list[dict]:
+        """
+        Ships YOU were flying when you killed another player.
+        Counts 'ship_name' where killer_name == player_name and damage != 'Suicide'.
+        Excludes '-' and empty names.
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._df.copy()
+        df = df[(df.get("killer_name") == player_name) & (df.get("damage") != "Suicide")]
+
+        if "ship_name" not in df.columns:
+            return []
+
+        # drop '-', '', and NaN
+        df["ship_name"] = df["ship_name"].astype(str).str.strip()
+        df = df[(df["ship_name"] != "-") & (df["ship_name"] != "")]
+
+        top = df["ship_name"].value_counts().head(limit).reset_index()
+        top.columns = ["ship", "count"]
+        return top.to_dict(orient="records")
+
+    def deaths_by_zone(self, player_name: str, limit: int = 10) -> list[dict]:
+        """
+        Zones where YOU died (enemy killed you).
+        Counts 'victim_zone_name' where victim_name == player_name and damage != 'Suicide'.
+        Returns: [{ "zone": str, "count": int }, ...]
+        """
+        if self._df is None or self._df.empty:
+            return []
+
+        df = self._df.copy()
+        df = df[(df.get("victim_name") == player_name) & (df.get("damage") != "Suicide")]
+
+        if "victim_zone_name" not in df.columns:
+            return []
+
+        top = (
+            df["victim_zone_name"]
+            .fillna("-").replace("", "-")
+            .value_counts()
+            .head(limit)
+            .reset_index()
+        )
+        top.columns = ["zone", "count"]
+        return top.to_dict(orient="records")

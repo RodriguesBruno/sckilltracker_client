@@ -58,6 +58,15 @@ def test_get_victim_player_name_from_pet_npc_returns_npc():
     expected_result = 'npc'
     assert result == expected_result
 
+def test_get_victim_player_name_from_crash_returns_npc():
+    entry = "<2025-09-08T13:10:18.208Z> [Notice] <Actor Death> CActor::Kill: 'BluePanda' [202139681949] in zone 'ANVL_Hornet_F7A_Mk2_5985359434045' killed by 'unknown' [0] using 'unknown' [Class unknown] with damage type 'Crash' from direction x: 0.000000, y: 0.000000, z: 0.000000 [Team_ActorTech]"
+
+    track_crash_deaths = False
+    result = get_victim_name(entry, track_crash_deaths)
+
+    expected_result = 'npc'
+    assert result == expected_result
+
 
 # [KILLED BY]
 
@@ -322,7 +331,7 @@ def test_get_ship_name_with_hornet_returns_hornet_f7a():
 # [PILOT NAME]
 
 def test_get_pilot_name_returns_pilot_name():
-    entry = '<2025-04-07T15:59:37.784Z> [Notice] <OnClientConnected> Player[RedPanda] has connected. [Team_ActorFeatures][Inventory]'
+    entry = '<2025-09-11T11:04:53.110Z> [Notice] <Legacy login response> [CIG-net] User Login Success - Handle[RedPanda] - Time[222182622] [Team_GameServices][Login]'
     result = get_player_name(entry)
 
     expected_result = 'RedPanda'
@@ -330,7 +339,7 @@ def test_get_pilot_name_returns_pilot_name():
 
 
 def test_get_pilot_name_with_another_name_returns_pilot_name():
-    entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[CBCORP] has connected. [Team_ActorFeatures][Inventory]'
+    entry = '<2025-09-11T11:04:53.110Z> [Notice] <Legacy login response> [CIG-net] User Login Success - Handle[CBCORP] - Time[222182622] [Team_GameServices][Login]'
     result = get_player_name(entry)
 
     expected_result = 'CBCORP'
@@ -339,7 +348,7 @@ def test_get_pilot_name_with_another_name_returns_pilot_name():
 
 
 def test_get_pilot_name_with_long_name_returns_pilot_name():
-    entry = '<2025-04-07T15:59:37.784Z> [Notice] <OnClientConnected> Player[ThisNameIsWeird] has connected. [Team_ActorFeatures][Inventory]'
+    entry = '<2025-09-11T11:04:53.110Z> [Notice] <Legacy login response> [CIG-net] User Login Success - Handle[ThisNameIsWeird] - Time[222182622] [Team_GameServices][Login]'
     result = get_player_name(entry)
 
     expected_result = 'ThisNameIsWeird'
@@ -347,7 +356,7 @@ def test_get_pilot_name_with_long_name_returns_pilot_name():
 
 
 def test_get_pilot_name_with_dash_returns_pilot_name():
-    entry = '<2025-04-08T08:42:39.869Z> [Notice] <OnClientConnected> Player[DASH-NAME] has connected. [Team_ActorFeatures][Inventory]'
+    entry = '<2025-09-11T11:04:53.110Z> [Notice] <Legacy login response> [CIG-net] User Login Success - Handle[DASH-NAME] - Time[222182622] [Team_GameServices][Login]'
     result = get_player_name(entry)
 
     expected_result = 'DASH-NAME'

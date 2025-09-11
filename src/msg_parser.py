@@ -1,5 +1,7 @@
 import re
 
+from src.file_handlers import read_config
+
 SHIP_PREFIXES: list[str] = [
     "ORIG",
     "CRUS",
@@ -26,20 +28,19 @@ def get_log_date(line: str) -> str:
     match = re.search(r"<(?P<date>[\d:T-]*)[.\dZ]*>\s\[", line)
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
-def get_victim_name(line: str) -> str:
-    if 'PU_Human_Enemy' and '_NPC_' in line:
-        return 'npc'
-
-    match = re.search(r"_+?\w+?_PU_Advocacy_\d*", line)
-    if match:
-        return 'npc'
-
-    match = re.search(r"_+?\w+?_pet_\d*", line)
-    if match:
+def get_victim_name(line: str, track_crash_deaths: bool = True) -> str:
+    if not track_crash_deaths and "damage type 'Crash'" in line:
         return 'npc'
 
     match = re.search(r"CActor::Kill:\s'(?P<player_name>[\w-]*)", line)
-    return match.group('player_name') if match else '-'
+    if match:
+        player_name = match.group("player_name")
+        if len(player_name) > 23:
+            return 'npc'
+
+        return player_name
+
+    return '-'
 
 def get_victim_zone(line: str) -> str:
     match = re.search(r"in\szone\s'(?P<zone>[a-zA-Z\d_-]*)'", line)
@@ -115,7 +116,7 @@ def get_game_mode(line: str) -> str:
         game_mode = match.group('game_mode')
         if game_mode == 'FPSGunGame':
             return 'Gun Rush'
-
+        
         return re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', game_mode).replace('_', ' ')
 
     return '-'
@@ -138,6 +139,10 @@ def get_ship_name(line: str) -> str:
 
     return '-'
 
+# def get_player_name(line: str) -> str:
+#     match = re.search(r"<OnClientConnected>\sPlayer\[(?P<player_name>[\w-]*)]\s", line)
+#     return match.group('player_name') if match else '-'
+
 def get_player_name(line: str) -> str:
-    match = re.search(r"<OnClientConnected>\sPlayer\[(?P<player_name>[\w-]*)]\s", line)
+    match = re.search(r"Handle\[(?P<player_name>[\w-]+)]", line)
     return match.group('player_name') if match else '-'

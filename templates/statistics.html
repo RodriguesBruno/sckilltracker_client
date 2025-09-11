@@ -6,7 +6,26 @@
 
 {% block content %}
 <div class="content">
-  <h2>Statistics</h2>
+  <h2>Local Statistics</h2>
+
+    <div class="chart-row">
+      <div class="chart-container shadowed-chart">
+        <div id="killerShipsPlot"></div>
+      </div>
+
+      <div class="chart-container shadowed-chart">
+        <div id="enemyKillerShipsPlot"></div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-container shadowed-chart" style="width:100%">
+        <div id="topVictimOrgsPlot"></div>
+      </div>
+      <div class="chart-container shadowed-chart" style="width:100%">
+        <div id="topKillerOrgsPlot"></div>
+      </div>
+    </div>
 
   <div class="chart-row">
     <div class="chart-container shadowed-chart">
@@ -27,7 +46,43 @@
       <div id="damagePlot"></div>
     </div>
   </div>
+  
+<div></div>
+  <div class="tables">
+  <div>
+    <h3>Your Kills and Deaths (Day / Week / Month / All)</h3>
+    <table class="stats-table" id="playerStatsTable">
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Kills</th>
+        <th>Deaths</th>
+        <th>Suicides</th>
+        <th>KDR</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    </table>
+  </div>
 
+    <div >
+      <div style="width:100%">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <h3 style="margin:0;">Kills vs Deaths (Timeline)</h3>
+          <label style="font-size:14px;">
+            Period:
+            <select id="kdPeriodSelect">
+              <option value="week">Week</option>
+              <option value="month" selected>Month</option>
+              <option value="all">All time</option>
+            </select>
+          </label>
+        </div>
+        <div id="kdTimelinePlot"></div>
+      </div>
+    </div>
+
+</div>
 
   <div class="tables">
     <div>
@@ -93,6 +148,42 @@
         title: 'Top Victims'
         }, axisCommon, layoutDark));
 
+        let shipsData = { most_killed_ships: [], most_dead_ships: [] };
+        try {
+          const resShips = await fetch('/statistics/ships');
+          if (resShips.ok) shipsData = await resShips.json();
+        } catch (e) {
+          console.warn('Ship aggregates fetch failed', e);
+        }
+
+        // Kills by Ship You Flew  (ship_name when YOU are the killer; excludes suicides)
+        const killsClean = (shipsData.most_killed_ships || []).filter(
+          s => s && typeof s.ship === 'string' && s.ship.trim() !== '-' && s.ship.trim() !== ''
+        );
+
+        Plotly.newPlot('killerShipsPlot', [{
+          x: killsClean.map(s => s.ship),
+          y: killsClean.map(s => s.count),
+          type: 'bar', marker: { color: '#2F6542' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Ship Name' },
+          yaxis: { title: 'Kills' },
+          title: 'Ships YOU were flying when you killed'
+        }, axisCommon, layoutDark));
+
+        // Deaths by Zone
+        Plotly.newPlot('enemyKillerShipsPlot', [{
+          x: shipsData.most_dead_ships.map(s => s.zone),
+          y: shipsData.most_dead_ships.map(s => s.count),
+          type: 'bar' , marker: { color: '#D77A7D' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Zone' },
+          yaxis: { title: 'Deaths' },
+          title: 'Zones where YOU died'
+        }, axisCommon, layoutDark));
+
       // Add click handler for Top Victims
       document.getElementById('topVictimsPlot').on('plotly_click', function(eventData) {
         const name = eventData.points[0].x;
@@ -100,6 +191,65 @@
         window.open(url, '_blank');
       });
 
+      // --- Orgs You Kill Most  & Orgs That Kill You Most ---
+    try {
+      const resOrgs = await fetch('/statistics/orgs');
+      if (resOrgs.ok) {
+        const orgData = await resOrgs.json();
+        const vOrgs = orgData.top_victim_orgs || [];
+        const kOrgs = orgData.top_killer_orgs || [];
+
+        // You -> Them
+        Plotly.newPlot('topVictimOrgsPlot', [{
+          x: vOrgs.map(o => o.org),
+          y: vOrgs.map(o => o.count),
+          type: 'bar', marker: { color: '#2F6542' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Organization' },
+          yaxis: { title: 'Kills' },
+          title: 'Organizations YOU kill the most'
+        }, axisCommon, layoutDark));
+
+        // Them -> You
+        Plotly.newPlot('topKillerOrgsPlot', [{
+          x: kOrgs.map(o => o.org),
+          y: kOrgs.map(o => o.count),
+          type: 'bar', marker: { color: '#D77A7D' }
+        }], Object.assign({
+          margin: { b: 80, t: 60 },
+          xaxis: { title: 'Organization' },
+          yaxis: { title: 'Deaths' },
+          title: 'Organizations that kill YOU the most'
+        }, axisCommon, layoutDark));
+      } else {
+        console.warn('Failed to load org stats', resOrgs.status);
+      }
+    } catch (e) {
+      console.warn('Org aggregates fetch failed', e);
+    }
+
+async function drawKDTimeline(period = "month") {
+  try {
+    const resTL = await fetch(`/statistics/timeline?period=${encodeURIComponent(period)}`);
+    if (!resTL.ok) throw new Error(`HTTP ${resTL.status}`);
+    const tdata = (await resTL.json()).series || [];
+    const dates = tdata.map(r => r.date);
+    const kills = tdata.map(r => r.kills);
+    const deaths = tdata.map(r => r.deaths);
+
+    Plotly.newPlot('kdTimelinePlot', [
+      { x: dates, y: kills, marker: { color: '#2F6542'}, type: 'scatter', mode: 'lines+markers', name: 'Kills' },
+      { x: dates, y: deaths, marker: { color: '#D77A7D'}, type: 'scatter', mode: 'lines+markers', name: 'Deaths' }
+    ], Object.assign({
+      margin: { b: 80, t: 40 },
+      xaxis: { title: 'Date' },
+      yaxis: { title: 'Count' }
+    }, axisCommon, layoutDark));
+  } catch (e) {
+    console.warn('Timeline fetch failed', e);
+  }
+}
       // Top Killers (vertical bar)
       Plotly.newPlot('topKillersPlot', [{
         x: data.top_killers.map(k => k.killer_name),
@@ -172,11 +322,36 @@
         ktBody.appendChild(tr);
       });
 
+      // Populate Player Kills/Deaths By Period Table
+      const periods = ['day', 'week', 'month', 'all'];
+      const pBody = document.querySelector('#playerStatsTable tbody');
+      const pdata = data.player_kills_deaths_by_period;
+
+      periods.forEach(period => {
+        const row = pdata[period];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${period.charAt(0).toUpperCase() + period.slice(1)}</td>
+          <td>${row.kills}</td>
+          <td>${row.deaths}</td>
+          <td>${row.suicides}</td>
+          <td>${row.kdr}</td>
+        `;
+        pBody.appendChild(tr);
+      });
+
+    const kdSelect = document.getElementById('kdPeriodSelect');
+    if (kdSelect) {
+      kdSelect.addEventListener('change', () => drawKDTimeline(kdSelect.value));
+      drawKDTimeline(kdSelect.value); // initial
+    }
+
     } catch (err) {
       console.error('Failed to load statistics:', err);
     }
   }
   document.addEventListener('DOMContentLoaded', loadStatistics);
+
 </script>
 
 {% endblock %}

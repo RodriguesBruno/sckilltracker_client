@@ -1,11 +1,10 @@
 import asyncio
 import logging
+import msvcrt
 import os
 from pathlib import Path
-import msvcrt
 
 from src.models.models import PlayerEvent
-
 
 
 def file_is_locked(file_path: Path) -> bool:
@@ -23,6 +22,8 @@ class RecordingsController:
     def __init__(self, config: dict) -> None:
         self._path: Path = Path(config.get('path'))
 
+        self._rename_files: bool = config.get('rename_files', True)
+
         self._record_suicide: bool = config.get('record_suicide')
         self._record_own_death: bool = config.get('record_own_death')
         self._record_pu: bool = config.get('record_pu')
@@ -38,6 +39,20 @@ class RecordingsController:
 
         self._current_files: list[str] = []
 
+    @property
+    def rename_files(self) -> bool:
+        return self._rename_files
+
+    @rename_files.setter
+    def rename_files(self, value: bool) -> None:
+        self._rename_files = value
+
+
+
+    def set_rename_files(self, enabled: bool) -> None:
+        """Update rename_files setting at runtime (no restart needed)."""
+        self._rename_files = enabled
+
     async def scan_video_files(self):
         video_files = sorted(
             [f for f in self._path.glob("*.mp4") if f.is_file()],
@@ -52,10 +67,20 @@ class RecordingsController:
     def path(self) -> Path:
         return self._path
 
-    async def set_path(self, path: Path) -> None:
+    async def set_path(self, path: str) -> None:
+        if not len(path):
+            path = Path(".")
+        else:
+            path = Path(path)
+
         if self._path != path:
             self._path = path
             await self.scan_video_files()
+
+    # async def set_path(self, path: Path) -> None:
+    #     if self._path != path:
+    #         self._path = path
+    #         await self.scan_video_files()
 
     @property
     def is_record_suicide(self) -> bool:
@@ -201,7 +226,7 @@ class RecordingsController:
     def video_files_quantity(self) -> int:
         return len(self._current_files)
 
-    async def rename_video(self, old_name: str, new_name: str) -> None:
+    def rename_video(self, old_name: str, new_name: str) -> None:
         logging.info(f"[RECORDING CONTROLLER - RENAME VIDEO]")
         try:
             old_path: Path = self._path / old_name
@@ -253,7 +278,7 @@ class RecordingsController:
 
         return False, f'{player_event.game_mode} is disabled'
 
-    async def delete_video(self, filename: str) -> None:
+    def delete_video(self, filename: str) -> None:
         logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO]")
         try:
             file_path: Path = self._path / filename
@@ -270,18 +295,21 @@ class RecordingsController:
         except Exception as e:
             logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO ERROR] {e}")
 
-
     async def auto_rename_video(self, player_event: PlayerEvent) -> str:
         logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING]")
+
+        # ⬇️ Skip renaming if disabled
+        if not self._rename_files:
+            logging.info("[RECORDING CONTROLLER - AUTO RENAMING DISABLED IN CONFIG]")
+            return ""
 
         sleep_time = 0.5
         video_record_max_time: float = 6
 
         while video_record_max_time > 0:
-            new_files: list[str] = sorted(
+            new_files: list[Path] = sorted(
                 [
-                    f for f
-                    in self._path.iterdir()
+                    f for f in self._path.iterdir()
                     if f.is_file() and f.name not in self._current_files
                 ],
                 key=lambda f: f.stat().st_ctime,
@@ -290,8 +318,8 @@ class RecordingsController:
 
             if new_files:
                 await asyncio.sleep(3)
-                file_name: str = new_files[0]
-                old_file: Path = Path(self._path, file_name)
+                old_file: Path = new_files[0]
+                file_name: str = old_file.name
 
                 if file_is_locked(file_path=old_file):
                     logging.warning(f"[RECORDING CONTROLLER - AUTO RENAMING] File is locked: {file_name}")
@@ -299,7 +327,8 @@ class RecordingsController:
                     video_record_max_time -= sleep_time
                     continue
 
-                logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING] File is unlocked: {file_name}, Proceeding with renaming...")
+                logging.info(
+                    f"[RECORDING CONTROLLER - AUTO RENAMING] File is unlocked: {file_name}, Proceeding with renaming...")
 
                 new_name: str = (
                     f"{player_event.date.replace(':', '_')}_"
@@ -317,16 +346,16 @@ class RecordingsController:
                 new_file: Path = old_file.with_name(new_name)
 
                 try:
-                    logging.info(f"[RECORDING CONTROLLER - AUTO RENAMING] filename: {file_name}, new filename: {new_name}")
+                    logging.info(
+                        f"[RECORDING CONTROLLER - AUTO RENAMING] filename: {file_name}, new filename: {new_name}")
                     old_file.rename(new_file)
                     self._current_files.append(new_name)
-
                     return new_name
 
                 except Exception as e:
                     logging.error(
-                        f"[RECORDING CONTROLLER - AUTO RENAMING ERROR] couldn't rename filename: {file_name} because {e}")
-
+                        f"[RECORDING CONTROLLER - AUTO RENAMING ERROR] couldn't rename filename: {file_name} because {e}"
+                    )
                     return str(file_name)
 
             await asyncio.sleep(sleep_time)
@@ -348,5 +377,6 @@ class RecordingsController:
             "record_free_flight": self._record_free_flight,
             "record_pirate_swarm": self._record_pirate_swarm,
             "record_vanduul_swarm": self._record_vanduul_swarm,
-            "record_other": self._record_other
+            "record_other": self._record_other,
+            "rename_files": self._rename_files
         }

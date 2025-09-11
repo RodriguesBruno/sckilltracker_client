@@ -1,5 +1,6 @@
-import pytest
 from datetime import datetime, timezone
+
+import pytest
 
 from src.models.models import PlayerMonthStatistics
 from src.statistics_controller import StatisticsController

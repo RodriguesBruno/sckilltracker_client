@@ -22,8 +22,11 @@
     <body>
         <nav class="navbar">
             <!-- LOGO -->
-            <div class="logo"><i class="fa fa-asterisk" style="font-size:32px; background-color: #000000; color: #d1007e;" ></i>{{ title }}</div>
-            <!-- NAVIGATION MENU -->
+{#            <div class="logo"><i class="fa fa-asterisk" style="font-size:32px; background-color: #000000; color: #d1007e;" ></i>{{ title }}</div>#}
+                <div class="logo">
+        <img src="/static/sckticon.ico" alt="Logo" style="height: 48px; vertical-align: middle; margin-left: 10px;">
+         <span style="vertical-align: middle; margin-left: 10px;">{{ title }}</span>
+    </div>
             <ul class="nav-links">
                 <!-- USING CHECKBOX HACK -->
                 <input type="checkbox" id="checkbox_toggle" />
@@ -33,6 +36,7 @@
                     <li><a href="/">Home</a></li>
                     <li><a href="/recordings">Recordings</a></li>
                     <li><a href="/statistics">Statistics</a></li>
+                    <li><a href="/global">Global</a></li>
                     <li><a href="/settings">Settings</a></li>
                 </div>
             </ul>

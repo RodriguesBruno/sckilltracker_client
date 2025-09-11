@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from src.exceptions import PlayerProfileNotFoundException
 from src.models.models import PlayerProfile, Organization

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 from src.repository import RepositoryType
 
+
 class Organization(BaseModel):
     name: str = Field(default='-')
     url: str = Field(default='-')
@@ -124,7 +125,8 @@ class StatisticsData(BaseModel):
     kills_by_game_mode: list[KillsGameMode]
     damage_type_distribution: list[DamageTypeDistribution]
     player_month_statistics: PlayerMonthStatistics
-
+    ##new table for player kills/deaths by period
+    player_kills_deaths_by_period: dict
 
 class Game(BaseModel):
     executable_name: str

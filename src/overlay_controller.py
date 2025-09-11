@@ -7,7 +7,6 @@ class OverlayController:
         self._font_color: str = config.get('font_color')
         self._font_size: str = config.get('font_size')
         self._enabled: bool = config.get('enabled')
-
         self._on_suicide: bool = config.get('on_suicide')
         self._on_own_death: bool = config.get('on_own_death')
         self._on_pu: bool = config.get('on_pu')
@@ -50,105 +49,131 @@ class OverlayController:
     def enabled(self) -> bool:
         return self._enabled
 
-    @enabled.setter
-    def enabled(self, value) -> None:
-        self._enabled = value
+    def enable(self) -> None:
+        self._enabled = True
+
+    def disable(self) -> None:
+        self._enabled = False
 
     @property
     def on_suicide(self) -> bool:
         return self._on_suicide
 
-    @on_suicide.setter
-    def on_suicide(self, value) -> None:
-        self._on_suicide = value
+    def on_suicide_enable(self) -> None:
+        self._on_suicide = True
+
+    def on_suicide_disable(self) -> None:
+        self._on_suicide = False
 
     @property
     def on_own_death(self) -> bool:
         return self._on_own_death
 
-    @on_own_death.setter
-    def on_own_death(self, value) -> None:
-        self._on_own_death = value
+    def on_own_death_enable(self) -> None:
+        self._on_own_death = True
+
+    def on_own_death_disable(self) -> None:
+        self._on_own_death = False
 
     @property
     def on_pu(self) -> bool:
         return self._on_pu
 
-    @on_pu.setter
-    def on_pu(self, value) -> None:
-        self._on_pu = value
+    def on_pu_enable(self) -> None:
+        self._on_pu = True
+
+    def on_pu_disable(self) -> None:
+        self._on_pu = False
 
     @property
     def on_gun_rush(self) -> bool:
         return self._on_gun_rush
 
-    @on_gun_rush.setter
-    def on_gun_rush(self, value) -> None:
-        self._on_gun_rush = value
+    def on_gun_rush_enable(self) -> None:
+        self._on_gun_rush = True
+
+    def on_gun_rush_disable(self) -> None:
+        self._on_gun_rush = False
 
     @property
     def on_squadron_battle(self) -> bool:
         return self._on_squadron_battle
 
-    @on_squadron_battle.setter
-    def on_squadron_battle(self, value) -> None:
-        self._on_squadron_battle = value
+    def on_squadron_battle_enable(self) -> None:
+        self._on_squadron_battle = True
+
+    def on_squadron_battle_disable(self) -> None:
+        self._on_squadron_battle = False
 
     @property
     def on_arena_commander(self) -> bool:
         return self._on_arena_commander
 
-    @on_arena_commander.setter
-    def on_arena_commander(self, value) -> None:
-        self._on_arena_commander = value
+    def on_arena_commander_enable(self) -> None:
+        self._on_arena_commander = True
+
+    def on_arena_commander_disable(self) -> None:
+        self._on_arena_commander = False
 
     @property
     def on_classic_race(self) -> bool:
         return self._on_classic_race
 
-    @on_classic_race.setter
-    def on_classic_race(self, value) -> None:
-        self._on_classic_race = value
+    def on_classic_race_enable(self) -> None:
+        self._on_classic_race = True
+
+    def on_classic_race_disable(self) -> None:
+        self._on_classic_race = False
 
     @property
     def on_battle_royale(self) -> bool:
         return self._on_battle_royale
 
-    @on_battle_royale.setter
-    def on_battle_royale(self, value) -> None:
-        self._on_battle_royale = value
+    def on_battle_royale_enable(self) -> None:
+        self._on_battle_royale = True
+
+    def on_battle_royale_disable(self) -> None:
+        self._on_battle_royale = False
 
     @property
     def on_free_flight(self) -> bool:
         return self._on_free_flight
 
-    @on_free_flight.setter
-    def on_free_flight(self, value) -> None:
-        self._on_free_flight = value
+    def on_free_flight_enable(self) -> None:
+        self._on_free_flight = True
+
+    def on_free_flight_disable(self) -> None:
+        self._on_free_flight = False
 
     @property
     def on_pirate_swarm(self) -> bool:
         return self._on_pirate_swarm
 
-    @on_pirate_swarm.setter
-    def on_pirate_swarm(self, value) -> None:
-        self._on_pirate_swarm = value
+    def on_pirate_swarm_enable(self) -> None:
+        self._on_pirate_swarm = True
+
+    def on_pirate_swarm_disable(self) -> None:
+        self._on_pirate_swarm = False
 
     @property
     def on_vanduul_swarm(self) -> bool:
         return self._on_vanduul_swarm
 
-    @on_vanduul_swarm.setter
-    def on_vanduul_swarm(self, value) -> None:
-        self._on_vanduul_swarm = value
+    def on_vanduul_swarm_enable(self) -> None:
+        self._on_vanduul_swarm = True
+
+    def on_vanduul_swarm_disable(self) -> None:
+        self._on_vanduul_swarm = False
 
     @property
     def on_other(self) -> bool:
         return self._on_other
 
-    @on_other.setter
-    def on_other(self, value) -> None:
-        self._on_other = value
+    def on_other_enable(self) -> None:
+        self._on_other = True
+
+    def on_other_disable(self) -> None:
+        self._on_other = False
 
     async def must_display_overlay(self, player_name: str, player_event: PlayerEvent) -> tuple[bool, str]:
         is_self: bool = player_event.victim_profile.name == player_name

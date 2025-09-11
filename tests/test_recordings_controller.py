@@ -1,9 +1,10 @@
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 import pytest
-from unittest.mock import patch, MagicMock
-from src.recordings_controller import RecordingsController
+
 from src.models.models import PlayerEvent, PlayerProfile
+from src.recordings_controller import RecordingsController
 
 
 @pytest.fixture
