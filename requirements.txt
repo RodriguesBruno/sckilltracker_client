@@ -17,3 +17,4 @@ psutil
 pystray
 pygame
 pillow
+uvicorn
