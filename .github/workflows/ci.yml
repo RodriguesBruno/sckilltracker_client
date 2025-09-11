@@ -3,7 +3,7 @@ name: SCKillTracker Client Build and Release
 on:
   push:
     branches:
-      - main   # trigger when merging/pushing to main
+      - main
 
 jobs:
   build:
@@ -26,12 +26,7 @@ jobs:
       - name: Build executable with PyInstaller
         run: |
           pyinstaller --clean -F ^
-            --name "sckilltracker_client" ^
-            --icon "static/sckticon.ico" ^
-            --add-data "templates;templates" ^
-            --add-data "static;static" ^
-            --add-data "src;src" ^
-            app.py --uac-admin
+            --name "sckilltracker_client" --icon "static/sckticon.ico" --add-data "templates;templates" --add-data "static;static" --add-data "src;src" app.py --uac-admin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
