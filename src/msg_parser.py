@@ -28,10 +28,7 @@ def get_log_date(line: str) -> str:
     match = re.search(r"<(?P<date>[\d:T-]*)[.\dZ]*>\s\[", line)
     return f'{match.group("date").replace("T", " ")} UTC' if match else '-'
 
-def get_victim_name(line: str) -> str:
-    config = read_config(config_file="config.json")
-    track_crash_deaths = config.get("track_crash_deaths", True)
-
+def get_victim_name(line: str, track_crash_deaths: bool = True) -> str:
     if not track_crash_deaths and "damage type 'Crash'" in line:
         return 'npc'
 
@@ -40,6 +37,7 @@ def get_victim_name(line: str) -> str:
         player_name = match.group("player_name")
         if len(player_name) > 23:
             return 'npc'
+
         return player_name
 
     return '-'

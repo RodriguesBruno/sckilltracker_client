@@ -105,9 +105,9 @@ class EventManager:
 
         return False, None
 
-    async def get_player_events(self, new_lines: list[str], game_mode: str) -> list[PlayerEvent]:
+    async def get_player_events(self, new_lines: list[str], game_mode: str, track_crash_deaths: bool) -> list[PlayerEvent]:
         player_events: list[PlayerEvent] = [
-            await self._get_player_event(log_entry=line, game_mode=game_mode)
+            await self._get_player_event(log_entry=line, game_mode=game_mode, track_crash_deaths=track_crash_deaths)
             for line in new_lines
             if self._player_event_keyword in line
         ]
@@ -116,13 +116,13 @@ class EventManager:
 
         return player_events
 
-    async def _get_player_event(self, log_entry: str, game_mode: str) -> PlayerEvent | None:
-        date = get_log_date(log_entry)
-        victim_name: str = get_victim_name(log_entry)
-        victim_zone_name: str = get_victim_zone(log_entry)
-        killer_name: str = get_killer_name(log_entry)
-        using: str = get_using(log_entry)
-        damage: str = get_damage(log_entry)
+    async def _get_player_event(self, log_entry: str, game_mode: str, track_crash_deaths: bool) -> PlayerEvent | None:
+        date = get_log_date(line=log_entry)
+        victim_name: str = get_victim_name(line=log_entry, track_crash_deaths=track_crash_deaths)
+        victim_zone_name: str = get_victim_zone(line=log_entry)
+        killer_name: str = get_killer_name(line=log_entry)
+        using: str = get_using(line=log_entry)
+        damage: str = get_damage(line=log_entry)
 
         victim_profile: PlayerProfile = await self._profile_manager.get_profile(name=victim_name)
 

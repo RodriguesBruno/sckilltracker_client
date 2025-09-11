@@ -3,7 +3,6 @@ import logging
 import subprocess
 from multiprocessing import Queue
 from typing import Callable, Optional
-
 import httpx
 
 from src.client_utils import generate_client_id
@@ -22,10 +21,12 @@ from src.models.models import (
 from src.overlay_controller import OverlayController
 from src.recordings_controller import RecordingsController
 from src.repository import Repository, RepositoryType
-from src.sound_player import SoundPlayer
+from src.sound_controller import SoundController
 from src.statistics_controller import StatisticsController
+from src.streak_controller import StreakController
 from src.trigger_controller import TriggerController
 from src.utils import get_date
+
 
 SHIP_PREFIXES: list[str] = [
     "ORIG",
@@ -59,6 +60,7 @@ class SCClient:
             trigger_controller: TriggerController,
             recordings_controller: RecordingsController,
             overlay_controller: OverlayController,
+            sound_controller: SoundController,
             overlay_queue: Optional[Queue] = None
     ) -> None:
 
@@ -70,6 +72,7 @@ class SCClient:
 
         self._game_executable_name: str = config.get('game_executable_name')
         self._game_executable_check_frequency: int = config.get('game_executable_check_frequency')
+        self._track_crash_deaths: bool = config.get('track_crash_deaths', True)
 
         self._logfile_monitor: LogFileMonitor = logfile_monitor
         self._repo: Repository = repo
@@ -77,6 +80,10 @@ class SCClient:
         self._trigger_controller: TriggerController = trigger_controller
         self._recordings_controller: RecordingsController = recordings_controller
         self._overlay_controller: OverlayController = overlay_controller
+        self._sound_controller: SoundController = sound_controller
+
+        self._streak_controller: StreakController = StreakController()
+
         self._overlay_queue = overlay_queue
 
         self._event_manager: EventManager = EventManager()
@@ -86,6 +93,7 @@ class SCClient:
 
         self._game_mode: str = '-'
         self._ship_name: str = '-'
+
 
         self._player_profile: PlayerProfile = PlayerProfile()
 
@@ -208,6 +216,16 @@ class SCClient:
     def api_url(self, value: str) -> None:
         self._api_url = value
 
+    @property
+    def track_crash_deaths(self) -> bool:
+        return self._track_crash_deaths
+
+    def enable_track_crash_deaths(self):
+        self._track_crash_deaths = True
+
+    def disable_track_crash_deaths(self):
+        self._track_crash_deaths = False
+
     def player_events(self, limit: Optional[int] = None) -> list[PlayerEvent]:
         if limit:
             entries = self._repo.read()[-limit:]
@@ -268,7 +286,8 @@ class SCClient:
             "api_url": self._api_url,
             "verbose_logging": self._verbose_logging,
             "game_executable_name": self._game_executable_name,
-            "game_executable_check_frequency": self._game_executable_check_frequency
+            "game_executable_check_frequency": self._game_executable_check_frequency,
+            "track_crash_deaths": self._track_crash_deaths
         }
 
     async def _handle_logfile_notifications(self, broadcast: Callable) -> None:
@@ -317,7 +336,6 @@ class SCClient:
 
                 if must_display:
                     logging.info(f"[CLIENT - OVERLAY] Shown reason: {reason}") and self._verbose_logging
-
                     self._overlay_queue.put(data)
 
                 else:
@@ -365,11 +383,6 @@ class SCClient:
                     data = player_event.model_dump()
                     await broadcast(data)
 
-                    # if self._overlay_queue and self._overlay_controller.must_display_overlay(
-                    #     player_name=self.pilot_name,
-                    #     player_event=player_event
-                    # ):
-                    #     self._overlay_queue.put(data)
                     if self._overlay_queue:
                         must_display, reason = await self._overlay_controller.must_display_overlay(
                             player_name=self.pilot_name,
@@ -380,22 +393,22 @@ class SCClient:
 
         return player_events
 
-    async def recordings_video_files(self) -> list[str]:
+    def recordings_video_files(self) -> list[str]:
         return self._recordings_controller.video_files()
 
-    async def recordings_latest_videos(self, qty = 3) -> list[str]:
+    def recordings_latest_videos(self, qty = 3) -> list[str]:
         return self._recordings_controller.latest_videos(qty=qty)
 
-    async def recordings_rename_video(self, old_name: str, new_name: str) -> None:
-        return await self._recordings_controller.rename_video(old_name=old_name, new_name=new_name)
+    def recordings_rename_video(self, old_name: str, new_name: str) -> None:
+        return self._recordings_controller.rename_video(old_name=old_name, new_name=new_name)
 
-    async def recordings_delete_video(self, filename: str) -> None:
-        return await self._recordings_controller.delete_video(filename=filename)
+    def recordings_delete_video(self, filename: str) -> None:
+        return self._recordings_controller.delete_video(filename=filename)
 
     async def recordings_scan_video_files(self) -> None:
         return await self._recordings_controller.scan_video_files()
 
-    async def recordings_video_files_quantity(self) -> int:
+    def recordings_video_files_quantity(self) -> int:
         return self._recordings_controller.video_files_quantity()
 
     async def validate_logfile(self) -> None:
@@ -498,7 +511,8 @@ class SCClient:
                     # [PLAYER EVENTS]
                     player_events: list[PlayerEvent] = await self._event_manager.get_player_events(
                         new_lines=new_lines,
-                        game_mode=self._game_mode
+                        game_mode=self._game_mode,
+                        track_crash_deaths=self._track_crash_deaths
                     )
 
                     if player_events:
@@ -510,10 +524,11 @@ class SCClient:
                                 player_event.victim_profile.name.lower() not in ["", "-", "npc"] and
                                 player_event.victim_profile.name != self._player_profile.name
                             ):
-                                SoundPlayer.increment_kill_streak()
+                                level: int = self._streak_controller.increment_kill_streak()
+                                self._sound_controller.play_streak_sound(level=level)
 
                                 if self._overlay_queue:
-                                    self._overlay_queue.put({"kill_streak": SoundPlayer._kill_count})
+                                    self._overlay_queue.put({"kill_streak": self._streak_controller.kill_count})
 
                             # DEATH EVENT
                             elif (
@@ -521,10 +536,10 @@ class SCClient:
                                 player_event.killer_profile.name.lower() not in ["", "-", "npc"] and
                                 player_event.killer_profile.name != self._player_profile.name
                             ):
-                                SoundPlayer.reset_kill_streak()
+                                self._streak_controller.reset_kill_streak()
 
                                 if self._overlay_queue:
-                                    self._overlay_queue.put({"kill_streak": 0})
+                                    self._overlay_queue.put({"kill_streak": self._streak_controller.kill_count})
 
                             if self._player_profile.name == player_event.killer_profile.name:
                                 player_event.ship_name = self._ship_name
@@ -541,55 +556,6 @@ class SCClient:
                                     player_event=player_event
                                 )
 
-                                # if must_record_video:
-                                #     logging.info(f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
-                                #     await self._trigger_controller.trigger_hotkey()
-                                #
-                                #     video_filename: str = await self._recordings_controller.auto_rename_video(
-                                #         player_event=player_event
-                                #     )
-                                #
-                                #     logging.info(
-                                #         f"[CLIENT - UI NOTIFICATION - RECORDING CONTROLLER] videos_qty: "
-                                #         f"{self._recordings_controller.video_files_quantity()}, "
-                                #         f"latest_video_filename: {video_filename}") and self._verbose_logging
-                                #
-                                #     recording_notification: RecordingNotification = RecordingNotification(
-                                #         recordings_qty=self._recordings_controller.video_files_quantity(),
-                                #         latest_video_filename=video_filename
-                                #     )
-                                #     await broadcast(recording_notification.model_dump())
-
-                                # if must_record_video:
-                                #     # 1) Overlay first
-                                #     if self._overlay_queue:
-                                #         data_for_overlay = player_event.model_dump()
-                                #         if self._overlay_controller.must_display_overlay(
-                                #                 player_name=self.pilot_name,
-                                #                 player_event=player_event
-                                #         ):
-                                #             self._overlay_queue.put(data_for_overlay)
-                                #
-                                #     # 2) Then trigger recording
-                                #     logging.info(
-                                #         f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
-                                #     await self._trigger_controller.trigger_hotkey()
-                                #
-                                #     # 3) Post-trigger bookkeeping (unchanged)
-                                #     video_filename: str = await self._recordings_controller.auto_rename_video(
-                                #         player_event=player_event
-                                #     )
-                                #
-                                #     logging.info(
-                                #         f"[CLIENT - UI NOTIFICATION - RECORDING CONTROLLER] videos_qty: "
-                                #         f"{self._recordings_controller.video_files_quantity()}, "
-                                #         f"latest_video_filename: {video_filename}") and self._verbose_logging
-                                #
-                                #     recording_notification: RecordingNotification = RecordingNotification(
-                                #         recordings_qty=self._recordings_controller.video_files_quantity(),
-                                #         latest_video_filename=video_filename
-                                #     )
-                                #     await broadcast(recording_notification.model_dump())
                                 if must_record_video:
                                     # 1) Overlay first
                                     if self._overlay_queue:

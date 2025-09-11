@@ -22,7 +22,6 @@ class RecordingsController:
     def __init__(self, config: dict) -> None:
         self._path: Path = Path(config.get('path'))
 
-        # runtime toggle for auto-renaming
         self._rename_files: bool = config.get('rename_files', True)
 
         self._record_suicide: bool = config.get('record_suicide')
@@ -40,9 +39,19 @@ class RecordingsController:
 
         self._current_files: list[str] = []
 
+    @property
+    def rename_files(self) -> bool:
+        return self._rename_files
+
+    @rename_files.setter
+    def rename_files(self, value: bool) -> None:
+        self._rename_files = value
+
+
+
     def set_rename_files(self, enabled: bool) -> None:
         """Update rename_files setting at runtime (no restart needed)."""
-        self._rename_files = bool(enabled)
+        self._rename_files = enabled
 
     async def scan_video_files(self):
         video_files = sorted(
@@ -58,10 +67,20 @@ class RecordingsController:
     def path(self) -> Path:
         return self._path
 
-    async def set_path(self, path: Path) -> None:
+    async def set_path(self, path: str) -> None:
+        if not len(path):
+            path = Path(".")
+        else:
+            path = Path(path)
+
         if self._path != path:
             self._path = path
             await self.scan_video_files()
+
+    # async def set_path(self, path: Path) -> None:
+    #     if self._path != path:
+    #         self._path = path
+    #         await self.scan_video_files()
 
     @property
     def is_record_suicide(self) -> bool:
@@ -207,7 +226,7 @@ class RecordingsController:
     def video_files_quantity(self) -> int:
         return len(self._current_files)
 
-    async def rename_video(self, old_name: str, new_name: str) -> None:
+    def rename_video(self, old_name: str, new_name: str) -> None:
         logging.info(f"[RECORDING CONTROLLER - RENAME VIDEO]")
         try:
             old_path: Path = self._path / old_name
@@ -259,7 +278,7 @@ class RecordingsController:
 
         return False, f'{player_event.game_mode} is disabled'
 
-    async def delete_video(self, filename: str) -> None:
+    def delete_video(self, filename: str) -> None:
         logging.error(f"[RECORDINGS CONTROLLER - DELETE VIDEO]")
         try:
             file_path: Path = self._path / filename

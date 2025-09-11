@@ -13,3 +13,7 @@ pyinstaller
 aiofiles
 PyQt5
 requests
+psutil
+pystray
+pygame
+pillow

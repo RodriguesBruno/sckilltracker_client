@@ -14,21 +14,19 @@ class TriggerController:
     - Supports an optional trigger delay (0-10 seconds) before sending the hotkey.
     """
     def __init__(self, config: dict) -> None:
-        # Basic config
         self._enabled: bool = bool(config.get('enabled', True))
         self._selected_vendor: str = config.get('selected_vendor', 'nvidia')
         self._vendors: List[Dict] = list(config.get('vendors', []))
 
-     # Runtime extras
-        self._custom_hotkey: Optional[str] = None  # used when vendor is "other"
-    # read initial delay from config (clamped 0..10)
+        self._custom_hotkey: Optional[str] = None
 
         try:
             self._delay_sec: int = max(0, min(10, int(config.get('delay_seconds', 0))))
+
         except (TypeError, ValueError):
                self._delay_sec = 0
 
-    # ---------------------- Properties ----------------------
+
     @property
     def is_enabled(self) -> bool:
         return self._enabled
@@ -51,6 +49,7 @@ class TriggerController:
         """Clamp and set delay in seconds (0-10)."""
         try:
             self._delay_sec = max(0, min(10, int(seconds)))
+
         except (TypeError, ValueError):
             self._delay_sec = 0
 
@@ -76,10 +75,10 @@ class TriggerController:
                     v["hotkey"] = self._custom_hotkey
                     replaced = True
                     break
+
             if not replaced:
                 self._vendors.append({"name": "other", "hotkey": self._custom_hotkey})
 
-    # ---------------------- Internals -----------------------
     def _vendor_hotkey(self) -> str:
         """Get hotkey from vendors list for the selected vendor; empty string if missing."""
         for vendor in self._vendors:
@@ -93,7 +92,6 @@ class TriggerController:
             return self._custom_hotkey
         return self._vendor_hotkey()
 
-    # ---------------------- Action --------------------------
     async def trigger_hotkey(self) -> None:
         """
         Trigger the instant replay hotkey.
@@ -123,7 +121,6 @@ class TriggerController:
         logging.info("[TRIGGER CONTROLLER] Triggered Hotkey: %s, Vendor: %s, Delay: %ss",
                      hotkey, self._selected_vendor, self._delay_sec)
 
-    # ---------------------- Export --------------------------
     def get_config(self) -> dict:
         return {
             "enabled": self._enabled,

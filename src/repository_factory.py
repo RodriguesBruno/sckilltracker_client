@@ -16,7 +16,9 @@ class RepositoryFactory:
             path: str= "./db/events.csv"
             return CSVRepository(path=path)
 
-        if repository_type == RepositoryType.SQL:
+        elif repository_type == RepositoryType.SQL:
             logging.info(f"[REPOSITORY FACTORY] - SQL")
             path: str = './db/events.db'
             return SQLRepository(path=path)
+
+        return None
