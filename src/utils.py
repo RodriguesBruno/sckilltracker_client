@@ -2,6 +2,7 @@ import os
 import socket
 import sys
 from datetime import datetime
+from pathlib import Path
 
 
 def get_date() -> str:
@@ -13,12 +14,14 @@ def get_local_ip() -> str:
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
 
-def resource_path(relative_path):
+def resource_path(relative_path: str) -> str:
     try:
-        return os.path.join(sys._MEIPASS, relative_path)
+        return str(Path(sys._MEIPASS) / relative_path)
+        # return os.path.join(sys._MEIPASS, relative_path)
 
     except AttributeError:
-        return os.path.abspath(relative_path)
+        return str(Path(__file__).resolve().parent.parent / relative_path)
+        # return os.path.abspath(relative_path)
 
 
 def setup_folders() -> None:
