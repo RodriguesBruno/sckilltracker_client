@@ -12,7 +12,7 @@
         "port": 8082
     },
     "log_monitor": {
-        "logfile_with_path": "D:\\StarCitizen\\LIVE\\Game.log",
+        "logfile_with_path": "",
         "frequency": 5
     },
     "trigger_controller": {
@@ -35,7 +35,7 @@
         "delay_seconds": 0
     },
     "recordings_controller": {
-        "path": "C:\\Users\\rodri\\Videos\\Radeon ReLive\\Squadron 42 - Star Citizen",
+        "path": "",
         "record_suicide": true,
         "record_own_death": true,
         "record_pu": true,
