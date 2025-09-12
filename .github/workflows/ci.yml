@@ -36,6 +36,7 @@ jobs:
             --add-data "templates;templates" ^
             --add-data "static;static" ^
             --add-data "src;src" ^
+            --add-data "config;config" ^
             app.py --uac-admin
 
       - name: Upload artifact
