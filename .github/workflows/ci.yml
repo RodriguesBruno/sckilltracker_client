@@ -35,9 +35,9 @@ jobs:
             --icon "static/sckticon.ico" ^
             --add-data "templates;templates" ^
             --add-data "static;static" ^
-            --add-data "src;src" ^
             --add-data "config;config" ^
-            app.py --uac-admin
+            --add-data "src;src" ^
+          app.py --uac-admin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
