@@ -12,6 +12,7 @@ def load_tray_icon():
     icon_path = Path("static/sckticon.ico")  # Update the path as needed
     if not icon_path.exists():
         raise FileNotFoundError(f"Tray icon not found at: {icon_path}")
+
     return Image.open(icon_path)
 
 def hide_system_tray_console():
@@ -36,6 +37,7 @@ def setup_system_tray(app_url: str):
         parent = psutil.Process(os.getpid())
         for child in parent.children(recursive=True):
             child.kill()
+
         parent.kill()
 
     icon = pystray.Icon("app")

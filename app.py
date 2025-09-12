@@ -226,6 +226,7 @@ def statistics_page(request: Request):
         "version": sc_client.version
     })
 
+
 @app.get("/global")
 def global_page(request: Request):
     return templates.TemplateResponse("global.html", {
@@ -234,54 +235,52 @@ def global_page(request: Request):
         "version": sc_client.version
     })
 
+
 @app.get("/statistics/timeline")
 def statistics_timeline(period: str = "month"):
     try:
-        player_name = sc_client.pilot_name
+        player_name: str = sc_client.pilot_name
+        return JSONResponse(
+            {
+                "series": statistics_controller.kills_deaths_timeline(player_name, period=period)
+            }
+        )
 
     except Exception:
-        player_name = None
+        return JSONResponse({"series": []})
 
-    if not player_name:
-        return {"series": []}
-
-    return {
-        "series": statistics_controller.kills_deaths_timeline(player_name, period=period)
-    }
 
 @app.get("/statistics/ships")
 def statistics_ships():
     try:
-        player_name = sc_client.pilot_name
+        player_name: str = sc_client.pilot_name
+
+        return JSONResponse(
+            {
+                "most_killed_ships": statistics_controller.killer_ships_used(player_name=player_name),
+                "most_dead_ships": statistics_controller.deaths_by_zone(player_name=player_name)
+            }
+        )
 
     except Exception:
-        player_name = None
+        return JSONResponse({"most_killed_ships": [], "most_dead_ships": []})
 
-    if not player_name:
-        return {"most_killed_ships": [], "most_dead_ships": []}
-
-    return {
-        # Ships you flew when you got kills (ship_name, killer == you)
-        "most_killed_ships": statistics_controller.killer_ships_used(player_name),
-        # Zones where you died (victim_zone_name, victim == you)
-        "most_dead_ships": statistics_controller.deaths_by_zone(player_name)
-    }
 
 @app.get("/statistics/orgs")
 def statistics_orgs():
     try:
-        player_name = sc_client.pilot_name
+        player_name: str = sc_client.pilot_name
+
+        return JSONResponse(
+            {
+                "top_victim_orgs": statistics_controller.top_victim_orgs(player_name),
+                "top_killer_orgs": statistics_controller.top_killer_orgs(player_name)
+            }
+        )
 
     except Exception:
-        player_name = None
+        return JSONResponse({"top_victim_orgs": [], "top_killer_orgs": []})
 
-    if not player_name:
-        return {"top_victim_orgs": [], "top_killer_orgs": []}
-
-    return {
-        "top_victim_orgs": statistics_controller.top_victim_orgs(player_name),
-        "top_killer_orgs": statistics_controller.top_killer_orgs(player_name)
-    }
 
 @app.get("/statistics/data", response_model=StatisticsData)
 def statistics_data():
@@ -707,9 +706,7 @@ async def toggle_crash_tracking(action: RequestedAction):
         sc_client.disable_track_crash_deaths()
 
     config['client'] = sc_client.get_config()
-
     write_config(config_file=config_file, data=config)
-
     return JSONResponse({"track_crash_deaths": sc_client.track_crash_deaths})
 
 @app.get("/settings")
