@@ -281,7 +281,6 @@ class SCClient:
 
     def get_config(self) -> dict:
         return {
-            "version": self._version,
             "enabled": self._enabled,
             "api_url": self._api_url,
             "verbose_logging": self._verbose_logging,

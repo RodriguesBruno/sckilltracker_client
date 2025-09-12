@@ -51,10 +51,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Read version from config.json
+      - name: Read version from client_config.json
         id: get_version
         run: |
-          VERSION=$(jq -r '.client.version' config.json)
+          VERSION=$(jq -r '.version' config/client_config.json)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=v$VERSION" >> $GITHUB_ENV
 

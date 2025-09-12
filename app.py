@@ -1,12 +1,12 @@
 import asyncio
 import logging
-import multiprocessing
+import uvicorn
 import webbrowser
-from contextlib import asynccontextmanager
-from multiprocessing import Manager
+import multiprocessing
 from pathlib import Path
 from typing import Optional
-import uvicorn
+from multiprocessing import Manager
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, WebSocketDisconnect, WebSocket, Form, status, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse, FileResponse
@@ -14,10 +14,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 
+from config.config import client_config_file, config_file, default_file, logging_config_file
 from src.client import SCClient
 from src.connection_manager import ConnectionManager
 from src.enums import RequestedAction
-from src.file_handlers import read_config, write_config
+from src.file_handlers import read_config, write_config, ensure_config
 from src.logfile_monitor import LogFileMonitor
 from src.logger import setup_logging
 from src.models.models import (
@@ -50,6 +51,7 @@ from src.system_tray import hide_system_tray_console, setup_system_tray
 from src.trigger_controller import TriggerController
 from src.utils import get_local_ip, resource_path, setup_folders
 
+
 sc_client: Optional[SCClient] = None
 overlay_queue = None
 position_value = None
@@ -72,11 +74,12 @@ overlay_on_other = None
 
 setup_folders()
 
-config_logging: dict = read_config(config_file='./config_logging.json')
+config_logging: dict = read_config(config_file=logging_config_file)
 setup_logging(config=config_logging)
 
-config_file: str = "./config.json"
-config: dict = read_config(config_file=config_file)
+client_config: dict = read_config(client_config_file)
+config: dict = ensure_config(config_file=config_file, default_file=default_file)
+config['client']['version'] = client_config.get('version')
 
 
 @asynccontextmanager
@@ -120,7 +123,7 @@ async def lifespan(app: FastAPI):
 static_dir = resource_path("static")
 templates_dir = resource_path("templates")
 
-title: str = config.get('title')
+title: str = client_config.get('title')
 recordings_path: Path = Path(config.get('recordings_controller').get('path'))
 
 app: FastAPI = FastAPI(title=f"{title} API", openapi_url="/openapi.json", lifespan=lifespan)
