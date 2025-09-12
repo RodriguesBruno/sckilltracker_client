@@ -2,7 +2,9 @@ import time
 import threading
 import tkinter as tk
 from PIL import ImageTk, Image
+from src.utils import resource_path
 
+image_path: str = resource_path("static/splash.jpg")
 
 def show_splash_screen(duration=2) -> None:
     def splash():
@@ -12,7 +14,7 @@ def show_splash_screen(duration=2) -> None:
         splash_root.attributes("-alpha", 0.0)
 
         try:
-            image = Image.open("static/splash.jpg")
+            image = Image.open(image_path)
             photo = ImageTk.PhotoImage(image)
             width, height = photo.width(), photo.height()
 
