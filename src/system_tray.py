@@ -1,15 +1,18 @@
 import os
 import ctypes
 import threading
+from pathlib import Path
+
 import psutil
 import pystray
 import webbrowser
-from pathlib import Path
 from PIL import Image
+
+from src.utils import resource_path
 
 
 def load_tray_icon():
-    icon_path = Path("static/sckticon.ico")  # Update the path as needed
+    icon_path: Path = Path(resource_path("static/sckticon.ico"))  # Update the path as needed
     if not icon_path.exists():
         raise FileNotFoundError(f"Tray icon not found at: {icon_path}")
 
