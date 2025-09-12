@@ -37,7 +37,7 @@ jobs:
             --add-data "static;static" ^
             --add-data "config;config" ^
             --add-data "src;src" ^
-          app.py --uac-admin
+            app.py --uac-admin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
