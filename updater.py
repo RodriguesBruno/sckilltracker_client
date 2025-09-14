@@ -34,7 +34,7 @@ EXEC_DIR = Path(getattr(sys, "frozen", False) and sys.executable or __file__).re
 CONFIG_PATH: str = str(EXEC_DIR / "config.json")
 
 REPO = "RodriguesBruno/sckilltracker_client"
-EXE_NAME = "sckilltracker_client.exe"
+EXE_NAME = "sckilltracker.exe"
 
 def get_local_version() -> dict:
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
