@@ -107,6 +107,7 @@ jobs:
           path: |
             dist/sckilltracker_client.exe
             updater/dist/sckilltracker_client_updater.exe
+          if-no-files-found: error
 
   release:
     needs: build
@@ -127,7 +128,7 @@ jobs:
           tag_name: ${{ needs.build.outputs.tag }}
           name: Release ${{ needs.build.outputs.version }}
           files: |
-            sckilltracker_client.exe
-            sckilltracker_client_updater.exe
+            dist/sckilltracker_client.exe
+            updater/dist/sckilltracker_client_updater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
