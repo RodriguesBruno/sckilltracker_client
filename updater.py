@@ -5,11 +5,12 @@ import shutil
 import sys
 import time
 import os
-from pathlib import Path
 import psutil
+from pathlib import Path
+from requests import Response
 
 
-LOG_FILE = Path(__file__).resolve().parent / "updater.log"
+LOG_FILE: Path = Path(__file__).resolve().parent / "updater.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -31,9 +32,9 @@ def get_local_version() -> str:
         return json.load(f)["version"]
 
 
-def get_latest_release():
-    url = f"https://api.github.com/repos/{REPO}/releases/latest"
-    resp = requests.get(url, timeout=10)
+def get_latest_release() -> tuple[str, str ,str]:
+    url: str = f"https://api.github.com/repos/{REPO}/releases/latest"
+    resp: Response = requests.get(url, timeout=10)
     resp.raise_for_status()
     data = resp.json()
     tag = data["tag_name"].lstrip("v")
@@ -82,7 +83,7 @@ def kill_running_client(exe_name: str) -> bool:
 
 
 def run_update():
-    local_version = get_local_version()
+    local_version: str = get_local_version()
     latest_version, download_url, asset_name = get_latest_release()
 
     logger.info(f"Local version: {local_version}")
@@ -91,16 +92,16 @@ def run_update():
     if latest_version > local_version:
         logger.info("New version available, preparing update...")
 
-        exe_path = Path(__file__).resolve().parent / EXE_NAME
+        exe_path: Path = Path(__file__).resolve().parent / EXE_NAME
 
-        kill_running_client(EXE_NAME)
+        kill_running_client(exe_name=EXE_NAME)
 
         if exe_path.exists():
             backup = exe_path.with_name(f"{exe_path.stem}_{local_version}_old{exe_path.suffix}")
             logger.info(f"Renaming old exe to {backup.name}")
             shutil.move(str(exe_path), str(backup))
 
-        download_file(download_url, exe_path)
+        download_file(url=download_url, dest=exe_path)
 
         logger.info("Update complete. Restarting new version...")
         time.sleep(1)

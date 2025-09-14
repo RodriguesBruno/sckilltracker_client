@@ -27,7 +27,7 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build executable with PyInstaller
+      - name: Build client executable with PyInstaller
         shell: cmd
         run: |
           pyinstaller --clean -F ^
@@ -39,11 +39,20 @@ jobs:
             --add-data "src;src" ^
             app.py --uac-admin
 
-      - name: Upload artifact
+      - name: Build updater executable with PyInstaller
+        shell: cmd
+        run: |
+          pyinstaller --clean -F ^
+            --name "updater" ^
+            updater.py
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: sckilltracker_client
-          path: dist/sckilltracker_client.exe
+          name: sckilltracker_binaries
+          path: |
+            dist/sckilltracker_client.exe
+            dist/updater.exe
 
   release:
     needs: build
@@ -59,10 +68,10 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=v$VERSION" >> $GITHUB_ENV
 
-      - name: Download artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: sckilltracker_client
+          name: sckilltracker_binaries
           path: .
 
       - name: Create GitHub Release
@@ -70,6 +79,8 @@ jobs:
         with:
           tag_name: ${{ env.TAG }}
           name: Release ${{ env.VERSION }}
-          files: sckilltracker_client.exe
+          files: |
+            sckilltracker_client.exe
+            updater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
