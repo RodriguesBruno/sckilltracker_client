@@ -49,7 +49,7 @@ SHIP_PREFIXES: list[str] = [
 	"MRAI"
 ]
 
-CLIENT_VERSION = '1.7.5'
+CLIENT_VERSION = '1.7.6'
 
 
 class SCClient:
