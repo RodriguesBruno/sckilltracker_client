@@ -1,5 +1,7 @@
 {
+    "title": "SCKillTracker Client",
     "client": {
+        "version": "1.7.4",
         "enabled": false,
         "api_url": "https://sckilltracker.servegame.com:8081/api/v1/event",
         "verbose_logging": true,
@@ -12,12 +14,12 @@
         "port": 8082
     },
     "log_monitor": {
-        "logfile_with_path": "D:\\StarCitizen\\LIVE\\Game.log",
+        "logfile_with_path": "",
         "frequency": 5
     },
     "trigger_controller": {
         "enabled": false,
-        "selected_vendor": "amd",
+        "selected_vendor": "nvidia",
         "vendors": [
             {
                 "name": "nvidia",
@@ -35,7 +37,7 @@
         "delay_seconds": 0
     },
     "recordings_controller": {
-        "path": "C:\\Users\\rodri\\Videos\\Radeon ReLive\\Squadron 42 - Star Citizen",
+        "path": "",
         "record_suicide": true,
         "record_own_death": true,
         "record_pu": true,

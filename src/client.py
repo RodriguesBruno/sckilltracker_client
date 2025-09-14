@@ -49,6 +49,8 @@ SHIP_PREFIXES: list[str] = [
 	"MRAI"
 ]
 
+CLIENT_VERSION = '1.7.4'
+
 
 class SCClient:
     def __init__(
@@ -64,7 +66,7 @@ class SCClient:
             overlay_queue: Optional[Queue] = None
     ) -> None:
 
-        self._version: str = config.get('version')
+        self._version: str = CLIENT_VERSION
         self._enabled: bool = config.get('enabled')
         self._api_url: str = config.get('api_url')
         self._verbose_logging: bool = config.get('verbose_logging')

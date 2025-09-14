@@ -62,10 +62,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Read version from client_config.json
+      - name: Read version from client.py
         id: get_version
         run: |
-          VERSION=$(jq -r '.version' config/client_config.json)
+          VERSION=$(python -c "import re; f=open('src/client.py').read(); print(re.search(r'CLIENT_VERSION\s*=\s*[\'\"](.+?)[\'\"]', f).group(1))")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=v$VERSION" >> $GITHUB_ENV
 

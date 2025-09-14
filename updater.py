@@ -9,6 +9,8 @@ import psutil
 from pathlib import Path
 from requests import Response
 
+from config.config import ensure_config
+
 
 LOG_FILE: Path = Path(__file__).resolve().parent / "updater.log"
 logging.basicConfig(
@@ -21,15 +23,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger("updater")
 
+EXEC_DIR = Path(getattr(sys, "frozen", False) and sys.executable or __file__).resolve().parent
+
+CONFIG_PATH: str = str(EXEC_DIR / "config.json")
 
 REPO = "RodriguesBruno/sckilltracker_client"
-CONFIG_PATH = Path(__file__).resolve().parent / "config" / "client_config.json"
 EXE_NAME = "sckilltracker_client.exe"
 
-
-def get_local_version() -> str:
+def get_local_version() -> dict:
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["version"]
+        return json.load(f)
+
+
+def update_local_config(data: dict) -> None:
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
 
 
 def get_latest_release() -> tuple[str, str ,str]:
@@ -83,7 +91,8 @@ def kill_running_client(exe_name: str) -> bool:
 
 
 def run_update():
-    local_version: str = get_local_version()
+    config: dict = ensure_config()
+    local_version: str = config.get('client').get('version')
     latest_version, download_url, asset_name = get_latest_release()
 
     logger.info(f"Local version: {local_version}")
@@ -103,12 +112,17 @@ def run_update():
 
         download_file(url=download_url, dest=exe_path)
 
+        config['client']['version'] = latest_version
+        update_local_config(data=config)
+
         logger.info("Update complete. Restarting new version...")
+
         time.sleep(1)
         os.startfile(exe_path)
         sys.exit(0)
     else:
         logger.info("Already up to date. No update performed.")
+
 
 if __name__ == "__main__":
     run_update()
