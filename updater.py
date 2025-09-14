@@ -1,3 +1,4 @@
+import traceback
 import requests
 import json
 import logging
@@ -12,7 +13,14 @@ from requests import Response
 from config.config import ensure_config
 
 
+def log_exception(exc_type, exc_value, exc_tb):
+    with open("sckilltracker_updater_error.log", "w", encoding="utf-8") as f:
+        traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
+
+sys.excepthook = log_exception
+
 LOG_FILE: Path = Path(__file__).resolve().parent / "updater.log"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
