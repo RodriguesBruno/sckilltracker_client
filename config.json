@@ -1,7 +1,7 @@
 {
     "client": {
         "enabled": false,
-        "api_url": "http://sckilltracker.servegame.com:8081/api/v1/event",
+        "api_url": "https://sckilltracker.servegame.com:8081/api/v1/event",
         "verbose_logging": true,
         "game_executable_name": "starcitizen.exe",
         "game_executable_check_frequency": 5,
