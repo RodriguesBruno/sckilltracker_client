@@ -16,8 +16,15 @@ jobs:
       tag: ${{ steps.version.outputs.tag }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout client repository
         uses: actions/checkout@v4
+
+      - name: Checkout updater repository
+        uses: actions/checkout@v4
+        with:
+          repository: RodriguesBruno/sckilltracker_updater
+          token: ${{ secrets.UPDATER_REPO_TOKEN }}
+          path: updater
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,16 +43,10 @@ jobs:
         run: |
           python <<'PYCODE'
           import re, pathlib
-          
-          # Read client.py and extract version
           text = pathlib.Path("src/client.py").read_text()
           version = re.search(r'CLIENT_VERSION\s*=\s*[\'"](.+?)[\'"]', text).group(1)
-          
-          # Pass values to job outputs
           print(f"::set-output name=version::{version}")
           print(f"::set-output name=tag::v{version}")
-          
-          # Generate version_info.txt for PyInstaller metadata
           ver_tuple = ", ".join(version.split("."))
           pathlib.Path("version_info.txt").write_text(f"""VSVersionInfo(
             ffi=FixedFileInfo(
@@ -75,7 +76,7 @@ jobs:
           )""")
           PYCODE
 
-      - name: Build client executable with PyInstaller
+      - name: Build client executable
         shell: cmd
         run: |
           pyinstaller --clean -F ^
@@ -88,14 +89,15 @@ jobs:
             --add-data "src;src" ^
             app.py --uac-admin
 
-      - name: Build updater executable with PyInstaller
+      - name: Build updater executable
         shell: cmd
         run: |
+          cd updater
           pyinstaller --clean -F ^
             --name "sckilltracker_client_updater" ^
-            --icon "static/sckticon.ico" ^
-            --version-file version_info.txt ^
-            updater.py --uac-admin
+            --icon "../static/sckticon.ico" ^
+            app.py --uac-admin
+          cd ..
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -103,7 +105,7 @@ jobs:
           name: sckilltracker_binaries
           path: |
             dist/sckilltracker_client.exe
-            dist/sckilltracker_client_updater.exe
+            updater/dist/sckilltracker_client_updater.exe
 
   release:
     needs: build
