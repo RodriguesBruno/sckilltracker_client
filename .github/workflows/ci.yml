@@ -43,9 +43,9 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --clean -F ^
-            --name "updater" ^
+            --name "sckilltracker_client_updater" ^
             --icon "static/sckticon.ico" ^
-            updater.py
+            updater.py --uac-admin
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -53,7 +53,7 @@ jobs:
           name: sckilltracker_binaries
           path: |
             dist/sckilltracker_client.exe
-            dist/updater.exe
+            dist/sckilltracker_client_updater.exe
 
   release:
     needs: build
@@ -82,6 +82,6 @@ jobs:
           name: Release ${{ env.VERSION }}
           files: |
             sckilltracker_client.exe
-            updater.exe
+            sckilltracker_client_updater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
