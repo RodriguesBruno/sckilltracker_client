@@ -31,7 +31,7 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --clean -F ^
-            --name "sckilltracker_client" ^
+            --name "sckilltracker" ^
             --icon "static/sckticon.ico" ^
             --add-data "templates;templates" ^
             --add-data "static;static" ^
@@ -43,7 +43,7 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --clean -F ^
-            --name "sckilltracker_client_updater" ^
+            --name "sckilltracker_updater" ^
             --icon "static/sckticon.ico" ^
             updater.py --uac-admin
 
@@ -52,8 +52,8 @@ jobs:
         with:
           name: sckilltracker_binaries
           path: |
-            dist/sckilltracker_client.exe
-            dist/sckilltracker_client_updater.exe
+            dist/sckilltracker.exe
+            dist/sckilltracker_updater.exe
 
   release:
     needs: build
@@ -81,7 +81,7 @@ jobs:
           tag_name: ${{ env.TAG }}
           name: Release ${{ env.VERSION }}
           files: |
-            sckilltracker_client.exe
-            sckilltracker_client_updater.exe
+            sckilltracker.exe
+            sckilltracker_updater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

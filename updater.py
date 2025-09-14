@@ -10,8 +10,6 @@ import psutil
 from pathlib import Path
 from requests import Response
 
-from config.config import ensure_config
-
 
 def log_exception(exc_type, exc_value, exc_tb):
     with open("sckilltracker_updater_error.log", "w", encoding="utf-8") as f:
@@ -99,38 +97,41 @@ def kill_running_client(exe_name: str) -> bool:
 
 
 def run_update():
-    config: dict = ensure_config()
-    local_version: str = config.get('client').get('version')
-    latest_version, download_url, asset_name = get_latest_release()
+    try:
+        config: dict = get_local_version()
+        local_version: str = config.get('client').get('version')
+        latest_version, download_url, asset_name = get_latest_release()
 
-    logger.info(f"Local version: {local_version}")
-    logger.info(f"Latest version: {latest_version}")
+        logger.info(f"Local version: {local_version}")
+        logger.info(f"Latest version: {latest_version}")
 
-    if latest_version > local_version:
-        logger.info("New version available, preparing update...")
+        if latest_version > local_version:
+            logger.info("New version available, preparing update...")
 
-        exe_path: Path = Path(__file__).resolve().parent / EXE_NAME
+            exe_path: Path = Path(__file__).resolve().parent / EXE_NAME
 
-        kill_running_client(exe_name=EXE_NAME)
+            kill_running_client(exe_name=EXE_NAME)
 
-        if exe_path.exists():
-            backup = exe_path.with_name(f"{exe_path.stem}_{local_version}_old{exe_path.suffix}")
-            logger.info(f"Renaming old exe to {backup.name}")
-            shutil.move(str(exe_path), str(backup))
+            if exe_path.exists():
+                backup = exe_path.with_name(f"{exe_path.stem}_{local_version}_old{exe_path.suffix}")
+                logger.info(f"Renaming old exe to {backup.name}")
+                shutil.move(str(exe_path), str(backup))
 
-        download_file(url=download_url, dest=exe_path)
+            download_file(url=download_url, dest=exe_path)
 
-        config['client']['version'] = latest_version
-        update_local_config(data=config)
+            config['client']['version'] = latest_version
+            update_local_config(data=config)
 
-        logger.info("Update complete. Restarting new version...")
+            logger.info("Update complete. Restarting new version...")
 
-        time.sleep(1)
-        os.startfile(exe_path)
-        sys.exit(0)
-    else:
-        logger.info("Already up to date. No update performed.")
+            time.sleep(1)
+            os.startfile(exe_path)
+            sys.exit(0)
+        else:
+            logger.info("Already up to date. No update performed.")
 
+    except Exception as e:
+        logging.error(f"There was an error with updater: {e}")
 
 if __name__ == "__main__":
     run_update()
