@@ -10,8 +10,6 @@ import psutil
 from pathlib import Path
 from requests import Response
 
-from config.config import ensure_config
-
 
 def log_exception(exc_type, exc_value, exc_tb):
     with open("sckilltracker_updater_error.log", "w", encoding="utf-8") as f:
