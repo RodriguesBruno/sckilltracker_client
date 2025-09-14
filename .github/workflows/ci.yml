@@ -65,7 +65,7 @@ jobs:
                   [ StringStruct(u'CompanyName', u'SCKillTracker'),
                     StringStruct(u'FileDescription', u'Star Citizen Kill Tracker Client'),
                     StringStruct(u'FileVersion', u'{version}'),
-                    StringStruct(u'InternalName', u'sckilltracker'),
+                    StringStruct(u'InternalName', u'sckilltracker_client'),
                     StringStruct(u'OriginalFilename', u'sckilltracker_client.exe'),
                     StringStruct(u'ProductName', u'SCKillTracker Client'),
                     StringStruct(u'ProductVersion', u'{version}') ])
@@ -79,7 +79,7 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --clean -F ^
-            --name "sckilltracker" ^
+            --name "sckilltracker_client" ^
             --icon "static/sckticon.ico" ^
             --version-file version_info.txt ^
             --add-data "templates;templates" ^
@@ -92,7 +92,7 @@ jobs:
         shell: cmd
         run: |
           pyinstaller --clean -F ^
-            --name "sckilltracker_updater" ^
+            --name "sckilltracker_client_updater" ^
             --icon "static/sckticon.ico" ^
             --version-file version_info.txt ^
             updater.py --uac-admin
