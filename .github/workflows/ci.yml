@@ -109,6 +109,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(python -c "import re; f=open('src/client.py').read(); print(re.search(r'CLIENT_VERSION\s*=\s*[\"\\\'](.+?)[\"\\\']", f).group(1))")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG=v$VERSION" >> $GITHUB_ENV
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
