@@ -53,7 +53,6 @@ from src.trigger_controller import TriggerController
 from src.utils import get_local_ip, resource_path, setup_folders
 
 
-
 def log_exception(exc_type, exc_value, exc_tb):
     with open("sckilltracker_client_error.log", "w", encoding="utf-8") as f:
         traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
