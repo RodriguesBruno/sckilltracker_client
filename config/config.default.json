@@ -1,8 +1,9 @@
 {
+    "title": "SCKillTracker Client",
     "client": {
         "enabled": false,
         "api_url": "https://sckilltracker.servegame.com:8081/api/v1/event",
-        "verbose_logging": true,
+        "verbose_logging": false,
         "game_executable_name": "starcitizen.exe",
         "game_executable_check_frequency": 5,
         "track_crash_deaths": false
@@ -17,7 +18,7 @@
     },
     "trigger_controller": {
         "enabled": false,
-        "selected_vendor": "amd",
+        "selected_vendor": "nvidia",
         "vendors": [
             {
                 "name": "nvidia",
@@ -54,7 +55,7 @@
         "type": "csv"
     },
     "overlay": {
-        "enabled": true,
+        "enabled": false,
         "position": "top-right",
         "font_color": "orange",
         "font_size": "20",
@@ -74,7 +75,7 @@
     "sound_controller": {
         "path": "static\\sounds\\",
         "kill_sounds": {
-            "enabled": true
+            "enabled": false
         },
         "volume": 0.13
     }

@@ -1,7 +1,5 @@
 import re
 
-from src.file_handlers import read_config
-
 SHIP_PREFIXES: list[str] = [
     "ORIG",
     "CRUS",

@@ -16,11 +16,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 
-from config.config import client_config_file, config_file, default_file, logging_config_file
+from config.config import ensure_config, write_config, read_logging_config
 from src.client import SCClient
 from src.connection_manager import ConnectionManager
 from src.enums import RequestedAction
-from src.file_handlers import read_config, write_config, ensure_config
 from src.logfile_monitor import LogFileMonitor
 from src.logger import setup_logging
 from src.models.models import (
@@ -56,7 +55,7 @@ from src.utils import get_local_ip, resource_path, setup_folders
 
 
 def log_exception(exc_type, exc_value, exc_tb):
-    with open("error.log", "w", encoding="utf-8") as f:
+    with open("sckilltracker_client_error.log", "w", encoding="utf-8") as f:
         traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
 
 sys.excepthook = log_exception
@@ -83,12 +82,10 @@ overlay_on_other = None
 
 setup_folders()
 
-config_logging: dict = read_config(config_file=logging_config_file)
+config_logging: dict = read_logging_config()
 setup_logging(config=config_logging)
 
-client_config: dict = read_config(client_config_file)
-config: dict = ensure_config(config_file=config_file, default_file=default_file)
-config['client']['version'] = client_config.get('version')
+config: dict = ensure_config()
 
 
 @asynccontextmanager
@@ -132,7 +129,7 @@ async def lifespan(app: FastAPI):
 static_dir = resource_path("static")
 templates_dir = resource_path("templates")
 
-title: str = client_config.get('title')
+title: str = config.get('title')
 recordings_path: Path = Path(config.get('recordings_controller').get('path'))
 
 app: FastAPI = FastAPI(title=f"{title} API", openapi_url="/openapi.json", lifespan=lifespan)
@@ -160,7 +157,6 @@ recordings_controller: RecordingsController = RecordingsController(config=config
 overlay_controller: OverlayController = OverlayController(config=config.get('overlay'))
 
 sound_controller: SoundController = SoundController(config=config.get('sound_controller'))
-
 
 protocol: str = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pem").exists()) else "ws"
 ws_url: str = f'{protocol}://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
@@ -338,7 +334,7 @@ async def control_client(action: RequestedAction):
         sc_client.disable()
     
     config['client'] = sc_client.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return ClientEnabledStatus(is_enabled=sc_client.is_enabled)
 
 
@@ -350,7 +346,7 @@ async def control_trigger_controller(action: RequestedAction):
         trigger_controller.disable()
         
     config['trigger_controller'] = trigger_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return TriggerControllerStatus(
         enabled=trigger_controller.is_enabled,
         selected_vendor=trigger_controller.selected_vendor
@@ -364,7 +360,7 @@ async def recordings_controller_on_suicide(action: RequestedAction):
         recordings_controller.record_suicide_disable()
         
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 
@@ -376,7 +372,7 @@ async def recordings_controller_on_own_death(action: RequestedAction):
         recordings_controller.record_own_death_disable()
         
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 
@@ -388,7 +384,7 @@ async def recordings_controller_on_pu(action: RequestedAction):
         recordings_controller.record_pu_disable()
         
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/gun_rush/{action}", response_model=RecordingsControllerStatus)
@@ -399,7 +395,7 @@ async def recordings_controller_on_gun_rush(action: RequestedAction):
         recordings_controller.record_gun_rush_disable()
         
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/squadron_battle/{action}", response_model=RecordingsControllerStatus)
@@ -410,7 +406,7 @@ async def recordings_controller_on_squadron_battle(action: RequestedAction):
         recordings_controller.record_squadron_battle_disable()
         
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/arena_commander/{action}", response_model=RecordingsControllerStatus)
@@ -421,7 +417,7 @@ async def recordings_controller_on_arena_commander(action: RequestedAction):
         recordings_controller.record_arena_commander_disable()
         
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/classic_race/{action}", response_model=RecordingsControllerStatus)
@@ -432,7 +428,7 @@ async def recordings_controller_on_classic_race(action: RequestedAction):
         recordings_controller.record_classic_race_disable()
 
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/battle_royale/{action}", response_model=RecordingsControllerStatus)
@@ -443,7 +439,7 @@ async def recordings_controller_on_battle_royale(action: RequestedAction):
         recordings_controller.record_battle_royale_disable()
 
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/free_flight/{action}", response_model=RecordingsControllerStatus)
@@ -454,7 +450,7 @@ async def recordings_controller_on_free_flight(action: RequestedAction):
         recordings_controller.record_free_flight_disable()
 
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/pirate_swarm/{action}", response_model=RecordingsControllerStatus)
@@ -465,7 +461,7 @@ async def recordings_controller_on_pirate_swarm(action: RequestedAction):
         recordings_controller.record_pirate_swarm_disable()
 
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/vanduul_swarm/{action}", response_model=RecordingsControllerStatus)
@@ -476,7 +472,7 @@ async def recordings_controller_on_vanduul_swarm(action: RequestedAction):
         recordings_controller.record_vanduul_swarm_disable()
 
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 @app.get("/recordings_controller/other/{action}", response_model=RecordingsControllerStatus)
@@ -487,7 +483,7 @@ async def recordings_controller_other_enable(action: RequestedAction):
         recordings_controller.record_other_disable()
 
     config['recordings_controller'] = recordings_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return RecordingsControllerStatus(**recordings_controller.get_config())
 
 
@@ -527,7 +523,7 @@ async def control_overlay(action: RequestedAction):
         overlay_controller.disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_enabled.value)
 
 @app.get("/overlay/suicide/{action}", response_model=OverlayStatus)
@@ -540,7 +536,7 @@ async def overlay_on_suicide(action: RequestedAction):
         overlay_controller.on_suicide_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_suicide.value)
 
 
@@ -554,7 +550,7 @@ async def overlay_on_own_death(action: RequestedAction):
         overlay_controller.on_own_death_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_own_death.value)
 
 
@@ -568,7 +564,7 @@ async def overlay_on_pu(action: RequestedAction):
         overlay_controller.on_pu_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_pu.value)
 
 @app.get("/overlay/gun_rush/{action}", response_model=OverlayStatus)
@@ -581,7 +577,7 @@ async def overlay_on_gun_rush(action: RequestedAction):
         overlay_controller.on_gun_rush_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_gun_rush.value)
 
 
@@ -595,7 +591,7 @@ async def overlay_on_squadron_battle(action: RequestedAction):
         overlay_controller.on_squadron_battle_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_squadron_battle.value)
 
 @app.get("/overlay/arena_commander/{action}", response_model=OverlayStatus)
@@ -608,7 +604,7 @@ async def overlay_on_arena_commander(action: RequestedAction):
         overlay_controller.on_arena_commander_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_arena_commander.value)
 
 @app.get("/overlay/classic_race/{action}", response_model=OverlayStatus)
@@ -621,7 +617,7 @@ async def overlay_on_classic_race(action: RequestedAction):
         overlay_controller.on_classic_race_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_classic_race.value)
 
 @app.get("/overlay/battle_royale/{action}", response_model=OverlayStatus)
@@ -634,7 +630,7 @@ async def overlay_on_battle_royale(action: RequestedAction):
         overlay_controller.on_battle_royale_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_battle_royale.value)
 
 @app.get("/overlay/free_flight/{action}", response_model=OverlayStatus)
@@ -647,7 +643,7 @@ async def overlay_on_free_flight(action: RequestedAction):
         overlay_controller.on_free_flight_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_free_flight.value)
 
 @app.get("/overlay/pirate_swarm/{action}", response_model=OverlayStatus)
@@ -660,7 +656,7 @@ async def overlay_on_pirate_swarm(action: RequestedAction):
         overlay_controller.on_pirate_swarm_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_pirate_swarm.value)
 
 @app.get("/overlay/vanduul_swarm/{action}", response_model=OverlayStatus)
@@ -673,7 +669,7 @@ async def overlay_on_vanduul_swarm(action: RequestedAction):
         overlay_controller.on_vanduul_swarm_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_vanduul_swarm.value)
 
 @app.get("/overlay/other/{action}", response_model=OverlayStatus)
@@ -686,7 +682,7 @@ async def overlay_on_other(action: RequestedAction):
         overlay_controller.on_other_disable()
 
     config['overlay'] = overlay_controller.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return OverlayStatus(is_enabled=overlay_on_other.value)
 
 @app.get("/verbose_logging/enable", response_model=LoggingStatus)
@@ -695,7 +691,7 @@ async def enable_verbose_logging():
         sc_client.verbose_logging_enable()
         config['client'] = sc_client.get_config()
 
-        write_config(config_file=config_file, data=config)
+        write_config(data=config)
 
     return LoggingStatus(is_verbose=sc_client.is_verbose_logging)
 
@@ -706,7 +702,7 @@ async def disable_verbose_logging():
         sc_client.verbose_logging_disable()
         config['client'] = sc_client.get_config()
 
-        write_config(config_file=config_file, data=config)
+        write_config(data=config)
 
     return LoggingStatus(is_verbose=sc_client.is_verbose_logging)
 
@@ -718,7 +714,7 @@ async def toggle_crash_tracking(action: RequestedAction):
         sc_client.disable_track_crash_deaths()
 
     config['client'] = sc_client.get_config()
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
     return JSONResponse({"track_crash_deaths": sc_client.track_crash_deaths})
 
 @app.get("/settings")
@@ -814,7 +810,7 @@ async def update_settings(
     config["sound_controller"] = sound_controller.get_config()
 
     # ✅ Save updated config
-    write_config(config_file=config_file, data=config)
+    write_config(data=config)
 
     return RedirectResponse(url="/settings", status_code=303)
 
