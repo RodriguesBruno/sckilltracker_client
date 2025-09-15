@@ -1,5 +1,6 @@
 import logging
 import threading
+from pathlib import Path
 import pygame
 
 
@@ -7,11 +8,9 @@ class SoundController:
     pygame.mixer.init()
 
     def __init__(self, config: dict) -> None:
-        self._config: dict = config
-        self._path: str = config.get('path')
+        self._path: Path = Path(config.get('path'))
         self._kill_sounds_enabled: bool = config.get('kill_sounds').get('enabled')
         self._volume: float = config.get('volume')
-
 
     @property
     def kill_sounds_enabled(self) -> bool:
@@ -50,9 +49,8 @@ class SoundController:
 
         threading.Thread(target=_play, daemon=True).start()
 
-
     def play_streak_sound(self, level: int) -> None:
-        self.play_sound(f"{self._path}/kill{level}.mp3")
+        self.play_sound(path=str(self._path / f"kill{level}.mp3"))
 
     def get_config(self) -> dict:
         return {
