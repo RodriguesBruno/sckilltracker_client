@@ -91,6 +91,7 @@ jobs:
             app.py --uac-admin
 
       - name: Download latest updater release
+        shell: cmd
         run: |
           mkdir updater_bin
           gh release download --repo RodriguesBruno/sckilltracker_updater ^
