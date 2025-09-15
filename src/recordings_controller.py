@@ -77,11 +77,6 @@ class RecordingsController:
             self._path = path
             await self.scan_video_files()
 
-    # async def set_path(self, path: Path) -> None:
-    #     if self._path != path:
-    #         self._path = path
-    #         await self.scan_video_files()
-
     @property
     def is_record_suicide(self) -> bool:
         return self._record_suicide
