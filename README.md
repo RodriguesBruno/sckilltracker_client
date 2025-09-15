@@ -1,6 +1,6 @@
-# SCKillTracker Client
+<img src="static/sckticon.ico" alt="Star Citizen Logo" width="32"/>
 
-![Star Citizen Logo](static/sckticon.png)
+# SCKillTracker Client
 
 **SCKillTracker Client** is a desktop companion app for [Star Citizen](https://robertsspaceindustries.com/star-citizen) that tracks your in-game kills and provides detailed statistics, logs, and recordings.  
 It’s designed to run locally on Windows and comes with a simple web dashboard to view your gameplay stats.
@@ -23,7 +23,7 @@ It’s designed to run locally on Windows and comes with a simple web dashboard 
 
 1. Download the latest release from the [Releases page](https://github.com/RodriguesBruno/sckilltracker_client/releases).  
 2. Extract the files to a folder of your choice.  
-3. Run `sckilltracker_client.exe` (requires **Windows 10/11** and Python 3.11 runtime libraries).  
+3. Run `sckilltracker_client.exe` (requires **Windows 10/11**).  
 4. The client will create a `config.json` file on first launch.  
 
 ---
