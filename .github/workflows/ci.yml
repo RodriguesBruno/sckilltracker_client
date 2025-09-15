@@ -39,7 +39,7 @@ jobs:
           text = pathlib.Path("src/client.py").read_text()
           match = re.search(r'CLIENT_VERSION\s*=\s*[\'"](.+?)[\'"]', text)
           if not match:
-            raise RuntimeError("CLIENT_VERSION not found in src/client.py")
+              raise RuntimeError("CLIENT_VERSION not found in src/client.py")
           version = match.group(1)
           print(f"::set-output name=version::{version}")
           print(f"::set-output name=tag::v{version}")
@@ -66,7 +66,7 @@ jobs:
                     StringStruct(u'OriginalFilename', u'sckilltracker_client.exe'),
                     StringStruct(u'ProductName', u'SCKillTracker Client'),
                     StringStruct(u'ProductVersion', u'{version}') ])
-                ]),
+              ]),
               VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
             ]
           )""")
@@ -87,9 +87,13 @@ jobs:
 
       - name: Download latest updater release
         run: |
-          gh release download --repo RodriguesBruno/sckilltracker_updater --pattern "sckilltracker_client_updater.exe" --dir updater_bin
+          mkdir updater_bin
+          gh release download --repo RodriguesBruno/sckilltracker_updater --pattern "sckilltracker_client_updater.exe" --dir updater_bin --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
+
+      - name: List binaries
+        run: dir dist & dir updater_bin
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
