@@ -54,7 +54,7 @@ class SoundController:
 
     def get_config(self) -> dict:
         return {
-            "path": self._path,
+            "path": str(self._path),
             "kill_sounds": {
                 "enabled": self._kill_sounds_enabled
             },
