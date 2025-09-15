@@ -46,7 +46,7 @@ class OverlayController:
         self._font_size = value
 
     @property
-    def enabled(self) -> bool:
+    def is_enabled(self) -> bool:
         return self._enabled
 
     def enable(self) -> None:
