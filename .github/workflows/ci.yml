@@ -35,14 +35,19 @@ jobs:
         shell: bash
         run: |
           python <<'PYCODE'
-          import re, pathlib
+          import re, pathlib, os
           text = pathlib.Path("src/client.py").read_text()
           match = re.search(r'CLIENT_VERSION\s*=\s*[\'"](.+?)[\'"]', text)
           if not match:
               raise RuntimeError("CLIENT_VERSION not found in src/client.py")
           version = match.group(1)
-          print(f"::set-output name=version::{version}")
-          print(f"::set-output name=tag::v{version}")
+
+          # Write outputs with new method
+          with open(os.environ["GITHUB_OUTPUT"], "a") as gh_out:
+              gh_out.write(f"version={version}\n")
+              gh_out.write(f"tag=v{version}\n")
+
+          # Create version_info.txt for PyInstaller
           ver_tuple = ", ".join(version.split("."))
           pathlib.Path("version_info.txt").write_text(f"""VSVersionInfo(
             ffi=FixedFileInfo(
@@ -85,23 +90,14 @@ jobs:
             --add-data "src;src" ^
             app.py --uac-admin
 
-      - name: Debug release assets
-        run: |
-          gh release view --repo RodriguesBruno/sckilltracker_updater --json assets --jq '.assets[].name'
-        env:
-          GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
-
-      - name: Debug updater release assets
-        run: gh release view v1.0.0 --repo RodriguesBruno/sckilltracker_updater --json assets --jq '.assets[].name'
-        env:
-          GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
-
       - name: Download latest updater release
         run: |
           mkdir updater_bin
-          gh release download --repo RodriguesBruno/sckilltracker_updater --pattern "sckilltracker_client_updater.exe" --dir updater_bin --clobber
+          gh release download --repo RodriguesBruno/sckilltracker_updater ^
+            --pattern "sckilltracker_client_updater.exe" ^
+            --dir updater_bin --clobber
         env:
-          GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
 
       - name: List binaries
         run: dir dist & dir updater_bin
