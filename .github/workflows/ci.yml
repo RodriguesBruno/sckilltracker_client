@@ -91,6 +91,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
 
+      - name: Debug updater release assets
+        run: gh release view v1.0.0 --repo RodriguesBruno/sckilltracker_updater --json assets --jq '.assets[].name'
+        env:
+          GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
+
       - name: Download latest updater release
         run: |
           mkdir updater_bin
