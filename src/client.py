@@ -49,7 +49,7 @@ SHIP_PREFIXES: list[str] = [
 	"MRAI"
 ]
 
-CLIENT_VERSION = '1.7.7'
+CLIENT_VERSION = '1.7.8'
 
 
 class SCClient:
@@ -328,19 +328,18 @@ class SCClient:
             data = player_event.model_dump()
             await broadcast(data)
 
-
-            if self._overlay_queue:
-                must_display, reason = await self._overlay_controller.must_display_overlay(
-                    player_name=self.pilot_name,
-                    player_event=player_event
-                )
-
-                if must_display:
-                    logging.info(f"[CLIENT - OVERLAY] Shown reason: {reason}") and self._verbose_logging
-                    self._overlay_queue.put(data)
-
-                else:
-                    logging.info(f"[CLIENT - OVERLAY] Not Shown reason: {reason}") and self._verbose_logging
+            # if self._overlay_queue:
+            #     must_display, reason = await self._overlay_controller.must_display_overlay(
+            #         player_name=self.pilot_name,
+            #         player_event=player_event
+            #     )
+            #
+            #     if must_display:
+            #         logging.info(f"[CLIENT - OVERLAY] Shown reason: {reason}") and self._verbose_logging
+            #         self._overlay_queue.put(data)
+            #
+            #     else:
+            #         logging.info(f"[CLIENT - OVERLAY] Not Shown reason: {reason}") and self._verbose_logging
 
         return player_events
 
@@ -384,13 +383,13 @@ class SCClient:
                     data = player_event.model_dump()
                     await broadcast(data)
 
-                    if self._overlay_queue:
-                        must_display, reason = await self._overlay_controller.must_display_overlay(
-                            player_name=self.pilot_name,
-                            player_event=player_event
-                        )
-                        if must_display:
-                            self._overlay_queue.put(data)
+                    # if self._overlay_queue:
+                    #     must_display, reason = await self._overlay_controller.must_display_overlay(
+                    #         player_name=self.pilot_name,
+                    #         player_event=player_event
+                    #     )
+                    #     if must_display:
+                    #         self._overlay_queue.put(data)
 
         return player_events
 
@@ -550,6 +549,14 @@ class SCClient:
                                 player_event.ship_name = '-'
                                 ship_name_changed = True
 
+                            # 1) Display Overlay
+                            if self._overlay_controller.is_enabled:
+                                must_display, reason = await self._overlay_controller.must_display_overlay(
+                                    player_name=self.pilot_name,
+                                    player_event=player_event
+                                )
+                                if must_display:
+                                    self._overlay_queue.put(player_event.model_dump())
 
                             if self._trigger_controller.is_enabled:
                                 must_record_video, reason = await self._recordings_controller.must_record_video(
@@ -558,14 +565,6 @@ class SCClient:
                                 )
 
                                 if must_record_video:
-                                    # 1) Overlay first
-                                    if self._overlay_queue:
-                                        data_for_overlay = player_event.model_dump()
-                                        if await self._overlay_controller.must_display_overlay(
-                                                player_name=self.pilot_name,
-                                                player_event=player_event
-                                        ):
-                                            self._overlay_queue.put(data_for_overlay)
 
                                     # 2) Then trigger recording
                                     logging.info(

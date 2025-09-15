@@ -829,7 +829,7 @@ def main() -> None:
     position_value = manager.Value("u", overlay_controller.position)
     color_value = manager.Value("u", overlay_controller.font_color)
     font_size_value = manager.Value("u", overlay_controller.font_size)
-    overlay_enabled = manager.Value("b", overlay_controller.enabled)
+    overlay_enabled = manager.Value("b", overlay_controller.is_enabled)
     overlay_on_suicide = manager.Value("b", overlay_controller.on_suicide)
     overlay_on_own_death = manager.Value("b", overlay_controller.on_own_death)
     overlay_on_pu = manager.Value("b", overlay_controller.on_pu)
