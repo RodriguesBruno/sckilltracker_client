@@ -19,14 +19,6 @@ jobs:
       - name: Checkout client repository
         uses: actions/checkout@v4
 
-      - name: Checkout updater repository
-        uses: actions/checkout@v4
-        with:
-          repository: RodriguesBruno/sckilltracker_updater
-          token: ${{ secrets.UPDATER_REPO_TOKEN }}
-          path: updater
-
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -36,7 +28,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller gh
 
       - name: Extract version and generate version file
         id: version
@@ -45,7 +37,10 @@ jobs:
           python <<'PYCODE'
           import re, pathlib
           text = pathlib.Path("src/client.py").read_text()
-          version = re.search(r'CLIENT_VERSION\s*=\s*[\'"](.+?)[\'"]', text).group(1)
+          match = re.search(r'CLIENT_VERSION\s*=\s*[\'"](.+?)[\'"]', text)
+          if not match:
+            raise RuntimeError("CLIENT_VERSION not found in src/client.py")
+          version = match.group(1)
           print(f"::set-output name=version::{version}")
           print(f"::set-output name=tag::v{version}")
           ver_tuple = ", ".join(version.split("."))
@@ -90,15 +85,11 @@ jobs:
             --add-data "src;src" ^
             app.py --uac-admin
 
-      - name: Build updater executable
-        shell: cmd
+      - name: Download latest updater release
         run: |
-          cd updater
-          pyinstaller --clean -F ^
-            --name "sckilltracker_client_updater" ^
-            --icon "../static/sckticon.ico" ^
-            app.py --uac-admin
-          cd ..
+          gh release download --repo RodriguesBruno/sckilltracker_updater --pattern "sckilltracker_client_updater.exe" --dir updater_bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -106,7 +97,7 @@ jobs:
           name: sckilltracker_binaries
           path: |
             dist/sckilltracker_client.exe
-            updater/dist/sckilltracker_client_updater.exe
+            updater_bin/sckilltracker_client_updater.exe
           if-no-files-found: error
 
   release:
@@ -129,6 +120,6 @@ jobs:
           name: Release ${{ needs.build.outputs.version }}
           files: |
             dist/sckilltracker_client.exe
-            updater/dist/sckilltracker_client_updater.exe
+            updater_bin/sckilltracker_client_updater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
