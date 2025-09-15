@@ -780,6 +780,7 @@ async def update_settings(
     config["local_api"]["ip_address"] = local_api_ip_address
     config["local_api"]["port"] = int(local_api_port)
     config["client"]["api_url"] = api_url
+    sc_client.api_url = api_url
 
     # Log Monitor settings
     logfile_monitor.logfile_with_path = logfile
