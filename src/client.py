@@ -325,21 +325,7 @@ class SCClient:
             player_event.push_result_message = f"Offline mode: {self._current_date}"
             player_event.push_result_is_success = False
 
-            data = player_event.model_dump()
-            await broadcast(data)
-
-            # if self._overlay_queue:
-            #     must_display, reason = await self._overlay_controller.must_display_overlay(
-            #         player_name=self.pilot_name,
-            #         player_event=player_event
-            #     )
-            #
-            #     if must_display:
-            #         logging.info(f"[CLIENT - OVERLAY] Shown reason: {reason}") and self._verbose_logging
-            #         self._overlay_queue.put(data)
-            #
-            #     else:
-            #         logging.info(f"[CLIENT - OVERLAY] Not Shown reason: {reason}") and self._verbose_logging
+            await broadcast(player_event.model_dump())
 
         return player_events
 
@@ -380,16 +366,7 @@ class SCClient:
                     player_event.push_result_message=message
                     player_event.push_result_is_success=is_success
 
-                    data = player_event.model_dump()
-                    await broadcast(data)
-
-                    # if self._overlay_queue:
-                    #     must_display, reason = await self._overlay_controller.must_display_overlay(
-                    #         player_name=self.pilot_name,
-                    #         player_event=player_event
-                    #     )
-                    #     if must_display:
-                    #         self._overlay_queue.put(data)
+                    await broadcast(player_event.model_dump())
 
         return player_events
 
