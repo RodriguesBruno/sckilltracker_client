@@ -85,6 +85,12 @@ jobs:
             --add-data "src;src" ^
             app.py --uac-admin
 
+      - name: Debug release assets
+        run: |
+          gh release view --repo RodriguesBruno/sckilltracker_updater --json assets --jq '.assets[].name'
+        env:
+          GITHUB_TOKEN: ${{ secrets.UPDATER_REPO_TOKEN }}
+
       - name: Download latest updater release
         run: |
           mkdir updater_bin
