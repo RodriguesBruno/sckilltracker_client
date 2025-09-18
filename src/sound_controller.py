@@ -3,6 +3,8 @@ import threading
 from pathlib import Path
 import pygame
 
+from src.utils import resource_path
+
 
 class SoundController:
     pygame.mixer.init()
@@ -26,7 +28,7 @@ class SoundController:
 
     @volume.setter
     def volume(self, value: float) -> None:
-        volume_percent = max(0.0, min(100.0, value))  # clamp between 0–100
+        volume_percent = max(0.0, min(100.0, value))
         rounded_value = round((volume_percent / 100), 4)
 
         if rounded_value < 0.0 or rounded_value > 1.0:
@@ -50,7 +52,8 @@ class SoundController:
         threading.Thread(target=_play, daemon=True).start()
 
     def play_streak_sound(self, level: int) -> None:
-        self.play_sound(path=str(self._path / f"kill{level}.mp3"))
+        path: str = resource_path(str(self._path / f"kill{level}.mp3"))
+        self.play_sound(path=path)
 
     def get_config(self) -> dict:
         return {
@@ -59,5 +62,4 @@ class SoundController:
                 "enabled": self._kill_sounds_enabled
             },
             "volume": self._volume
-
         }

@@ -2,7 +2,7 @@
 class StreakController:
     def __init__(self) -> None:
         self._kill_count: int = 0
-        self._max_kill_level = 20
+        self._max_kill_level: int = 20
 
     @property
     def kill_count(self) -> int:

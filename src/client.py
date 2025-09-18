@@ -49,7 +49,7 @@ SHIP_PREFIXES: list[str] = [
 	"MRAI"
 ]
 
-CLIENT_VERSION = '1.7.8'
+CLIENT_VERSION = '1.7.9'
 
 
 class SCClient:
@@ -307,7 +307,9 @@ class SCClient:
 
         logfile_is_running: bool = False if not self._logfile_monitor.log_is_validated else self._game_is_running
 
-        logging.info(f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}") and self._verbose_logging
+        logging.info(
+            f"[CLIENT - UI NOTIFICATION - LOGFILE SCANNER] is running: {logfile_is_running}"
+        ) and self._verbose_logging
 
         await broadcast(
             LogFileNotification(
@@ -442,7 +444,7 @@ class SCClient:
                 await self._handle_logfile_notifications(broadcast=broadcast)
 
                 logfile_changed: bool = False
-                if not self._logfile_monitor.log_is_validated:
+                if self._logfile_monitor.log_is_not_validated:
                     await self.validate_logfile()
                     logfile_changed = True
 
@@ -464,7 +466,9 @@ class SCClient:
                     )
 
                     if pilot_name_changed:
-                        logging.debug(f"[CLIENT EVENT - PILOT NAME CHANGED] to {player_profile.name}") and self._debug_logging
+                        logging.debug(
+                            f"[CLIENT EVENT - PILOT NAME CHANGED] to {player_profile.name}"
+                        ) and self._debug_logging
                         self._player_profile = player_profile
 
                     # [SHIP NAME EVENT]
@@ -494,8 +498,8 @@ class SCClient:
 
                     if player_events:
                         for player_event in player_events:
-                            ##KILLSTREAKS
-                                    # KILL EVENT
+                            # KILLSTREAKS
+                            # KILL EVENT
                             if (
                                 player_event.killer_profile.name == self._player_profile.name and
                                 player_event.victim_profile.name.lower() not in ["", "-", "npc"] and
@@ -504,8 +508,9 @@ class SCClient:
                                 level: int = self._streak_controller.increment_kill_streak()
                                 self._sound_controller.play_streak_sound(level=level)
 
-                                if self._overlay_queue:
-                                    self._overlay_queue.put({"kill_streak": self._streak_controller.kill_count})
+                                if self._overlay_controller.on_kill_streak:
+                                    data: dict = {"kill_streak": self._streak_controller.kill_count}
+                                    self._overlay_queue.put(data)
 
                             # DEATH EVENT
                             elif (
@@ -514,9 +519,9 @@ class SCClient:
                                 player_event.killer_profile.name != self._player_profile.name
                             ):
                                 self._streak_controller.reset_kill_streak()
-
-                                if self._overlay_queue:
-                                    self._overlay_queue.put({"kill_streak": self._streak_controller.kill_count})
+                                if self._overlay_controller.on_kill_streak:
+                                    data: dict = {"kill_streak": self._streak_controller.kill_count}
+                                    self._overlay_queue.put(data)
 
                             if self._player_profile.name == player_event.killer_profile.name:
                                 player_event.ship_name = self._ship_name
@@ -545,7 +550,8 @@ class SCClient:
 
                                     # 2) Then trigger recording
                                     logging.info(
-                                        f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}") and self._verbose_logging
+                                        f"[CLIENT EVENT - TRIGGERING VIDEO RECORDING] REASON: {reason}"
+                                    ) and self._verbose_logging
                                     await self._trigger_controller.trigger_hotkey()
 
                                     # 3) Post-trigger bookkeeping (unchanged)
@@ -565,7 +571,9 @@ class SCClient:
                                     await broadcast(recording_notification.model_dump())
 
                                 else:
-                                    logging.info(f"[CLIENT EVENT - VIDEO RECORDING BYPASSED] REASON: {reason}") and self._verbose_logging
+                                    logging.info(
+                                        f"[CLIENT EVENT - VIDEO RECORDING BYPASSED] REASON: {reason}"
+                                    ) and self._verbose_logging
 
                         if self.is_enabled:
                             updated_player_events: list[PlayerEvent] = await self._handle_online_mode(broadcast, player_events)
@@ -628,8 +636,6 @@ class SCClient:
 
 
     # [STATISTICS METHODS]
-
-
     def statistics_top_victims(self, exclude_player: bool = True) -> list[dict]:
         if exclude_player:
             return self._statistics_controller.top_victims(exclude_player=self._player_profile.name)
