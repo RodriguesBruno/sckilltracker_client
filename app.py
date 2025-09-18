@@ -65,22 +65,6 @@ color_value = None
 font_size_value = None
 overlay_queue = None
 
-# overlay_enabled = None
-#
-# overlay_on_suicide = None
-# overlay_on_own_death = None
-# overlay_on_pu = None
-# overlay_on_gun_rush = None
-# overlay_on_squadron_battle = None
-# overlay_on_arena_commander = None
-# overlay_on_classic_race = None
-# overlay_on_battle_royale = None
-# overlay_on_free_flight = None
-# overlay_on_pirate_swarm = None
-# overlay_on_vanduul_swarm = None
-# overlay_on_other = None
-# overlay_on_kill_streak = None
-
 setup_folders()
 
 config_logging: dict = read_logging_config()
@@ -219,7 +203,7 @@ async def index_page(request: Request):
         "recordings_qty": sc_client.recordings_video_files_quantity(),
         "latest_recordings": sc_client.recordings_latest_videos(qty=1),
         "recording_controller": recordings_controller.get_config(),
-        "ws_url": ws_url,
+        "ws_url": ws_url
     })
 
 
@@ -317,7 +301,6 @@ async def get_status():
             records_qty=repo.count
         )
     )
-
 
 
 @app.get("/client/{action}", response_model=ClientEnabledStatus)
@@ -498,10 +481,8 @@ async def delete_video(filename: str = Form(...)):
 @app.get("/overlay/{action}", response_model=OverlayStatus)
 async def control_overlay(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_enabled.value = True
         overlay_controller.enable()
     else:
-        # overlay_enabled.value = False
         overlay_controller.disable()
 
     update_overlay_controller_config_and_save()
@@ -510,10 +491,8 @@ async def control_overlay(action: RequestedAction):
 @app.get("/overlay/suicide/{action}", response_model=OverlayStatus)
 async def overlay_on_suicide(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_suicide.value = True
         overlay_controller.on_suicide_enable()
     else:
-        # overlay_on_suicide.value = False
         overlay_controller.on_suicide_disable()
 
     update_overlay_controller_config_and_save()
@@ -523,10 +502,8 @@ async def overlay_on_suicide(action: RequestedAction):
 @app.get("/overlay/own_death/{action}", response_model=OverlayStatus)
 async def overlay_on_own_death(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_own_death.value = True
         overlay_controller.on_own_death_enable()
     else:
-        # overlay_on_own_death.value = False
         overlay_controller.on_own_death_disable()
 
     update_overlay_controller_config_and_save()
@@ -536,10 +513,8 @@ async def overlay_on_own_death(action: RequestedAction):
 @app.get("/overlay/pu/{action}", response_model=OverlayStatus)
 async def overlay_on_pu(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_pu.value = True
         overlay_controller.on_pu_enable()
     else:
-        # overlay_on_pu.value = False
         overlay_controller.on_pu_disable()
 
     update_overlay_controller_config_and_save()
@@ -548,10 +523,8 @@ async def overlay_on_pu(action: RequestedAction):
 @app.get("/overlay/gun_rush/{action}", response_model=OverlayStatus)
 async def overlay_on_gun_rush(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_gun_rush.value = True
         overlay_controller.on_gun_rush_enable()
     else:
-        # overlay_on_gun_rush.value = False
         overlay_controller.on_gun_rush_disable()
 
     update_overlay_controller_config_and_save()
@@ -561,10 +534,8 @@ async def overlay_on_gun_rush(action: RequestedAction):
 @app.get("/overlay/squadron_battle/{action}", response_model=OverlayStatus)
 async def overlay_on_squadron_battle(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_squadron_battle.value = True
         overlay_controller.on_squadron_battle_enable()
     else:
-        # overlay_on_squadron_battle.value = False
         overlay_controller.on_squadron_battle_disable()
 
     update_overlay_controller_config_and_save()
@@ -573,10 +544,8 @@ async def overlay_on_squadron_battle(action: RequestedAction):
 @app.get("/overlay/arena_commander/{action}", response_model=OverlayStatus)
 async def overlay_on_arena_commander(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_arena_commander.value = True
         overlay_controller.on_arena_commander_enable()
     else:
-        # overlay_on_arena_commander.value = False
         overlay_controller.on_arena_commander_disable()
 
     update_overlay_controller_config_and_save()
@@ -585,10 +554,8 @@ async def overlay_on_arena_commander(action: RequestedAction):
 @app.get("/overlay/classic_race/{action}", response_model=OverlayStatus)
 async def overlay_on_classic_race(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_classic_race.value = True
         overlay_controller.on_classic_race_enable()
     else:
-        # overlay_on_classic_race.value = False
         overlay_controller.on_classic_race_disable()
 
     update_overlay_controller_config_and_save()
@@ -597,10 +564,8 @@ async def overlay_on_classic_race(action: RequestedAction):
 @app.get("/overlay/battle_royale/{action}", response_model=OverlayStatus)
 async def overlay_on_battle_royale(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_battle_royale.value = True
         overlay_controller.on_battle_royale_enable()
     else:
-        # overlay_on_battle_royale.value = False
         overlay_controller.on_battle_royale_disable()
 
     update_overlay_controller_config_and_save()
@@ -609,10 +574,8 @@ async def overlay_on_battle_royale(action: RequestedAction):
 @app.get("/overlay/free_flight/{action}", response_model=OverlayStatus)
 async def overlay_on_free_flight(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_free_flight.value = True
         overlay_controller.on_free_flight_enable()
     else:
-        # overlay_on_free_flight.value = False
         overlay_controller.on_free_flight_disable()
 
     update_overlay_controller_config_and_save()
@@ -621,10 +584,8 @@ async def overlay_on_free_flight(action: RequestedAction):
 @app.get("/overlay/pirate_swarm/{action}", response_model=OverlayStatus)
 async def overlay_on_pirate_swarm(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_pirate_swarm.value = True
         overlay_controller.on_pirate_swarm_enable()
     else:
-        # overlay_on_pirate_swarm.value = False
         overlay_controller.on_pirate_swarm_disable()
 
     update_overlay_controller_config_and_save()
@@ -633,10 +594,8 @@ async def overlay_on_pirate_swarm(action: RequestedAction):
 @app.get("/overlay/vanduul_swarm/{action}", response_model=OverlayStatus)
 async def overlay_on_vanduul_swarm(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_vanduul_swarm.value = True
         overlay_controller.on_vanduul_swarm_enable()
     else:
-        # overlay_on_vanduul_swarm.value = False
         overlay_controller.on_vanduul_swarm_disable()
 
     update_overlay_controller_config_and_save()
@@ -645,10 +604,8 @@ async def overlay_on_vanduul_swarm(action: RequestedAction):
 @app.get("/overlay/other/{action}", response_model=OverlayStatus)
 async def overlay_on_other(action: RequestedAction):
     if action == RequestedAction.ENABLE:
-        # overlay_on_other.value = True
         overlay_controller.on_other_enable()
     else:
-        # overlay_on_other.value = False
         overlay_controller.on_other_disable()
 
     update_overlay_controller_config_and_save()
@@ -774,7 +731,6 @@ async def update_settings(
     overlay_controller.font_color = overlay_font_color
     overlay_controller.font_size = overlay_font_size
     overlay_controller.on_kill_streak = overlay_kill_streak
-    # overlay_on_kill_streak.value = overlay_kill_streak
     config["overlay"] = overlay_controller.get_config()
 
     # Sound Controller settings
@@ -793,10 +749,6 @@ def main() -> None:
 
     global position_value, color_value, font_size_value, overlay_queue, sc_client
 
-        # overlay_enabled, overlay_on_suicide,overlay_on_own_death, overlay_on_pu, overlay_on_gun_rush, overlay_on_squadron_battle, \
-        # overlay_on_arena_commander, overlay_on_classic_race, overlay_on_battle_royale, overlay_on_free_flight, \
-        # overlay_on_pirate_swarm, overlay_on_vanduul_swarm, overlay_on_other, overlay_on_kill_streak
-
     manager = Manager()
     overlay_queue = manager.Queue()
 
@@ -804,20 +756,6 @@ def main() -> None:
     position_value = manager.Value("u", overlay_controller.position)
     color_value = manager.Value("u", overlay_controller.font_color)
     font_size_value = manager.Value("u", overlay_controller.font_size)
-    # overlay_enabled = manager.Value("b", overlay_controller.is_enabled)
-    # overlay_on_suicide = manager.Value("b", overlay_controller.on_suicide)
-    # overlay_on_own_death = manager.Value("b", overlay_controller.on_own_death)
-    # overlay_on_pu = manager.Value("b", overlay_controller.on_pu)
-    # overlay_on_gun_rush = manager.Value("b", overlay_controller.on_gun_rush)
-    # overlay_on_squadron_battle = manager.Value("b", overlay_controller.on_squadron_battle)
-    # overlay_on_arena_commander = manager.Value("b", overlay_controller.on_arena_commander)
-    # overlay_on_classic_race = manager.Value("b", overlay_controller.on_classic_race)
-    # overlay_on_battle_royale = manager.Value("b", overlay_controller.on_battle_royale)
-    # overlay_on_free_flight = manager.Value("b", overlay_controller.on_free_flight)
-    # overlay_on_pirate_swarm = manager.Value("b", overlay_controller.on_pirate_swarm)
-    # overlay_on_vanduul_swarm = manager.Value("b", overlay_controller.on_vanduul_swarm)
-    # overlay_on_other = manager.Value("b", overlay_controller.on_other)
-    # overlay_on_kill_streak = manager.Value("b", overlay_controller.on_kill_streak)
 
     sc_client = SCClient(
         config=config.get('client'),
@@ -828,7 +766,7 @@ def main() -> None:
         recordings_controller=recordings_controller,
         overlay_controller=overlay_controller,
         sound_controller=sound_controller,
-        overlay_queue=overlay_queue,   
+        overlay_queue=overlay_queue
     )
 
     host: str = config.get("local_api").get("ip_address")
