@@ -57,7 +57,7 @@ def log_exception(exc_type, exc_value, exc_tb):
     with open("sckilltracker_client_error.log", "w", encoding="utf-8") as f:
         traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
 
-# sys.excepthook = log_exception
+sys.excepthook = log_exception
 
 sc_client: Optional[SCClient] = None
 position_value = None
