@@ -100,26 +100,18 @@
                         <input type="checkbox" id="overlayToggle" class="toggle"
                             data-title-enable="Enable Overlay"
                             data-title-disable="Disable Overlay"
-                            {% if overlay_enabled %} checked {% endif %}>
+                            {% if overlay.enabled %} checked {% endif %}>
                         <span class="slider round"
-                            title="{{ 'Disable Overlay' if overlay_enabled else 'Enable Overlay' }}"></span>
+                            title="{{ 'Disable Overlay' if overlay.enabled else 'Enable Overlay' }}"></span>
                     </label>
                     <span id="overlay-expand-icon"
-                          class="expand-icon {% if not overlay_enabled %}hidden{% endif %}"
+                          class="expand-icon {% if not overlay.enabled %}hidden{% endif %}"
                           style="cursor: pointer;"
                     >
                         {% if trigger_controller_enabled %}◀{% else %}▶{% endif %}
                     </span>
                 </div>
             </div>
-
-<!--            <div class="slide_btn">-->
-<!--                <span>Overlay</span>-->
-<!--                <label class="switch">-->
-<!--                    <input type="checkbox" id="overlayToggle" class="toggle" data-title-enable="Enable Overlay" data-title-disable="Disable Overlay" {% if overlay_enabled %} checked {% endif %}>-->
-<!--                    <span class="slider round" title="{{ 'Disable Overlay' if overlay_enabled else 'Enable Overlay' }}"></span>-->
-<!--                </label>-->
-<!--            </div>-->
 
             <div class="slide_btn">
                 <span>Verbose Logging</span>
@@ -667,7 +659,7 @@
         fetchData(endpoint)
     });
     
-    // [OVERLAY]
+    // F[OVERLAY]
     document.getElementById('overlayToggle').addEventListener('change', function() {
         const endpoint = this.checked ? '/overlay/enable' : '/overlay/disable';
         fetchData(endpoint)

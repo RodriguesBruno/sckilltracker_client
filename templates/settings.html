@@ -35,10 +35,10 @@
         <label for="frequency">Log File Scan Frequency (s)</label>
         <input type="text" id="frequency" name="frequency" value="{{ config.log_monitor.frequency }}" required>
       </div>
-<!--      <div class="form-group">-->
-<!--        <label for="api_key">API Key</label>-->
-<!--        <input type="password" id="api_key" name="api_key" value="{{ config['client'].get('api_key', '') }}" placeholder="Enter API Key">-->
-<!--      </div>-->
+    </div>
+
+    <div class="settings-panel">
+      <h3>Database</h3>
     </div>
 
     <div class="settings-panel">
@@ -71,21 +71,22 @@
           <option value=false {% if not config.recordings_controller.rename_files %}selected{% endif %}>No</option>
         </select>
       </div>
-<div class="form-group">
-  <label for="trigger_delay">
-    Trigger Delay: <span id="trigger_delay_value">{{ config.trigger_controller.delay_seconds }}</span>s
-  </label>
-  <input
-    type="range"
-    id="trigger_delay"
-    name="trigger_delay"
-    min="0"
-    max="10"
-    step="1"
-    value="{{ config.trigger_controller.delay_seconds }}"
-    oninput="document.getElementById('trigger_delay_value').textContent = this.value"
-  >
-</div>
+
+    <div class="form-group">
+      <label for="trigger_delay">
+        Trigger Delay: <span id="trigger_delay_value">{{ config.trigger_controller.delay_seconds }}</span>s
+      </label>
+      <input
+        type="range"
+        id="trigger_delay"
+        name="trigger_delay"
+        min="0"
+        max="10"
+        step="1"
+        value="{{ config.trigger_controller.delay_seconds }}"
+        oninput="document.getElementById('trigger_delay_value').textContent = this.value"
+      >
+    </div>
 
 
     </div>
@@ -122,12 +123,19 @@
           oninput="document.getElementById('font_size_value').textContent = this.value"
         >
       </div>
+      <div class="form-group">
+        <label for="overlay_kill_streak">Kill Streak Overlay Enabled</label>
+        <select name="overlay_kill_streak" id="overlay_kill_streak">
+          <option value=true {% if config.overlay.on_kill_streak %}selected{% endif %}>Yes</option>
+          <option value=false {% if not config.overlay.on_kill_streak %}selected{% endif %}>No</option>
+        </select>
+      </div>
     </div>
 
     <div class="settings-panel">
       <h3>Sound</h3>
       <div class="form-group">
-        <label for="enable_kill_sounds">Enable Kill Sounds</label>
+        <label for="enable_kill_sounds">Kill Streak Sounds Enabled</label>
         <select name="enable_kill_sounds" id="enable_kill_sounds">
           <option value=true {% if config.sound_controller.kill_sounds.enabled %}selected{% endif %}>Yes</option>
           <option value=false {% if not config.sound_controller.kill_sounds.enabled %}selected{% endif %}>No</option>
@@ -156,8 +164,7 @@
           <audio id="test-audio" src="/static/sounds/kill1.mp3" preload="auto"></audio>
           </div>
         </div>
-      </div>
-    </div>  
+
     <div class="text-center">
       <input type="submit" id="submit-button" value="Submit" disabled><br>
     </div>

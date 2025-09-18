@@ -40,6 +40,10 @@ class LogFileMonitor:
     def log_is_validated(self) -> bool:
         return self._is_validated
 
+    @property
+    def log_is_not_validated(self) -> bool:
+        return not self._is_validated
+
     @log_is_validated.setter
     def log_is_validated(self, value: bool) -> None:
         self._is_validated = value

@@ -3,10 +3,10 @@ from src.models.models import PlayerEvent
 
 class OverlayController:
     def __init__(self, config: dict) -> None:
+        self._enabled: bool = config.get('enabled')
         self._position: str = config.get('position')
         self._font_color: str = config.get('font_color')
         self._font_size: str = config.get('font_size')
-        self._enabled: bool = config.get('enabled')
         self._on_suicide: bool = config.get('on_suicide')
         self._on_own_death: bool = config.get('on_own_death')
         self._on_pu: bool = config.get('on_pu')
@@ -19,6 +19,7 @@ class OverlayController:
         self._on_pirate_swarm: bool = config.get('on_pirate_swarm')
         self._on_vanduul_swarm: bool = config.get('on_vanduul_swarm')
         self._on_other: bool = config.get('on_other')
+        self._on_kill_streak: bool = config.get('on_kill_streak')
 
 
     @property
@@ -175,6 +176,14 @@ class OverlayController:
     def on_other_disable(self) -> None:
         self._on_other = False
 
+    @property
+    def on_kill_streak(self) -> bool:
+        return self._on_kill_streak
+
+    @on_kill_streak.setter
+    def on_kill_streak(self, value) -> None:
+        self._on_kill_streak = value
+
     async def must_display_overlay(self, player_name: str, player_event: PlayerEvent) -> tuple[bool, str]:
         is_self: bool = player_event.victim_profile.name == player_name
 
@@ -227,5 +236,6 @@ class OverlayController:
             "on_free_flight": self._on_free_flight,
             "on_pirate_swarm": self._on_pirate_swarm,
             "on_vanduul_swarm": self._on_vanduul_swarm,
-            "on_other": self._on_other
+            "on_other": self._on_other,
+            "on_kill_streak": self._on_kill_streak
         }
