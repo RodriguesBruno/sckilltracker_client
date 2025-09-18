@@ -71,14 +71,13 @@
         "on_pirate_swarm": true,
         "on_vanduul_swarm": true,
         "on_other": true,
-        "on_kill_streak": true,
-        "on_new": true
+        "on_kill_streak": true
     },
     "sound_controller": {
         "path": "static\\sounds\\",
         "kill_sounds": {
-            "enabled": false
+            "enabled": true
         },
-        "volume": 0.13
+        "volume": 0.05
     }
 }
