@@ -150,6 +150,7 @@ class Overlay(QWidget):
         QTimer.singleShot(100, self.move_to_position)
 
     def poll_queue(self) -> None:
+
         while not self.queue.empty():
             data = self.queue.get()
             if isinstance(data, dict):
@@ -163,6 +164,7 @@ class Overlay(QWidget):
 
                 if widget:
                     self.display_widget(widget)
+
 
     def check_position(self) -> None:
         if self.position_value.value != self.current_position.value:

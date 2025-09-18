@@ -74,6 +74,8 @@ def ensure_config() -> dict:
     user_config: dict = read_config()
 
     merged_config, changed = merge_defaults(default_config=default_config, user_config=user_config)
+    merged_config["client"]["version"] = CLIENT_VERSION
+
     if changed:
         write_config(data=merged_config)
 
