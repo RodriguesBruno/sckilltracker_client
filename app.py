@@ -163,6 +163,10 @@ async def notification():
     return await sc_client.text_notification(broadcast=connection_manager.broadcast)
 
 
+@app.get("/sound_controller/kill_streak/{level}")
+def kill_streak_sound(level: int):
+    sound_controller.play_streak_sound(level=level)
+
 @app.get("/videos/static/{filename}")
 async def serve_video(filename: str):
     video_path: Path = recordings_controller.path / filename
