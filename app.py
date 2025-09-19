@@ -57,7 +57,7 @@ def log_exception(exc_type, exc_value, exc_tb):
     with open("sckilltracker_client_error.log", "w", encoding="utf-8") as f:
         traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
 
-# sys.excepthook = log_exception
+sys.excepthook = log_exception
 
 sc_client: Optional[SCClient] = None
 position_value = None
@@ -162,6 +162,10 @@ async def websocket_endpoint(websocket: WebSocket):
 async def notification():
     return await sc_client.text_notification(broadcast=connection_manager.broadcast)
 
+
+@app.get("/sound_controller/kill_streak/{level}")
+def kill_streak_sound(level: int):
+    sound_controller.play_streak_sound(level=level)
 
 @app.get("/videos/static/{filename}")
 async def serve_video(filename: str):
