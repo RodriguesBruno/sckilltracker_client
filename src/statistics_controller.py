@@ -242,7 +242,6 @@ class StatisticsController:
         Daily timeline of YOUR kills and deaths (non-suicides) over a selectable period.
         period ∈ {"week","month","all"}
         """
-
         if self._df.empty:
             return []
 
