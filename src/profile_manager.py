@@ -33,7 +33,8 @@ class ProfileManager:
 
     async def get_profile(self, name: str) -> PlayerProfile:
         if name in self._profile_cache:
-            logging.info(f"[PROFILE MANAGER] USING CACHED PROFILE FOR PLAYER: {name}") and self.verbose_logging
+            if self._verbose_logging:
+                logging.info(f"[PROFILE MANAGER] USING CACHED PROFILE FOR PLAYER: {name}")
             return self._profile_cache[name]
 
         player_profile: PlayerProfile = await self.create_profile(name=name)
@@ -41,7 +42,8 @@ class ProfileManager:
         return player_profile
 
     async def create_profile(self, name: str) -> PlayerProfile:
-        logging.info(f"[PROFILE MANAGER] CREATING PROFILE FOR PLAYER: {name}") and self.verbose_logging
+        if self.verbose_logging:
+            logging.info(f"[PROFILE MANAGER] CREATING PROFILE FOR PLAYER: {name}")
         await self._profile_scraper.fetch_player(name)
 
         org: Organization = Organization(
@@ -66,7 +68,8 @@ class ProfileManager:
 
     async def update_profile(self, name: str) -> PlayerProfile:
         if name in self._profile_cache:
-            logging.info(f"[PROFILE MANAGER] UPDATING PROFILE FOR PLAYER: {name}") and self.verbose_logging
+            if self.verbose_logging:
+                logging.info(f"[PROFILE MANAGER] UPDATING PROFILE FOR PLAYER: {name}")
 
             player_profile: PlayerProfile = await self.create_profile(name=name)
 

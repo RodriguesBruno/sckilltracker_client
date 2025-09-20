@@ -1,5 +1,6 @@
 import csv
 import os
+from typing import Any
 
 from src.models.models import PlayerEvent, PlayerProfile, Organization
 from src.repository import Repository, RepositoryType
@@ -17,7 +18,6 @@ keys: list[str] = [
     "victim_fluency",
 
     "victim_location",
-
 
     "victim_zone_name",
 
@@ -40,7 +40,7 @@ keys: list[str] = [
     "push_result_is_success"
 ]
 
-def player_event_to_csv_adapter(event: PlayerEvent) -> dict:
+def player_event_to_csv_adapter(event: PlayerEvent) -> dict[str, Any]:
     return {
         "uuid": event.uuid,
         "date": event.date,
@@ -75,7 +75,7 @@ def player_event_to_csv_adapter(event: PlayerEvent) -> dict:
         "push_result_is_success": event.push_result_is_success
     }
 
-def csv_to_player_event_adapter(entry: dict) -> PlayerEvent:
+def csv_to_player_event_adapter(entry: dict[str, Any]) -> PlayerEvent:
     return PlayerEvent(
         uuid=entry["uuid"],
         date=entry["date"],
@@ -133,11 +133,9 @@ class CSVRepository(Repository):
                 writer = csv.DictWriter(f, fieldnames=self._key_names)
                 writer.writeheader()
 
-    @property
     def type(self) -> RepositoryType:
         return RepositoryType.CSV
 
-    @property
     def count(self) -> int:
         with open(self._file_name, newline='', encoding=self._encoding) as f:
             reader = csv.DictReader(f)
@@ -147,13 +145,13 @@ class CSVRepository(Repository):
     def file_name(self) -> str:
         return self._file_name
 
-    def create(self, entries: list[dict]):
+    def create(self, entries: list[dict[str, Any]]) -> None:
         with open(self._file_name, 'a', newline='', encoding=self._encoding) as f:
             writer = csv.DictWriter(f, fieldnames=self._key_names)
             for e in entries:
                 writer.writerow({key: e.get(key) for key in self._key_names})
 
-    def read(self) -> list[dict]:
+    def read(self) -> list[dict[str, Any]]:
         with open(self._file_name, newline='', encoding=self._encoding) as f:
             reader = csv.DictReader(f)
 
@@ -172,8 +170,8 @@ class CSVRepository(Repository):
 
             return result
 
-    def update(self):
+    def update(self) -> None:
         pass
 
-    def delete(self):
+    def delete(self) -> None:
         pass

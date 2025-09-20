@@ -3,6 +3,7 @@ import logging
 import msvcrt
 import os
 from pathlib import Path
+from typing import Any
 
 from src.models.models import PlayerEvent
 
@@ -19,23 +20,23 @@ def file_is_locked(file_path: Path) -> bool:
 
 
 class RecordingsController:
-    def __init__(self, config: dict) -> None:
-        self._path: Path = Path(config.get('path'))
+    def __init__(self, config: dict[str, Any]) -> None:
+        self._path: Path = Path(config.get('path', '.'))
 
         self._rename_files: bool = config.get('rename_files', True)
 
-        self._record_suicide: bool = config.get('record_suicide')
-        self._record_own_death: bool = config.get('record_own_death')
-        self._record_pu: bool = config.get('record_pu')
-        self._record_gun_rush: bool = config.get('record_gun_rush')
-        self._record_squadron_battle: bool = config.get('record_squadron_battle')
-        self._record_arena_commander: bool = config.get('record_arena_commander')
-        self._record_classic_race: bool = config.get('record_classic_race')
-        self._record_battle_royale: bool = config.get('record_battle_royale')
-        self._record_free_flight: bool = config.get('record_free_flight')
-        self._record_pirate_swarm: bool = config.get('record_pirate_swarm')
-        self._record_vanduul_swarm: bool = config.get('record_vanduul_swarm')
-        self._record_other: bool = config.get('record_other')
+        self._record_suicide: bool = config.get('record_suicide', True)
+        self._record_own_death: bool = config.get('record_own_death', True)
+        self._record_pu: bool = config.get('record_pu', True)
+        self._record_gun_rush: bool = config.get('record_gun_rush', True)
+        self._record_squadron_battle: bool = config.get('record_squadron_battle', True)
+        self._record_arena_commander: bool = config.get('record_arena_commander', True)
+        self._record_classic_race: bool = config.get('record_classic_race', True)
+        self._record_battle_royale: bool = config.get('record_battle_royale', True)
+        self._record_free_flight: bool = config.get('record_free_flight', True)
+        self._record_pirate_swarm: bool = config.get('record_pirate_swarm', True)
+        self._record_vanduul_swarm: bool = config.get('record_vanduul_swarm', True)
+        self._record_other: bool = config.get('record_other', True)
 
         self._current_files: list[str] = []
 
@@ -53,7 +54,7 @@ class RecordingsController:
         """Update rename_files setting at runtime (no restart needed)."""
         self._rename_files = enabled
 
-    async def scan_video_files(self):
+    async def scan_video_files(self) -> None:
         video_files = sorted(
             [f for f in self._path.glob("*.mp4") if f.is_file()],
             key=lambda f: os.stat(f).st_ctime,
@@ -69,12 +70,12 @@ class RecordingsController:
 
     async def set_path(self, path: str) -> None:
         if not len(path):
-            path = Path(".")
+            updated_path: Path = Path(".")
         else:
-            path = Path(path)
+            updated_path = Path(path)
 
-        if self._path != path:
-            self._path = path
+        if self._path != updated_path:
+            self._path = updated_path
             await self.scan_video_files()
 
     @property
@@ -253,7 +254,7 @@ class RecordingsController:
 
             return False, 'Own Death is disabled'
 
-        game_mode_flags: dict = {
+        game_mode_flags: dict[str, Any] = {
             'PU': self._record_pu,
             'Gun Rush': self._record_gun_rush,
             'Squadron Battle': self._record_squadron_battle,
@@ -358,7 +359,7 @@ class RecordingsController:
 
         return ''
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         return {
             "path": str(self._path),
             "record_suicide": self._record_suicide,

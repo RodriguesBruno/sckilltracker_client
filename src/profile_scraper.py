@@ -43,7 +43,8 @@ class ProfileScraper:
         self._debug_logging = value
 
     async def fetch_player(self, name: str) -> None:
-        logging.info(f"[PROFILE SCRAPER] FETCHING DATA FOR PLAYER: {name}") and self._verbose_logging
+        if self._verbose_logging:
+            logging.info(f"[PROFILE SCRAPER] FETCHING DATA FOR PLAYER: {name}")
         url: str = f"{self._url}/{name}"
         text: str = await get_from_url(url)
 

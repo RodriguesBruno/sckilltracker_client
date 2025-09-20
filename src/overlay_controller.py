@@ -1,25 +1,27 @@
+from typing import Any
+
 from src.models.models import PlayerEvent
 
 
 class OverlayController:
-    def __init__(self, config: dict) -> None:
-        self._enabled: bool = config.get('enabled')
-        self._position: str = config.get('position')
-        self._font_color: str = config.get('font_color')
-        self._font_size: str = config.get('font_size')
-        self._on_suicide: bool = config.get('on_suicide')
-        self._on_own_death: bool = config.get('on_own_death')
-        self._on_pu: bool = config.get('on_pu')
-        self._on_gun_rush: bool = config.get('on_gun_rush')
-        self._on_squadron_battle: bool = config.get('on_squadron_battle')
-        self._on_arena_commander: bool = config.get('on_arena_commander')
-        self._on_classic_race: bool = config.get('on_classic_race')
-        self._on_battle_royale: bool = config.get('on_battle_royale')
-        self._on_free_flight: bool = config.get('on_free_flight')
-        self._on_pirate_swarm: bool = config.get('on_pirate_swarm')
-        self._on_vanduul_swarm: bool = config.get('on_vanduul_swarm')
-        self._on_other: bool = config.get('on_other')
-        self._on_kill_streak: bool = config.get('on_kill_streak')
+    def __init__(self, config: dict[str, Any]) -> None:
+        self._enabled: bool = config.get('enabled', True)
+        self._position: str = config.get('position', 'top-right')
+        self._font_color: str = config.get('font_color', 'orange')
+        self._font_size: str = config.get('font_size', '5')
+        self._on_suicide: bool = config.get('on_suicide', True)
+        self._on_own_death: bool = config.get('on_own_death', True)
+        self._on_pu: bool = config.get('on_pu', True)
+        self._on_gun_rush: bool = config.get('on_gun_rush', True)
+        self._on_squadron_battle: bool = config.get('on_squadron_battle', True)
+        self._on_arena_commander: bool = config.get('on_arena_commander', True)
+        self._on_classic_race: bool = config.get('on_classic_race', True)
+        self._on_battle_royale: bool = config.get('on_battle_royale', True)
+        self._on_free_flight: bool = config.get('on_free_flight', True)
+        self._on_pirate_swarm: bool = config.get('on_pirate_swarm', True)
+        self._on_vanduul_swarm: bool = config.get('on_vanduul_swarm', True)
+        self._on_other: bool = config.get('on_other', True)
+        self._on_kill_streak: bool = config.get('on_kill_streak', True)
 
 
     @property
@@ -27,7 +29,7 @@ class OverlayController:
         return self._position
 
     @position.setter
-    def position(self, value) -> None:
+    def position(self, value: str) -> None:
         self._position = value
 
     @property
@@ -35,7 +37,7 @@ class OverlayController:
         return self._font_color
 
     @font_color.setter
-    def font_color(self, value) -> None:
+    def font_color(self, value: str) -> None:
         self._font_color = value
 
     @property
@@ -43,7 +45,7 @@ class OverlayController:
         return self._font_size
 
     @font_size.setter
-    def font_size(self, value) -> None:
+    def font_size(self, value: str) -> None:
         self._font_size = value
 
     @property
@@ -181,7 +183,7 @@ class OverlayController:
         return self._on_kill_streak
 
     @on_kill_streak.setter
-    def on_kill_streak(self, value) -> None:
+    def on_kill_streak(self, value: bool) -> None:
         self._on_kill_streak = value
 
     async def must_display_overlay(self, player_name: str, player_event: PlayerEvent) -> tuple[bool, str]:
@@ -199,7 +201,7 @@ class OverlayController:
 
             return False, 'Own Death is disabled'
 
-        game_mode_flags: dict = {
+        game_mode_flags: dict[str, Any] = {
             'PU': self._on_pu,
             'Gun Rush': self._on_gun_rush,
             'Squadron Battle': self._on_squadron_battle,
@@ -219,7 +221,7 @@ class OverlayController:
 
         return False, f'{player_event.game_mode} is disabled'
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         return {
             "enabled": self._enabled,
             "position": self._position,

@@ -14,21 +14,22 @@ class Repository(ABC):
     def type(self) -> RepositoryType:
         ...
 
+    @abstractmethod
     def count(self) -> int:
         ...
 
     @abstractmethod
-    def create(self, entries: Any):
+    def create(self, entries: Any) -> Any:
         ...
 
     @abstractmethod
-    def read(self):
+    def read(self) -> list[dict[str, Any]]:
         ...
 
     @abstractmethod
-    def update(self):
+    def update(self) -> None:
         ...
 
     @abstractmethod
-    def delete(self):
+    def delete(self) -> None:
         ...
