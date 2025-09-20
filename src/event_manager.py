@@ -25,7 +25,6 @@ class EventManager:
         self._profile_manager: ProfileManager = ProfileManager()
         self._event_lines: list[str] = []
 
-        # self._pilot_name_keyword: str = '<OnClientConnected> Player'
         self._pilot_name_keyword: str = '<Legacy login response> [CIG-net] User Login Success - Handle['
         self._ship_name_keywords: list[str] = [
             '[VEHICLE SPAWN] CPlayerShipRespawnManager:',
