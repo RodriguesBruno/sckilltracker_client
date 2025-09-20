@@ -4,7 +4,9 @@ import tkinter as tk
 from PIL import ImageTk, Image
 from src.utils import resource_path
 
+
 image_path: str = resource_path("static/splash.jpg")
+
 
 def show_splash_screen(duration=2) -> None:
     def splash():

@@ -10,15 +10,14 @@ class RepositoryFactory:
         pass
 
     @staticmethod
-    def get_repo(repository_type: RepositoryType):
+    def get_repo(repository_type: RepositoryType) -> CSVRepository | SQLRepository:
         if repository_type == RepositoryType.CSV:
             logging.info(f"[REPOSITORY FACTORY] - CSV")
             path: str= "./db/events.csv"
             return CSVRepository(path=path)
 
-        elif repository_type == RepositoryType.SQL:
-            logging.info(f"[REPOSITORY FACTORY] - SQL")
-            path: str = './db/events.db'
-            return SQLRepository(path=path)
+        logging.info(f"[REPOSITORY FACTORY] - SQL")
+        path: str = './db/events.db'
+        return SQLRepository(path=path)
 
-        return None
+

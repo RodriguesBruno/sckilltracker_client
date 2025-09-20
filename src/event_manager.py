@@ -70,7 +70,7 @@ class EventManager:
     def set_event_lines(self, lines: list[str]) -> None:
         self._event_lines = lines
 
-    async def handle_pilot_name_event(self, new_lines: list[str], current_pilot_name: str) -> tuple:
+    async def handle_pilot_name_event(self, new_lines: list[str], current_pilot_name: str) -> tuple[bool, PlayerProfile] | tuple[bool, None]:
         pilot_name_event: str | None = find_event_line(lines=new_lines, keywords=[self._pilot_name_keyword])
 
         if pilot_name_event:
@@ -83,7 +83,7 @@ class EventManager:
 
         return False, None
 
-    async def handle_ship_name_event(self, new_lines: list[str], current_ship_name: str) -> tuple:
+    async def handle_ship_name_event(self, new_lines: list[str], current_ship_name: str) -> tuple[bool, str]:
         ship_name_event: str | None = find_event_line(lines=new_lines, keywords=self._ship_name_keywords)
 
         if ship_name_event:
@@ -92,9 +92,9 @@ class EventManager:
             if ship_name != current_ship_name:
                 return True, ship_name
 
-        return False, None
+        return False, '-'
 
-    async def handle_game_mode_event(self, new_lines: list[str], current_game_mode: str) -> tuple:
+    async def handle_game_mode_event(self, new_lines: list[str], current_game_mode: str) -> tuple[bool, str]:
         game_mode_event: str | None = find_event_line(lines=new_lines, keywords=self._game_mode_keywords)
 
         if game_mode_event:
@@ -103,21 +103,24 @@ class EventManager:
             if game_mode != current_game_mode:
                 return True, game_mode
 
-        return False, None
+        return False, '-'
 
     async def get_player_events(self, new_lines: list[str], game_mode: str, track_crash_deaths: bool) -> list[PlayerEvent]:
-        player_events: list[PlayerEvent] = [
-            await self._get_player_event(log_entry=line, game_mode=game_mode, track_crash_deaths=track_crash_deaths)
-            for line in new_lines
-            if self._player_event_keyword in line
-        ]
-
-        player_events = list(filter(lambda x: x is not None, player_events))
+        player_events: list[PlayerEvent] = []
+        for line in new_lines:
+            if self._player_event_keyword in line:
+                player_events.extend(
+                    await self._get_player_event(
+                        log_entry=line,
+                        game_mode=game_mode,
+                        track_crash_deaths=track_crash_deaths
+                    )
+                )
 
         return player_events
 
-    async def _get_player_event(self, log_entry: str, game_mode: str, track_crash_deaths: bool) -> PlayerEvent | None:
-        date = get_log_date(line=log_entry)
+    async def _get_player_event(self, log_entry: str, game_mode: str, track_crash_deaths: bool) -> list[PlayerEvent]:
+        date: str = get_log_date(line=log_entry)
         victim_name: str = get_victim_name(line=log_entry, track_crash_deaths=track_crash_deaths)
         victim_zone_name: str = get_victim_zone(line=log_entry)
         killer_name: str = get_killer_name(line=log_entry)
@@ -128,13 +131,13 @@ class EventManager:
 
         killer_profile: PlayerProfile = await self._profile_manager.get_profile(name=killer_name)
 
-        if killer_name == 'npc' or victim_name == 'npc':
-            return None
+        if killer_name != 'npc' or victim_name != 'npc':
+            return []
 
         elif game_mode == 'Elimination':
             ship_name = '-'
         else:
-            ship_name: str = get_ship_name(log_entry)
+            ship_name = get_ship_name(log_entry)
 
         result: PlayerEvent = PlayerEvent(
             uuid=str(uuid.uuid4()),
@@ -152,5 +155,5 @@ class EventManager:
             game_mode=game_mode
             )
 
-        return result
+        return [result]
 

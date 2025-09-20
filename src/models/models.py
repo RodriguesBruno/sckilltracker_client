@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from src.repository import RepositoryType
@@ -125,8 +127,8 @@ class StatisticsData(BaseModel):
     kills_by_game_mode: list[KillsGameMode]
     damage_type_distribution: list[DamageTypeDistribution]
     player_month_statistics: PlayerMonthStatistics
-    ##new table for player kills/deaths by period
-    player_kills_deaths_by_period: dict
+    player_kills_deaths_by_period: dict[str, Any]
+
 
 class Game(BaseModel):
     executable_name: str

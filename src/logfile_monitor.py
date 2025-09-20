@@ -1,12 +1,13 @@
 import logging
+from typing import Any
 
 from src.utils import get_date
 
 
 class LogFileMonitor:
-    def __init__(self, config: dict) -> None:
-        self._logfile_with_path: str = config.get('logfile_with_path')
-        self._frequency: int = config.get('frequency')
+    def __init__(self, config: dict[str, Any]) -> None:
+        self._logfile_with_path: str = config.get('logfile_with_path', '')
+        self._frequency: int = config.get('frequency', 5)
 
         self._is_validated: bool = False
         self._last_read_date: str = 'Never'
@@ -40,13 +41,13 @@ class LogFileMonitor:
     def log_is_validated(self) -> bool:
         return self._is_validated
 
-    @property
-    def log_is_not_validated(self) -> bool:
-        return not self._is_validated
-
     @log_is_validated.setter
     def log_is_validated(self, value: bool) -> None:
         self._is_validated = value
+
+    @property
+    def log_is_not_validated(self) -> bool:
+        return not self._is_validated
 
     @property
     def last_read_date(self) -> str:
@@ -74,16 +75,17 @@ class LogFileMonitor:
         self._is_validated = False
         self._file_position = 0
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         return {
             "logfile_with_path": self._logfile_with_path,
             "frequency": self._frequency
         }
 
-    async def validate_logfile(self, pilot_name_keyword: str, ship_name_keywords: list[str], game_mode_keywords: list[str]) ->  tuple[str, str, str]:
-        logging.info(f"[LOGFILE MONITOR] Validating: {self._logfile_with_path}") and self._verbose_logging
+    async def validate_logfile(self, pilot_name_keyword: str, ship_name_keywords: list[str], game_mode_keywords: list[str]) ->  tuple[str | None, str | None, str | None]:
+        if self._verbose_logging:
+            logging.info(f"[LOGFILE MONITOR] Validating: {self._logfile_with_path}")
 
-        self._file_position: int = 0
+        self._file_position = 0
 
         last_pilot_name_event_line = None
         last_ship_name_event_line = None
@@ -114,7 +116,8 @@ class LogFileMonitor:
 
             self._lines = len(lines)
 
-            logging.info(f"[LOGFILE MONITOR] Validation Complete") and self._verbose_logging
+            if self._verbose_logging:
+                logging.info(f"[LOGFILE MONITOR] Validation Complete")
 
         except Exception as _:
             self._file_position = 0
@@ -129,7 +132,8 @@ class LogFileMonitor:
             total_lines: int = file.tell()
 
             if self._file_position > total_lines:
-                logging.debug(f"[LOGFILE MONITOR] LOGFILE HAS ROLLED OVER") and self._debug_logging
+                if self._debug_logging:
+                    logging.debug(f"[LOGFILE MONITOR] LOGFILE HAS ROLLED OVER")
                 return True
 
             return False

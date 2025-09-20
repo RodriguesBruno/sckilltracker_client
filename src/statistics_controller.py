@@ -1,8 +1,7 @@
 import calendar
 import logging
 from datetime import timedelta, datetime
-from typing import Optional
-
+from typing import Optional, Any, Hashable
 import pandas as pd
 
 from src.models.models import PlayerMonthStatistics
@@ -10,7 +9,7 @@ from src.models.models import PlayerMonthStatistics
 
 class StatisticsController:
     def __init__(self) -> None:
-        self._df: Optional[pd.DataFrame] = None
+        self._df: pd.DataFrame = pd.DataFrame()
 
     def _get_prepared_df(self) -> pd.DataFrame:
         df = self._df.copy()
@@ -18,11 +17,11 @@ class StatisticsController:
 
         return df
 
-    def set_data(self, events: list[dict]) -> None:
+    def set_data(self, events: list[dict[str, str]]) -> None:
         logging.info(f"[STATISTICS CONTROLLER] - SET DATA")
         self._df = pd.DataFrame(events)
 
-    def top_victims(self, limit: int = 5, exclude_player: Optional[str] = None) -> list[dict[str, int]]:
+    def top_victims(self, limit: int = 5, exclude_player: Optional[str] = None) -> list[dict[Hashable, int]]:
         if self._df.empty:
             return []
 
@@ -46,7 +45,7 @@ class StatisticsController:
 
     def kills_for_player_this_month(self, player_name: str) -> PlayerMonthStatistics:
         """Return the number of kills a pilot made in the current month."""
-        if self._df is None or self._df.empty:
+        if self._df.empty:
             return PlayerMonthStatistics(
                 player_name=player_name,
                 month=datetime.now().strftime("%B"),
@@ -88,15 +87,13 @@ class StatisticsController:
         )
         return player_statistics
 
-    def top_killers(self, limit: int = 5, exclude_player: Optional[str] = None) -> list[dict[str, int]]:
+    def top_killers(self, limit: int = 5, exclude_player: Optional[str] = None) -> list[dict[Hashable, int]]:
         if self._df.empty:
             return []
 
         df: pd.DataFrame = self._df.copy()
 
-
         filtered_df = df[df['damage'] != 'Suicide']
-
 
         if exclude_player:
             filtered_df = filtered_df[filtered_df['killer_name'] != exclude_player]
@@ -112,20 +109,7 @@ class StatisticsController:
 
         return top.to_dict(orient='records')
 
-    def top_killers_old(self, limit: int = 5) -> list[dict[str, int]]:
-        if self._df.empty:
-            return []
-
-        df: pd.DataFrame = self._df.copy()
-
-        filtered_df = df[df['damage'] != 'Suicide']
-
-        top = filtered_df['killer_name'].value_counts().head(limit).to_frame(name='count').reset_index()
-        top.rename(columns={'index': 'name'}, inplace=True)
-
-        return top.to_dict(orient='records')
-
-    def kills_by_game_mode(self) -> list[dict[str, int]]:
+    def kills_by_game_mode(self) -> list[dict[Hashable, int]]:
         if self._df.empty:
             return []
 
@@ -134,11 +118,11 @@ class StatisticsController:
 
         return top.to_dict(orient='records')
 
-    def damage_type_distribution(self) -> list[dict[str, int]]:
+    def damage_type_distribution(self) -> list[dict[Hashable, Any]]:
         if self._df.empty:
             return []
 
-        top = self._df['damage'].value_counts().to_frame(name='count').reset_index()
+        top: pd.DataFrame = self._df['damage'].value_counts().to_frame(name='count').reset_index()
         top.rename(columns={'index': 'name'}, inplace=True)
 
         return top.to_dict(orient='records')
@@ -157,7 +141,7 @@ class StatisticsController:
             "all": None
         }
 
-        counts: dict = {}
+        counts: dict[str, Any] = {}
 
         for label, since in periods.items():
             if since:
@@ -174,23 +158,23 @@ class StatisticsController:
 
             counts[label] = top
 
-        result = pd.concat(counts.values(), axis=1).fillna(0).astype(int)
+        result: pd.DataFrame = pd.concat(counts.values(), axis=1).fillna(0).astype(int)
 
         result.index.name = name
         result.reset_index(inplace=True)
 
         return result
 
-    def get_top_killers_table(self, limit: int = 10, exclude_player: Optional[str] = None) -> list[dict[str, int]]:
-        if self._df is None or self._df.empty:
+    def get_top_killers_table(self, limit: int = 10, exclude_player: Optional[str] = None) -> list[dict[Hashable, Any]]:
+        if self._df.empty:
             return []
 
         result = self._get_table(name="killer", filter_by="killer_name", limit=limit, exclude_player=exclude_player)
 
         return result.to_dict(orient="records")
 
-    def get_top_victims_table(self, limit: int = 10, exclude_player: Optional[str] = None) -> list[dict[str, int]]:
-        if self._df is None or self._df.empty:
+    def get_top_victims_table(self, limit: int = 10, exclude_player: Optional[str] = None) -> list[dict[Hashable, Any]]:
+        if self._df.empty:
             return []
 
         result = self._get_table(name="victim", filter_by="victim_name", limit=limit, exclude_player=exclude_player)
@@ -198,17 +182,17 @@ class StatisticsController:
         return result.to_dict(orient="records")
 
     # --- add inside StatisticsController (near the other aggregations) ---
-    def top_victim_orgs(self, player_name: str, limit: int = 10) -> list[dict]:
+    def top_victim_orgs(self, player_name: str, limit: int = 10) -> list[dict[Hashable, Any]]:
         """
         Organizations YOU kill the most.
         Groups by victim's org where killer_name == player_name and damage != 'Suicide'.
         Returns: [{ "org": str, "count": int }, ...]
         """
-        if self._df is None or self._df.empty:
+        if self._df.empty:
             return []
 
         df = self._df.copy()
-        df = df[(df.get("killer_name") == player_name) & (df.get("damage") != "Suicide")]
+        df = df[(df["killer_name"] == player_name) & (df["damage"] != "Suicide")]
 
         # try to locate an org column
         org_col_candidates = ["victim_org_name", "victim_org", "victim_organization"]
@@ -226,17 +210,17 @@ class StatisticsController:
         top.columns = ["org", "count"]
         return top.to_dict(orient="records")
 
-    def top_killer_orgs(self, player_name: str, limit: int = 10) -> list[dict]:
+    def top_killer_orgs(self, player_name: str, limit: int = 10) -> list[dict[Hashable, Any]]:
         """
         Organizations that kill YOU the most.
         Groups by killer's org where victim_name == player_name and damage != 'Suicide'.
         Returns: [{ "org": str, "count": int }, ...]
         """
-        if self._df is None or self._df.empty:
+        if self._df.empty:
             return []
 
         df = self._df.copy()
-        df = df[(df.get("victim_name") == player_name) & (df.get("damage") != "Suicide")]
+        df = df[(df["victim_name"] == player_name) & (df["damage"] != "Suicide")]
 
         org_col_candidates = ["killer_org_name", "killer_org", "killer_organization"]
         col = next((c for c in org_col_candidates if c in df.columns), None)
@@ -253,12 +237,13 @@ class StatisticsController:
         top.columns = ["org", "count"]
         return top.to_dict(orient="records")
 
-    def kills_deaths_timeline(self, player_name: str, period: str = "month") -> list[dict]:
+    def kills_deaths_timeline(self, player_name: str, period: str = "month") -> list[dict[Hashable, Any]]:
         """
         Daily timeline of YOUR kills and deaths (non-suicides) over a selectable period.
         period ∈ {"week","month","all"}
         """
-        if self._df is None or self._df.empty:
+
+        if self._df.empty:
             return []
 
         df = self._get_prepared_df()  # ensures a proper datetime "date" column
@@ -293,9 +278,9 @@ class StatisticsController:
         out["date"] = out["date"].dt.strftime("%Y-%m-%d")
         return out.to_dict(orient="records")
 
-    ##Add a new method to summarize kills/deaths by period for a specific player:
-    def player_kills_deaths_by_period(self, player_name: str) -> dict:
-        if self._df is None or self._df.empty:
+    # Add a new method to summarize kills/deaths by period for a specific player:
+    def player_kills_deaths_by_period(self, player_name: str) -> dict[str, dict[str, float | int]]:
+        if self._df.empty:
             return {}
 
         df = self._get_prepared_df()
@@ -321,6 +306,7 @@ class StatisticsController:
             suicides = df_period[(df_period["killer_name"] == player_name) & (df_period["damage"] == "Suicide")]
 
             kdr = round(len(kills) / len(deaths), 2) if len(deaths) > 0 else len(kills)
+
             result[period] = {
                 "kills": len(kills),
                 "deaths": len(deaths),
@@ -330,17 +316,17 @@ class StatisticsController:
 
         return result
 
-    def killer_ships_used(self, player_name: str, limit: int = 10) -> list[dict]:
+    def killer_ships_used(self, player_name: str, limit: int = 10) -> list[dict[Hashable, Any]]:
         """
         Ships YOU were flying when you killed another player.
         Counts 'ship_name' where killer_name == player_name and damage != 'Suicide'.
         Excludes '-' and empty names.
         """
-        if self._df is None or self._df.empty:
+        if self._df.empty:
             return []
 
         df = self._df.copy()
-        df = df[(df.get("killer_name") == player_name) & (df.get("damage") != "Suicide")]
+        df = df[(df["killer_name"] == player_name) & (df["damage"] != "Suicide")]
 
         if "ship_name" not in df.columns:
             return []
@@ -353,17 +339,17 @@ class StatisticsController:
         top.columns = ["ship", "count"]
         return top.to_dict(orient="records")
 
-    def deaths_by_zone(self, player_name: str, limit: int = 10) -> list[dict]:
+    def deaths_by_zone(self, player_name: str, limit: int = 10) -> list[dict[Hashable, Any]]:
         """
         Zones where YOU died (enemy killed you).
         Counts 'victim_zone_name' where victim_name == player_name and damage != 'Suicide'.
         Returns: [{ "zone": str, "count": int }, ...]
         """
-        if self._df is None or self._df.empty:
+        if self._df.empty:
             return []
 
         df = self._df.copy()
-        df = df[(df.get("victim_name") == player_name) & (df.get("damage") != "Suicide")]
+        df = df[(df["victim_name"] == player_name) & (df["damage"] != "Suicide")]
 
         if "victim_zone_name" not in df.columns:
             return []

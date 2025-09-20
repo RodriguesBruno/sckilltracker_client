@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from typing import Optional, List, Dict
+from typing import Optional, Any
 
 import pyautogui
 
@@ -13,10 +13,10 @@ class TriggerController:
     - Can be enabled/disabled.
     - Supports an optional trigger delay (0-10 seconds) before sending the hotkey.
     """
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         self._enabled: bool = bool(config.get('enabled', True))
         self._selected_vendor: str = config.get('selected_vendor', 'nvidia')
-        self._vendors: List[Dict] = list(config.get('vendors', []))
+        self._vendors: list[dict[str, Any]] = list(config.get('vendors', [{}]))
 
         self._custom_hotkey: Optional[str] = None
 
@@ -113,7 +113,7 @@ class TriggerController:
 
         # Send hotkey
         if '+' in hotkey:
-            hotkey_combinations: List[str] = [key.strip() for key in hotkey.split('+') if key.strip()]
+            hotkey_combinations: list[str] = [key.strip() for key in hotkey.split('+') if key.strip()]
             pyautogui.hotkey(*hotkey_combinations)
         else:
             pyautogui.hotkey(hotkey)
@@ -121,7 +121,7 @@ class TriggerController:
         logging.info("[TRIGGER CONTROLLER] Triggered Hotkey: %s, Vendor: %s, Delay: %ss",
                      hotkey, self._selected_vendor, self._delay_sec)
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         return {
             "enabled": self._enabled,
             "selected_vendor": self._selected_vendor,

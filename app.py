@@ -134,12 +134,12 @@ protocol: str = "wss" if (Path("certs/cert.pem").exists() and Path("certs/key.pe
 ws_url: str = f'{protocol}://{get_local_ip()}:{config.get("local_api").get("port")}/ws'
 
 
-def update_overlay_controller_config_and_save():
+def update_overlay_controller_config_and_save() -> None:
     config['overlay'] = overlay_controller.get_config()
     write_config(data=config)
 
 
-def update_recordings_controller_config_and_save():
+def update_recordings_controller_config_and_save() -> None:
     config['recordings_controller'] = recordings_controller.get_config()
     write_config(data=config)
 

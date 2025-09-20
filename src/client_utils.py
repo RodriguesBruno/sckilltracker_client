@@ -1,7 +1,8 @@
 import hashlib
 import socket
 
-def generate_client_id():
+
+def generate_client_id() -> str:
     hostname = socket.gethostname()
     mac = get_mac_address()
     raw = f"{hostname}-{mac}"

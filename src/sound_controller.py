@@ -1,6 +1,8 @@
 import logging
 import threading
 from pathlib import Path
+from typing import Any
+
 import pygame
 
 from src.utils import resource_path
@@ -9,10 +11,10 @@ from src.utils import resource_path
 class SoundController:
     pygame.mixer.init()
 
-    def __init__(self, config: dict) -> None:
-        self._path: Path = Path(config.get('path'))
-        self._kill_sounds_enabled: bool = config.get('kill_sounds').get('enabled')
-        self._volume: float = config.get('volume')
+    def __init__(self, config: dict[str, Any]) -> None:
+        self._path: Path = Path(config.get('path','static\\sounds\\'))
+        self._kill_sounds_enabled: bool = config.get('kill_sounds', {}).get('enabled', True)
+        self._volume: float = config.get('volume', 0.05)
 
     @property
     def kill_sounds_enabled(self) -> bool:
@@ -55,7 +57,7 @@ class SoundController:
         path: str = resource_path(str(self._path / f"kill{level}.mp3"))
         self.play_sound(path=path)
 
-    def get_config(self) -> dict:
+    def get_config(self) -> dict[str, Any]:
         return {
             "path": str(self._path),
             "kill_sounds": {
